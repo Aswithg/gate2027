@@ -1,0 +1,3131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study_Planner</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<style>
+:root{
+  --bg:#060d18;--card:#0d1e2e;--navy:#091623;--acc:#00d4ff;
+  --text:#e2e8f0;--muted:#7a9ab5;--faint:#4a6a80;--border:#1a3248;
+  --green:#4ade80;--amber:#fbbf24;--red:#ef4444;--purple:#c084fc;
+  --radius:10px;--font:'Segoe UI',system-ui,sans-serif;
+}
+:root.light{
+  --bg:#f0f4f8;--card:#ffffff;--navy:#e8eef5;--acc:#0077aa;
+  --text:#0f1923;--muted:#4a6a80;--faint:#8aa0b4;--border:#ccd8e4;
+  --green:#16a34a;--amber:#d97706;--red:#dc2626;--purple:#7c3aed;
+}
+.theme-toggle{margin-left:auto;background:var(--navy);border:1px solid var(--border);border-radius:20px;padding:5px 12px;cursor:pointer;display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:var(--muted);transition:all .2s;white-space:nowrap;}
+.theme-toggle:hover{border-color:var(--acc);color:var(--acc);}
+.theme-toggle .tt-icon{font-size:15px;transition:transform .3s;}
+:root.light .top-nav{background:rgba(240,244,248,.97);}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;}
+.top-nav{position:sticky;top:0;z-index:100;background:rgba(6,13,24,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:0;padding:0 16px;}
+.nav-tab{padding:14px 18px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:transparent;color:var(--muted);border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;}
+.nav-tab.active{color:var(--acc);border-bottom-color:var(--acc);}
+.nav-tab:hover:not(.active){color:var(--text);}
+.nav-brand{padding:12px 18px 12px 4px;font-size:14px;font-weight:800;color:var(--acc);letter-spacing:-.3px;margin-right:8px;border-right:1px solid var(--border);}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 16px;}
+.section{margin-bottom:32px;}
+.sec-hdr{margin-bottom:18px;}
+.sec-hdr h2{font-size:18px;font-weight:700;color:var(--text);}
+.sec-hdr .sub{font-size:12px;color:var(--muted);margin-top:3px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;}
+@media(max-width:700px){.g4{grid-template-columns:1fr 1fr;}.g2{grid-template-columns:1fr;}}
+.hcard{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+.hval{font-size:26px;font-weight:800;margin:4px 0;}
+.hlbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);}
+.hsub{font-size:11px;color:var(--faint);margin-top:3px;}
+.pbar-bg{height:5px;background:var(--navy);border-radius:3px;overflow:hidden;margin-top:6px;}
+.pbar-fill{height:100%;border-radius:3px;background:var(--acc);transition:width .4s;}
+.sub-tbl{width:100%;border-collapse:collapse;}
+.sub-tbl th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);}
+.sub-tbl td{padding:10px 10px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle;}
+.sub-tbl tr:hover td{background:rgba(0,212,255,.03);}
+.sub-expand{cursor:pointer;}
+.sub-expand td:first-child::before{content:'▶ ';font-size:9px;color:var(--muted);}
+.sub-expand.open td:first-child::before{content:'▼ ';color:var(--acc);}
+.sub-detail{display:none;background:var(--navy);}
+.sub-detail.open{display:table-row;}
+.sub-detail td{padding:14px 16px;border-bottom:1px solid var(--border);}
+.pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:700;}
+.pill-done{background:#003d1f;color:#4ade80;}
+.pill-prog{background:#001e2e;color:#00d4ff;}
+.pill-pend{background:#1a1a2e;color:#7a9ab5;}
+.pill-skip{background:#1a1200;color:#fbbf24;}
+.prog-wrap{display:flex;align-items:center;gap:8px;}
+.prog-bar{flex:1;height:6px;background:var(--navy);border-radius:3px;overflow:hidden;min-width:60px;}
+.prog-bar-inner{height:100%;border-radius:3px;transition:width .4s;}
+.prog-pct{font-size:11px;color:var(--muted);min-width:32px;text-align:right;}
+.inp{width:100%;background:var(--navy);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-size:13px;font-family:var(--font);resize:vertical;}
+.inp:focus{outline:none;border-color:var(--acc);}
+.inp-sm{background:var(--navy);border:1px solid var(--border);border-radius:6px;padding:5px 8px;color:var(--text);font-size:13px;font-family:var(--font);}
+.inp-sm:focus{outline:none;border-color:var(--acc);}
+select.inp-sm{cursor:pointer;}
+.lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);display:block;margin-bottom:5px;}
+.range-wrap{display:flex;align-items:center;gap:10px;}
+.range-wrap input[type=range]{flex:1;accent-color:var(--acc);}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--acc);background:transparent;color:var(--acc);transition:all .2s;}
+.btn:hover{background:var(--acc);color:var(--navy);}
+.btn-g{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--navy);color:var(--muted);transition:all .2s;}
+.btn-g:hover{border-color:var(--acc);color:var(--acc);}
+.btn-sm{padding:5px 10px;font-size:11px;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:var(--navy);color:var(--muted);font-family:var(--font);transition:all .2s;}
+.btn-sm:hover{border-color:var(--acc);color:var(--acc);}
+.ms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
+.ms-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;}
+.ms-card.earned{border-color:#4ade8066;background:linear-gradient(135deg,#001f0f 0%,#0d1e2e 100%);}
+.ms-card.pending{opacity:.6;}
+.ms-emoji{font-size:22px;margin-bottom:6px;}
+.ms-title{font-size:13px;font-weight:700;margin-bottom:3px;color:var(--text);}
+.ms-card.earned .ms-title{color:#e2e8f0;}
+.ms-sub{font-size:11px;color:var(--muted);}
+.ms-card.earned .ms-sub{color:#7a9ab5;}
+.ms-badge{display:inline-block;margin-top:8px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;}
+.ms-earned-badge{background:#003d1f;color:#4ade80;}
+.ms-locked-badge{background:#1a1a2e;color:#7a9ab5;}
+.habit-row{display:flex;gap:8px;flex-wrap:wrap;}
+.habit-btn{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--navy);color:var(--muted);transition:all .2s;}
+.habit-btn.active{border-color:var(--green);background:#003d1f;color:var(--green);}
+.target-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:14px;}
+.target-card{background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:12px 14px;}
+.target-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:6px;}
+.stepper-row{display:flex;align-items:center;gap:8px;}
+.stepper-btn{width:30px;height:30px;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--text);display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.stepper-btn:hover{border-color:var(--acc);color:var(--acc);}
+.stepper-btn.minus:hover{border-color:var(--red);color:var(--red);}
+.stepper-val{font-size:20px;font-weight:800;color:var(--acc);min-width:50px;text-align:center;}
+.stepper-delta{font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px;min-width:42px;text-align:center;}
+.delta-plus{background:#003d1f;color:#4ade80;}
+.delta-zero{background:#0d1e2e;color:#7a9ab5;}
+.delta-minus{background:#2d0000;color:#ef4444;}
+.vs-target{font-size:10px;color:var(--faint);margin-top:4px;}
+.sub-strip{background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;}
+.sub-strip-item{display:flex;flex-direction:column;gap:2px;}
+.sub-strip-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--faint);}
+.sub-strip-val{font-size:14px;font-weight:800;color:var(--acc);}
+.sub-strip-val.warn{color:var(--amber);}
+.sub-strip-val.ok{color:var(--green);}
+.date-nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+.date-nav-indicator{font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;}
+.date-past{background:#1a1200;color:#fbbf24;border:1px solid #fbbf2444;}
+.date-today{background:#003d1f;color:#4ade80;border:1px solid #4ade8044;}
+.date-future{background:#001e2e;color:#00d4ff;border:1px solid #00d4ff44;}
+.lp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;}
+.lp-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;}
+.lp-card.active-sub{border-color:var(--acc);box-shadow:0 0 12px rgba(0,212,255,.15);}
+.lp-name{font-size:14px;font-weight:700;margin-bottom:3px;}
+.lp-faculty{font-size:11px;color:var(--muted);margin-bottom:10px;}
+.lp-links{display:flex;flex-wrap:wrap;gap:7px;}
+.lp-link-y{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;background:#1a0a00;color:#fb923c;border:1px solid #fb923c44;text-decoration:none;transition:all .2s;}
+.lp-link-y:hover{background:#fb923c;color:#000;}
+.lp-link-c{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;background:#001e2e;color:var(--acc);border:1px solid #00d4ff44;text-decoration:none;transition:all .2s;}
+.lp-link-c:hover{background:var(--acc);color:var(--navy);}
+.data-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 16px;background:var(--navy);border-radius:8px;margin-bottom:18px;border:1px solid var(--border);}
+.data-status{font-size:12px;color:var(--muted);margin-left:auto;}
+.toast{position:fixed;bottom:24px;right:24px;padding:10px 18px;background:#003d1f;color:#4ade80;border-radius:8px;font-size:13px;font-weight:600;border:1px solid #4ade8044;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;}
+.toast.show{opacity:1;}
+.cel-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;display:none;align-items:center;justify-content:center;}
+.cel-overlay.show{display:flex;}
+.cel-box{background:var(--card);border:2px solid var(--acc);border-radius:16px;padding:32px 40px;text-align:center;max-width:420px;width:90%;}
+.cel-emoji{font-size:52px;margin-bottom:12px;}
+.cel-title{font-size:22px;font-weight:800;color:var(--acc);margin-bottom:6px;}
+.cel-sub{font-size:14px;color:var(--muted);margin-bottom:20px;}
+.cel-detail{font-size:13px;color:var(--text);margin-bottom:24px;}
+#confetti-canvas{position:fixed;inset:0;pointer-events:none;z-index:9998;}
+.storage-warn{background:#2d0a00;border:1px solid #ef444466;border-radius:8px;padding:12px 16px;font-size:13px;color:#fca5a5;margin-bottom:18px;display:none;}
+.mock-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
+.mock-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;}
+.mock-card.active-mock{border-color:var(--amber);}
+.mock-card.done-mock{border-color:#4ade8044;}
+/* ── LOCKED TAB OVERLAY ── */
+.tab-locked-wrap{position:relative;}
+.tab-locked-banner{position:sticky;top:53px;z-index:50;display:flex;align-items:center;justify-content:center;gap:10px;padding:9px 18px;background:rgba(26,18,0,.97);border-bottom:1px solid #fbbf2433;font-size:12px;font-weight:700;color:#fbbf24;letter-spacing:.3px;}
+.tab-locked-banner span{font-weight:400;color:var(--muted);}
+.tab-locked-content{pointer-events:none;user-select:none;opacity:.45;filter:grayscale(.35);}
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:var(--faint);}
+/* ── PYQ TAB ── */
+.pyq-sub-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;}
+.pyq-sub-tab{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--navy);color:var(--muted);transition:all .2s;}
+.pyq-sub-tab.active{border-color:var(--acc);background:#001e2e;color:var(--acc);}
+.pyq-sub-tab:hover:not(.active){border-color:var(--faint);color:var(--text);}
+.pyq-topic-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:20px;}
+.pyq-topic-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;position:relative;}
+.pyq-topic-card.conf-strong{border-left:3px solid #4ade80;}
+.pyq-topic-card.conf-moderate{border-left:3px solid #fbbf24;}
+.pyq-topic-card.conf-weak{border-left:3px solid #ef4444;}
+.pyq-topic-card.conf-none{border-left:3px solid var(--border);}
+.pyq-topic-name{font-size:13px;font-weight:700;margin-bottom:2px;line-height:1.3;}
+.pyq-topic-meta{font-size:11px;color:var(--muted);margin-bottom:10px;}
+.pyq-conf-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:10px;font-size:11px;font-weight:700;margin-bottom:10px;}
+.conf-badge-strong{background:#003d1f;color:#4ade80;}
+.conf-badge-moderate{background:#2d1900;color:#fbbf24;}
+.conf-badge-weak{background:#2d0000;color:#ef4444;}
+.conf-badge-none{background:#0d1e2e;color:#4a6a80;}
+.pyq-log-row{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;}
+.pyq-log-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);min-width:54px;}
+.pyq-num-inp{width:56px;background:var(--navy);border:1px solid var(--border);border-radius:6px;padding:5px 7px;color:var(--text);font-size:14px;font-weight:700;text-align:center;font-family:var(--font);}
+.pyq-num-inp:focus{outline:none;border-color:var(--acc);}
+.pyq-log-btn{padding:5px 13px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--acc);background:rgba(0,212,255,.1);color:var(--acc);font-family:var(--font);transition:all .15s;}
+.pyq-log-btn:hover{background:var(--acc);color:var(--navy);}
+.pyq-history-btn{font-size:10px;color:var(--faint);background:none;border:none;cursor:pointer;font-family:var(--font);padding:0;text-decoration:underline;}
+.pyq-history-btn:hover{color:var(--muted);}
+.pyq-history{margin-top:8px;border-top:1px solid var(--border);padding-top:8px;display:none;}
+.pyq-history.open{display:block;}
+.pyq-hist-row{display:flex;gap:8px;font-size:11px;color:var(--muted);padding:3px 0;align-items:center;}
+.pyq-hist-date{min-width:72px;color:var(--faint);}
+.pyq-hist-c{color:#4ade80;font-weight:700;}
+.pyq-hist-w{color:#ef4444;font-weight:700;}
+.pyq-hist-pct{background:#0d1e2e;border-radius:6px;padding:1px 7px;font-size:10px;font-weight:700;}
+.pyq-pbar-wrap{margin:6px 0 2px;}
+.pyq-pbar-bg{height:4px;background:var(--navy);border-radius:3px;overflow:hidden;}
+.pyq-pbar-fill{height:100%;border-radius:3px;transition:width .4s;}
+.pyq-totals{display:flex;gap:12px;margin-bottom:6px;flex-wrap:wrap;}
+.pyq-tot-item{font-size:11px;color:var(--muted);}
+.pyq-tot-item b{font-size:13px;font-weight:800;}
+.pyq-summary-bar{display:flex;gap:10px;flex-wrap:wrap;padding:12px 16px;background:var(--navy);border-radius:8px;margin-bottom:16px;border:1px solid var(--border);align-items:center;}
+.pyq-summary-item{display:flex;flex-direction:column;gap:1px;}
+.pyq-summary-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--faint);}
+.pyq-summary-val{font-size:16px;font-weight:800;}
+.pyq-weak-list{display:flex;flex-direction:column;gap:6px;}
+.pyq-weak-item{display:flex;align-items:center;gap:10px;background:var(--navy);border:1px solid #ef444422;border-radius:7px;padding:8px 12px;}
+.pyq-weak-name{flex:1;font-size:12px;font-weight:700;}
+.pyq-weak-pct{font-size:13px;font-weight:800;color:#ef4444;min-width:42px;text-align:right;}
+.pyq-open-link{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;background:#0a1022;color:#818cf8;border:1px solid #818cf822;text-decoration:none;transition:all .2s;}
+.pyq-open-link:hover{background:#818cf8;color:#000;}
+.pyq-chart-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px;}
+.pyq-no-data{text-align:center;padding:32px;color:var(--faint);font-size:13px;}
+.pyq-section-hdr{font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+
+
+
+.db-back-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 13px;border-radius:20px;
+  font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--border);
+  background:var(--navy);color:var(--muted);font-family:var(--font);transition:all .2s;}
+.db-back-btn:hover{border-color:var(--acc);color:var(--acc);}
+.db-back-bar{display:flex;justify-content:flex-end;padding:10px 0 0;}
+/* ── PYQ SUBJECT QUIZ ── */
+.pyq-quiz-card{background:var(--navy);border:1px solid var(--acc);border-radius:var(--radius);padding:16px 18px;margin-bottom:20px;}
+.pyq-quiz-title{font-size:13px;font-weight:700;color:var(--acc);margin-bottom:2px;}
+.pyq-quiz-sub{font-size:11px;color:var(--muted);margin-bottom:14px;}
+.pyq-quiz-log-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.pyq-quiz-inp{width:62px;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 8px;color:var(--text);font-size:15px;font-weight:700;text-align:center;font-family:var(--font);}
+.pyq-quiz-inp:focus{outline:none;border-color:var(--acc);}
+.pyq-quiz-btn{padding:6px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--acc);background:rgba(0,212,255,.12);color:var(--acc);font-family:var(--font);transition:all .15s;}
+.pyq-quiz-btn:hover{background:var(--acc);color:var(--navy);}
+.pyq-quiz-stats{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px;}
+.pyq-quiz-stat-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);}
+.pyq-quiz-stat-val{font-size:18px;font-weight:800;}
+/* ══ DASHBOARD TAB ══ */
+.db-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-bottom:24px;}
+.db-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;cursor:pointer;transition:border-color .2s,box-shadow .2s;position:relative;overflow:hidden;}
+.db-card:hover{border-color:var(--acc);box-shadow:0 0 18px rgba(0,212,255,.12);}
+.db-card::after{content:'→';position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:18px;color:var(--faint);transition:color .2s,right .2s;}
+.db-card:hover::after{color:var(--acc);right:12px;}
+.db-card-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.db-card-icon{font-size:22px;line-height:1;}
+.db-card-title{font-size:14px;font-weight:800;color:var(--text);}
+.db-card-sub{font-size:11px;color:var(--muted);margin-top:1px;}
+.db-stat-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:10px;}
+.db-stat{display:flex;flex-direction:column;gap:1px;}
+.db-stat-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--faint);}
+.db-stat-val{font-size:20px;font-weight:800;line-height:1.1;}
+.db-pbar{height:5px;background:var(--navy);border-radius:3px;overflow:hidden;margin-top:8px;}
+.db-pbar-fill{height:100%;border-radius:3px;transition:width .5s;}
+.db-tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+.db-tag{font-size:10px;font-weight:700;padding:2px 9px;border-radius:10px;background:var(--navy);color:var(--muted);}
+.db-tag.green{background:#002d14;color:#4ade80;}
+.db-tag.amber{background:#2a1600;color:#fbbf24;}
+.db-tag.red{background:#2a0000;color:#ef4444;}
+.db-tag.blue{background:#001e2e;color:#00d4ff;}
+.db-tag.purple{background:#1e0a3c;color:#c084fc;}
+.db-today-card{background:var(--card);border:1px solid var(--acc);border-radius:var(--radius);padding:16px 20px;margin-bottom:24px;display:flex;gap:24px;flex-wrap:wrap;align-items:center;}
+.db-today-item{display:flex;flex-direction:column;gap:2px;}
+.db-today-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--faint);}
+.db-today-val{font-size:22px;font-weight:800;}
+.db-go-btn{padding:8px 18px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--acc);background:rgba(0,212,255,.1);color:var(--acc);white-space:nowrap;transition:all .2s;}
+.db-go-btn:hover{background:var(--acc);color:var(--navy);}
+.db-section-hdr{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+
+/* ══ DISCIPLINE CARD ══ */
+.disc-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:24px;transition:border-color .2s;}
+.disc-card:hover{border-color:var(--acc);}
+.disc-compact{display:flex;align-items:center;gap:18px;flex-wrap:wrap;cursor:pointer;}
+.disc-ring-wrap{position:relative;flex-shrink:0;}
+.disc-ring-lbl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;}
+.disc-ring-score{font-size:18px;font-weight:800;line-height:1;}
+.disc-ring-txt{font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+.disc-stats{display:flex;gap:16px;flex-wrap:wrap;flex:1;}
+.disc-stat{display:flex;flex-direction:column;gap:1px;}
+.disc-stat-val{font-size:20px;font-weight:800;line-height:1.1;}
+.disc-stat-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--faint);}
+.disc-expand-btn{margin-left:auto;background:var(--navy);border:1px solid var(--border);border-radius:7px;padding:6px 13px;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .2s;}
+.disc-expand-btn:hover{border-color:var(--acc);color:var(--acc);}
+.disc-detail{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;display:none;}
+.disc-detail.open{display:block;}
+.disc-signals{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+@media(max-width:600px){.disc-signals{grid-template-columns:1fr;}}
+.disc-signal{background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:10px 13px;display:flex;align-items:center;gap:10px;}
+.disc-signal.earned{border-color:#4ade8055;background:#002d1444;}
+.disc-signal.missed{border-color:#ef444455;background:#2a000044;}
+.disc-sig-icon{font-size:18px;flex-shrink:0;}
+.disc-sig-body{flex:1;min-width:0;}
+.disc-sig-name{font-size:11px;font-weight:700;color:var(--text);}
+.disc-sig-note{font-size:10px;color:var(--muted);margin-top:1px;}
+.disc-sig-pts{font-size:13px;font-weight:800;margin-left:auto;flex-shrink:0;}
+.disc-sig-pts.earned{color:#4ade80;}
+.disc-sig-pts.missed{color:#ef4444;}
+.disc-manual-toggle{background:var(--navy);border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;cursor:pointer;color:var(--muted);transition:all .2s;}
+.disc-manual-toggle.on{background:#002d14;border-color:#4ade80;color:#4ade80;}
+.disc-plan-section{margin-top:14px;border-top:1px solid var(--border);padding-top:12px;}
+.disc-plan-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.disc-plan-title{font-size:12px;font-weight:700;color:var(--text);}
+.disc-plan-date{font-size:11px;color:var(--muted);}
+.disc-block{background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:10px 13px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.disc-block.done-block{border-color:#4ade8066;background:#002d1433;}
+.disc-block.missed-block{border-color:#ef444466;background:#2a000033;}
+.disc-block-info{flex:1;min-width:120px;}
+.disc-block-time{font-size:11px;font-weight:700;color:var(--acc);}
+.disc-block-desc{font-size:11px;color:var(--text);margin-top:1px;}
+.disc-block-btns{display:flex;gap:6px;flex-shrink:0;}
+.disc-block-btn{padding:4px 11px;border-radius:14px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .2s;}
+.disc-block-btn.done{border-color:#4ade80;color:#4ade80;background:#002d14;}
+.disc-block-btn.miss{border-color:#ef4444;color:#ef4444;background:#2a0000;}
+.disc-add-block{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;}
+.disc-inp{background:var(--navy);border:1px solid var(--border);border-radius:6px;padding:5px 9px;font-size:11px;color:var(--text);outline:none;}
+.disc-inp:focus{border-color:var(--acc);}
+.disc-btn-add{padding:5px 13px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--acc);background:rgba(0,212,255,.1);color:var(--acc);}
+.disc-heatmap{margin-top:14px;border-top:1px solid var(--border);padding-top:12px;}
+.disc-hm-title{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;}
+.disc-hm-grid{display:flex;flex-wrap:wrap;gap:2px;}
+.disc-hm-cell{width:12px;height:12px;border-radius:2px;cursor:pointer;transition:transform .1s;}
+.disc-hm-cell:hover{transform:scale(1.3);}
+.disc-plan-editor{background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:12px;}
+.disc-wake-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.disc-wake-lbl{font-size:11px;font-weight:700;color:var(--text);}
+.disc-section-mini{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:10px 0 6px;}
+
+/* ── enriched block form ── */
+.disc-act-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.disc-act-btn{padding:4px 12px;border-radius:14px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .2s;}
+.disc-act-btn.sel-study{border-color:#00d4ff;background:rgba(0,212,255,.12);color:#00d4ff;}
+.disc-act-btn.sel-rev1{border-color:#c084fc;background:rgba(192,132,252,.12);color:#c084fc;}
+.disc-act-btn.sel-pyq{border-color:#fbbf24;background:rgba(251,191,36,.12);color:#fbbf24;}
+.disc-form-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px;}
+.disc-form-lbl{font-size:10px;font-weight:700;color:var(--muted);min-width:52px;}
+.disc-block-link{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;text-decoration:none;margin-left:4px;}
+.disc-block-link.yt{background:#ff000022;color:#ff4444;border:1px solid #ff444444;}
+.disc-block-link.rev{background:#c084fc22;color:#c084fc;border:1px solid #c084fc44;}
+.disc-block-link.pq{background:#fbbf2422;color:#fbbf24;border:1px solid #fbbf2444;}
+.disc-block-act{font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;}
+.disc-block-act.study{background:#00d4ff22;color:#00d4ff;}
+.disc-block-act.rev1{background:#c084fc22;color:#c084fc;}
+.disc-block-act.pyq{background:#fbbf2422;color:#fbbf24;}
+.disc-edit-row{display:none;margin-top:7px;padding-top:7px;border-top:1px solid var(--border);align-items:center;gap:6px;}
+.disc-edit-row.visible{display:flex;}
+.disc-edit-inp{background:var(--card);border:1px solid var(--acc);border-radius:6px;padding:4px 8px;color:var(--text);font-size:11px;flex:1;min-width:140px;outline:none;}
+.disc-edit-save{padding:3px 10px;border-radius:10px;font-size:10px;font-weight:700;cursor:pointer;border:none;background:var(--acc);color:var(--navy);}
+.disc-edit-cancel{padding:3px 10px;border-radius:10px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);}
+.disc-block-dur{font-size:10px;color:var(--faint);margin-left:4px;}
+</style>
+</head>
+<body>
+<!-- Firebase Loading Overlay -->
+<div id="fb-loading" style="position:fixed;inset:0;background:#060d18;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:99999;gap:16px;">
+  <div style="font-size:48px;">⚡</div>
+  <div style="color:#00d4ff;font-size:20px;font-weight:700;letter-spacing:1px;">G2027 Study Planner</div>
+  <div style="color:#7a9ab5;font-size:14px;" id="fb-status">Connecting to cloud...</div>
+  <div style="width:200px;height:3px;background:#1a3248;border-radius:2px;overflow:hidden;margin-top:8px;">
+    <div id="fb-bar" style="width:0%;height:100%;background:#00d4ff;border-radius:2px;transition:width 0.4s ease;"></div>
+  </div>
+</div>
+<nav class="top-nav">
+  <div class="nav-brand">⚡ G2027</div>
+  <button class="nav-tab active" onclick="switchMainTab('dashboard')">🏠 Dashboard</button>
+  <button class="nav-tab" onclick="switchMainTab('study')">📚 Study</button>
+  <button class="nav-tab" onclick="switchMainTab('rev1')">📖 Revision 1</button>
+  <button class="nav-tab" onclick="switchMainTab('pyq')">🎯 PYQ</button>
+  <button class="nav-tab" onclick="switchMainTab('rev2')">🚀 Rev 2 & Mocks</button>
+  <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">
+    <span class="tt-icon" id="tt-icon">🌙</span><span id="tt-label">Dark</span>
+  </button>
+</nav>
+<div id="toast" class="toast">Saved</div>
+<canvas id="confetti-canvas"></canvas>
+<div class="cel-overlay" id="cel-overlay">
+  <div class="cel-box">
+    <div class="cel-emoji" id="cel-emoji">🏆</div>
+    <div class="cel-title" id="cel-title">Achievement Unlocked!</div>
+    <div class="cel-sub" id="cel-sub"></div>
+    <div class="cel-detail" id="cel-detail"></div>
+    <button class="btn" onclick="closeCelebration()">Continue 🎯</button>
+    <div id="cel-count" style="font-size:11px;color:var(--faint);margin-top:10px;"></div>
+  </div>
+</div>
+
+
+<!-- DASHBOARD TAB -->
+<div class="tab-panel active" id="panel-dashboard">
+<div class="wrap"><div id="db-root"></div></div>
+</div>
+
+<!-- STUDY TAB -->
+<div class="tab-panel" id="panel-study">
+<div class="wrap">
+  <div class="storage-warn" id="storage-warn">⚠ localStorage not available.</div>
+  <div class="data-bar">
+    <button class="btn-g" onclick="exportData()">📤 Export backup</button>
+    <button class="btn-g" onclick="importData()">📥 Import backup</button>
+    <button class="btn-g" onclick="copyData()">📋 Copy to clipboard</button>
+    <span class="data-status" id="data-status">All changes auto-saved</span>
+  </div>
+  <div class="section">
+    <div class="sec-hdr"><h2>Journey Progress</h2><div class="sub" id="prog-sub"></div></div>
+    <div class="g4" id="hero-cards"></div>
+    <div class="card" style="margin-top:12px;padding:14px 16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="font-size:12px;font-weight:700;color:var(--muted);">OVERALL JOURNEY</span>
+        <span id="journey-pct" style="font-size:12px;font-weight:700;color:var(--acc);"></span>
+      </div>
+      <div class="pbar-bg" style="height:8px;"><div class="pbar-fill" id="journey-bar"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:10px;color:var(--faint);">
+        <span id="journey-start"></span><span id="journey-end"></span>
+      </div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="sec-hdr"><h2>Today's Entry</h2><div class="sub">Log your day — navigate dates with arrows</div></div>
+    <div class="card">
+      <div class="date-nav">
+        <button class="btn-sm" onclick="navDate(-1)" style="width:32px;height:32px;font-size:16px;">◀</button>
+        <input type="date" id="entry-date" class="inp-sm" onchange="changeEntryDate(this.value)" style="cursor:pointer;">
+        <button class="btn-sm" onclick="navDate(1)" style="width:32px;height:32px;font-size:16px;">▶</button>
+        <button class="btn-sm" onclick="changeEntryDate(TODAY)">↩ Today</button>
+        <span id="entry-day-label" style="font-size:12px;color:var(--muted);"></span>
+        <span id="entry-date-indicator" class="date-nav-indicator"></span>
+      </div>
+      <div class="sub-strip" id="sub-strip"></div>
+      <div class="target-grid" id="target-grid"></div>
+      <div style="margin-top:16px;"><label class="lbl">Habits</label><div class="habit-row" id="habit-row"></div></div>
+      <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div>
+          <label class="lbl">Subject being studied
+            <button id="sub-override-btn" onclick="enableSubOverride()" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--muted);padding:0 4px;">✏️</button>
+          </label>
+          <select class="inp-sm inp" id="entry-subject" onchange="onSubjectChange()" style="width:100%;"></select>
+        </div>
+        <div>
+          <label class="lbl">Videos watched today</label>
+          <input class="inp-sm inp" type="number" min="0" id="entry-vids" oninput="saveEntryField('videosToday',this.value)" style="width:100%;">
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <div class="section">
+    <div class="sec-hdr"><h2>Subject Progress</h2><div class="sub">Click row to expand</div></div>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="sub-tbl">
+        <thead><tr><th>#</th><th>Subject</th><th>Faculty</th><th>Window</th><th>Status</th><th>Videos</th><th>Progress</th><th>Confidence</th></tr></thead>
+        <tbody id="sub-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="section">
+    <div class="sec-hdr"><h2>Learning Path</h2><div class="sub">Direct links to playlists & courses</div></div>
+    <div class="lp-grid" id="lp-grid"></div>
+  </div>
+  <div class="section">
+    <div class="sec-hdr"><h2>Milestones</h2><div class="sub" id="ms-sub"></div></div>
+    <div class="ms-grid" id="ms-grid"></div>
+  </div>
+</div>
+</div>
+
+<!-- REVISION 1 TAB -->
+<div class="tab-panel" id="panel-rev1">
+<div class="tab-locked-wrap" id="rev1-wrap">
+<div class="wrap"><div id="sec-rev1"></div></div>
+</div>
+</div>
+
+<!-- REVISION 2 TAB -->
+<div class="tab-panel" id="panel-rev2">
+<div class="tab-locked-wrap" id="rev2-wrap">
+<div class="wrap"><div id="sec-rev2"></div></div>
+</div>
+</div>
+
+<!-- PYQ CONFIDENCE TRACKER TAB -->
+<div class="tab-panel" id="panel-pyq">
+<div class="wrap">
+  <div class="section">
+    <div class="sec-hdr"><h2>PYQ Confidence Tracker</h2><div class="sub">Log your PrepFusion PYQ sessions — track correct/wrong per topic, monitor improvement over time</div></div>
+    <div id="pyq-summary-bar"></div>
+    <div class="pyq-sub-tabs" id="pyq-sub-tabs"></div>
+    <div id="pyq-weak-section"></div>
+    <div id="pyq-chart-section"></div>
+    <div id="pyq-topic-area"></div>
+  </div>
+</div>
+</div>
+
+
+
+<script>
+/* GATE 2027 DASHBOARD v9 — Aug 12 2026 */
+const START='2026-06-22', EXAM='2026-12-31';
+function _today(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+const TODAY=_today();
+function diffDays(a,b){return Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000);}
+function addDays(d,n){const dt=new Date(d+'T00:00:00');dt.setDate(dt.getDate()+n);return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;}
+function dayOfWeek(d){return new Date(d+'T00:00:00').getDay();}
+function isWeekend(d){const w=dayOfWeek(d);return w===0||w===6;}
+const MOS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DAYS_FULL=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+function fmt(d){if(!d)return'—';const[y,m,dd]=d.split('-');return`${+dd} ${MOS[+m-1]}`;}
+function fmtFull(d){if(!d)return'—';const[y,m,dd]=d.split('-');return`${+dd} ${MOS[+m-1]} ${y}`;}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function $(id){return document.getElementById(id);}
+
+/* ── SUBJECTS v9 ──
+   Updated from image + playlist fetches Aug 12 2026:
+   Network Analysis  : 17/08 – 30/08 (14 days)   → still Ankit Goyal
+   Signals & Systems : 31/08 – 13/09 (14 days)
+   Control Systems   : 14/09 – 27/09 (14 days)
+   Measurements      : 28/09 – 04/10 (7 days)  → Ankit Goyal, 6 vids, ~15h
+   EMFT              : 05/10 – 11/10 (7 days)  → Vishal Soni, 20 vids, ~20h
+   Electrical Machines: 12/10 – 01/11 (21 days)
+   Power System      : 02/11 – 22/11 (21 days)
+   Power Electronics : 23/11 – 13/12 (21 days)
+   Analog+Digital    : 14/12 – 03/01 (21 days)
+   Aptitude+Maths    : 28/12 – 03/01 (7 days — overlap intentional per image)
+*/
+const SEED_SUBJECTS=[
+  {id:1, name:'NETWORK ANALYSIS', faculty:'Ankit Goyal', start:'2026-06-22', end:'2026-07-07', days:16, videos:33, targetHrs:70, status:'Completed', confidence:10, remarks:''},
+  {id:2, name:'SIGNALS & SYSTEMS', faculty:'Ankit Goyal', start:'2026-07-08', end:'2026-07-25', days:18, videos:49, targetHrs:80, status:'Completed', confidence:5, remarks:''},
+  {id:3, name:'CONTROL SYSTEMS', faculty:'Ankit Goyal', start:'2026-07-26', end:'2026-08-10', days:16, videos:59, targetHrs:70, status:'Completed', confidence:5, remarks:''},
+  {id:4, name:'MEASUREMENTS', faculty:'Ankit Goyal', start:'2026-08-11', end:'2026-08-16', days:6, videos:6, targetHrs:15, status:'Completed', confidence:4, remarks:''},
+  {id:5, name:'EMFT', faculty:'Vishal Soni', start:'2026-08-17', end:'2026-08-26', days:10, videos:20, targetHrs:20, status:'Completed', confidence:3, remarks:''},
+  {id:6, name:'ELECTRICAL MACHINES', faculty:'Ankit Goyal', start:'2026-09-07', end:'2026-09-30', days:24, videos:24, targetHrs:48, status:'In Progress', confidence:10, remarks:''},
+  {id:7, name:'POWER SYSTEM', faculty:'Ankit Goyal', start:'2026-10-01', end:'2026-10-15', days:15, videos:77, targetHrs:50, status:'Not Started', confidence:0, remarks:''},
+  {id:8, name:'POWER ELECTRONICS', faculty:'Ankit Goyal', start:'2026-10-16', end:'2026-10-31', days:16, videos:68, targetHrs:102, status:'Not Started', confidence:0, remarks:''},
+  {id:9, name:'DIGITAL ELECTRONICS', faculty:'Sujay', start:'2026-11-01', end:'2026-11-10', days:10, videos:16, targetHrs:32, status:'Not Started', confidence:0, remarks:''},
+  {id:10, name:'ANALOG ELECTRONICS', faculty:'Ankit Goyal', start:'2026-11-11', end:'2026-11-30', days:20, videos:61, targetHrs:110, status:'Not Started', confidence:0, remarks:''},
+  {id:11, name:'APTITUDE + MATHEMATICS', faculty:'Himanshu Agarwal', start:'2026-12-01', end:'2026-12-31', days:31, videos:72, targetHrs:215, status:'Not Started', confidence:0, remarks:''},
+];
+
+const SUBJECT_LINKS={
+  1:{yt:'https://www.youtube.com/playlist?list=PLm_MSClsnwm8p9-CZBNEjrn7W7CtLZKhV'},
+  2:{yt:'https://www.youtube.com/playlist?list=PLm_MSClsnwm9K8QfEMXKX2ILsRuMmT6n5'},
+  3:{yt:'https://www.youtube.com/playlist?list=PLm_MSClsnwm9zEHROFMSQtcf2YLTcJSSq'},
+  4:{yt:'https://www.youtube.com/playlist?list=PLs5_Rtf2P2r6rQ5-DSe-MSDBlrpz8fSz_'},
+  5:{yt:'https://www.youtube.com/playlist?list=PLs5_Rtf2P2r5_0pNT0vc2UV3jgcvek8sl'},
+  6:{yt:'https://www.youtube.com/playlist?list=PLs5_Rtf2P2r71GKGBlEiNh0l7paphzX2D'},
+  7:{yt:'https://www.youtube.com/playlist?list=PLs5_Rtf2P2r6Mlz9ObmcKx-SfNbIFfyVh'},
+  8:{yt:'https://www.youtube.com/playlist?list=PLs5_Rtf2P2r5KREX_ijxw2Sz-ISNhAgH4'},
+  9:{yt:'https://www.youtube.com/playlist?list=PLgzsL8klq6DKnltogpZsroj0yG-MlFLNL'},
+  10:{yt:'https://www.youtube.com/playlist?list=PLs5_Rtf2P2r5MplAOADz3fTWIyBZTkGbB'},
+  11:{pf_m:'https://prepfusion.in/new-courses/98/content?activeTab=Content',pf_a:'https://prepfusion.in/new-courses/96/content?activeTab=Content',yt_a:'https://www.youtube.com/playlist?list=PLgF7lRh8Xb_WWuQ39i48DruAyzb_voYYD',yt_m:'https://www.youtube.com/playlist?list=PLgF7lRh8Xb_UmswOfvBO371uK1Sa7ZF5I'},
+};
+
+/* ── DAILY SEED — exact from backup gate2027-backup-2026-08-12.json ── */
+const DAILY_SEED={
+  "2026-06-22": {
+    "studyHrs": 6,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 1
+  },
+  "2026-06-23": {
+    "studyHrs": 6,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 1
+  },
+  "2026-06-24": {
+    "studyHrs": 5.5,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 1
+  },
+  "2026-06-25": {
+    "studyHrs": 7,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 1
+  },
+  "2026-06-26": {
+    "studyHrs": 4,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 1
+  },
+  "2026-06-27": {
+    "studyHrs": 0,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 1
+  },
+  "2026-06-28": {
+    "studyHrs": 0,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 1
+  },
+  "2026-06-29": {
+    "studyHrs": 7,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 1
+  },
+  "2026-06-30": {
+    "studyHrs": 3,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 1
+  },
+  "2026-07-01": {
+    "studyHrs": 3,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 1
+  },
+  "2026-07-02": {
+    "studyHrs": 10,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 1
+  },
+  "2026-07-03": {
+    "studyHrs": 7,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 1
+  },
+  "2026-07-04": {
+    "studyHrs": 0,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 1
+  },
+  "2026-07-05": {
+    "studyHrs": 0,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 1
+  },
+  "2026-07-06": {
+    "studyHrs": 4,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 1
+  },
+  "2026-07-07": {
+    "studyHrs": 5,
+    "videosToday": 3,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 1
+  },
+  "2026-07-08": {
+    "studyHrs": 4,
+    "videosToday": 3,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 2
+  },
+  "2026-07-09": {
+    "studyHrs": 3,
+    "videosToday": 3,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 2
+  },
+  "2026-07-10": {
+    "studyHrs": 1,
+    "videosToday": 3,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 2
+  },
+  "2026-07-11": {
+    "studyHrs": 6,
+    "videosToday": 3,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 2
+  },
+  "2026-07-12": {
+    "studyHrs": 4,
+    "videosToday": 3,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 2
+  },
+  "2026-07-13": {
+    "studyHrs": 4,
+    "videosToday": 3,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 2
+  },
+  "2026-07-14": {
+    "studyHrs": 1,
+    "videosToday": 3,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 2
+  },
+  "2026-07-15": {
+    "studyHrs": 2,
+    "videosToday": 3,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 2
+  },
+  "2026-07-16": {
+    "studyHrs": 3,
+    "videosToday": 3,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 2
+  },
+  "2026-07-17": {
+    "studyHrs": 3,
+    "videosToday": 3,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 2
+  },
+  "2026-07-18": {
+    "studyHrs": 3,
+    "videosToday": 3,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 2
+  },
+  "2026-07-19": {
+    "studyHrs": 3,
+    "videosToday": 3,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 2
+  },
+  "2026-07-20": {
+    "studyHrs": 6,
+    "videosToday": 3,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 2
+  },
+  "2026-07-21": {
+    "studyHrs": 6,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 2
+  },
+  "2026-07-22": {
+    "studyHrs": 6,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 2
+  },
+  "2026-07-23": {
+    "studyHrs": 6,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 2
+  },
+  "2026-07-24": {
+    "studyHrs": 6,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 2
+  },
+  "2026-07-25": {
+    "studyHrs": 6,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 2
+  },
+  "2026-07-26": {
+    "studyHrs": 6,
+    "videosToday": 0,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 3
+  },
+  "2026-07-27": {
+    "studyHrs": 5,
+    "videosToday": 4,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 3
+  },
+  "2026-07-28": {
+    "studyHrs": 6.5,
+    "videosToday": 4,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 3
+  },
+  "2026-07-29": {
+    "studyHrs": 4,
+    "videosToday": 4,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 3
+  },
+  "2026-07-30": {
+    "studyHrs": 2.5,
+    "videosToday": 4,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 3
+  },
+  "2026-07-31": {
+    "studyHrs": 2.5,
+    "videosToday": 4,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 3
+  },
+  "2026-08-01": {
+    "studyHrs": 2.5,
+    "videosToday": 4,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 3
+  },
+  "2026-08-02": {
+    "studyHrs": 3,
+    "videosToday": 4,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 3
+  },
+  "2026-08-03": {
+    "studyHrs": 5,
+    "videosToday": 4,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 3
+  },
+  "2026-08-04": {
+    "studyHrs": 4,
+    "videosToday": 4,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 3
+  },
+  "2026-08-05": {
+    "studyHrs": 5,
+    "videosToday": 5,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 3
+  },
+  "2026-08-06": {
+    "studyHrs": 4,
+    "videosToday": 5,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 3
+  },
+  "2026-08-07": {
+    "studyHrs": 4,
+    "videosToday": 5,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 3
+  },
+  "2026-08-08": {
+    "studyHrs": 4,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 3
+  },
+  "2026-08-09": {
+    "studyHrs": 4,
+    "videosToday": 3,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 3
+  },
+  "2026-08-10": {
+    "studyHrs": 4,
+    "videosToday": 3,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 3
+  },
+  "2026-08-11": {
+    "studyHrs": 0,
+    "videosToday": 0,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 4
+  },
+  "2026-08-12": {
+    "studyHrs": 0,
+    "videosToday": 0,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 4
+  },
+  "2026-08-13": {
+    "studyHrs": 0,
+    "videosToday": 0,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "",
+    "subjectId": 4
+  },
+  "2026-08-14": {
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "subjectId": 4,
+    "studyHrs": 3.5,
+    "videosToday": 2
+  },
+  "2026-08-15": {
+    "studyHrs": 5,
+    "subjectId": 4,
+    "videosToday": 2,
+    "habits": {
+      "exercise": true,
+      "chess": true,
+      "perfect": true,
+      "gate": true
+    }
+  },
+  "2026-08-16": {
+    "studyHrs": 5,
+    "subjectId": 4,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    }
+  },
+  "2026-08-17": {
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "subjectId": 5,
+    "studyHrs": 2,
+    "videosToday": 2,
+    "note": "S1: [Done as planned] Vector Algebra, Rectangular and Cylindrical Coordinates | S2: [Done as planned] Basics of Network Analysis Concept"
+  },
+  "2026-08-18": {
+    "studyHrs": 2,
+    "subjectId": 5,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    }
+  },
+  "2026-08-19": {
+    "studyHrs": 2,
+    "subjectId": 5,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "S1: [Done as planned] Open, Closed Line & Surface Integral | S2: [Done as planned] Network Theorems Concept and Problems"
+  },
+  "2026-08-20": {
+    "studyHrs": 1.5,
+    "subjectId": 5,
+    "videosToday": 2,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "S1: [Done as planned] Properties of Charge & Coulombs Law, Electric Field Intensity | S2: [Done as planned] Transient Analysis - RC circuits"
+  },
+  "2026-08-21": {
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "subjectId": 5,
+    "studyHrs": 2,
+    "videosToday": 3
+  },
+  "2026-08-22": {
+    "studyHrs": 2,
+    "subjectId": 5,
+    "videosToday": 3,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "S1: [Done as planned] Capacitor & Method of Images | S2: [Done as planned] Transient Analysis Concepts & Problems | S3: [Done as planned] PYQs for the Basics of Network, Network Theorems & Transient Analysis"
+  },
+  "2026-08-23": {
+    "studyHrs": 2,
+    "subjectId": 5,
+    "videosToday": 3,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "S1: [Done as planned] Magnetic Fields, Biot Savart Law, Magnetic Flux and Boundary Conditions | S2: Watched Movie of Irumundi | S3: Not Completed"
+  },
+  "2026-08-24": {
+    "studyHrs": 2,
+    "subjectId": 5,
+    "videosToday": 1,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "note": "S1: [Done as planned] Time Varying Fields - 1 | S2: [Done as planned] Polar Plot, Power & Triangle Concepts and Problems"
+  },
+  "2026-08-25": {
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "subjectId": 5,
+    "studyHrs": 3,
+    "videosToday": 2,
+    "note": ""
+  },
+  "2026-08-26": {
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "subjectId": 5
+  },
+  "2026-08-27": {
+    "studyHrs": 0,
+    "subjectId": 6,
+    "videosToday": 0,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    }
+  },
+  "2026-08-28": {
+    "habits": {
+      "chess": true,
+      "perfect": true,
+      "exercise": true,
+      "gate": true
+    },
+    "subjectId": 6,
+    "studyHrs": 0,
+    "videosToday": 0
+  },
+  "2026-08-29": {
+    "studyHrs": 0,
+    "subjectId": 6,
+    "videosToday": 0,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    }
+  },
+  "2026-08-30": {
+    "studyHrs": 0,
+    "subjectId": 6,
+    "videosToday": 0,
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    }
+  },
+  "2026-08-31": {
+    "habits": {
+      "exercise": true,
+      "chess": true,
+      "perfect": true,
+      "gate": true
+    },
+    "subjectId": 6,
+    "studyHrs": 0,
+    "videosToday": 0
+  },
+  "2026-09-01": {
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "subjectId": 6,
+    "studyHrs": 0,
+    "videosToday": 0
+  },
+  "2026-09-02": {
+    "habits": {
+      "gate": true,
+      "exercise": true,
+      "chess": true,
+      "perfect": true
+    },
+    "subjectId": 6,
+    "studyHrs": 0,
+    "videosToday": 0
+  }
+};
+
+const SEED_MILESTONES=["sub1_done", "sub2_done", "streak_7", "streak_14", "streak_21", "streak_30", "day_30", "hrs_50", "hrs_100", "hrs_200", "streak_50", "sub3_done", "rev1_start", "day_60", "sub5_done", "sub4_done"];
+const SEED_SETTINGS={"dailyHrsTarget": 5.5, "dailyVidsTarget": 3};
+
+const MILESTONE_DEFS=[
+  {id:'sub1_done', emoji:'🔬',title:'Network Complete',    sub:'Finish Network Analysis',        detail:'Subject 1/11 done!'},
+  {id:'sub2_done', emoji:'〰️',title:'Signals Complete',    sub:'Finish Signals & Systems',       detail:'Subject 2/11 done!'},
+  {id:'sub3_done', emoji:'⚙️',title:'Control Complete',    sub:'Finish Control Systems',         detail:'Subject 3/11 done!'},
+  {id:'sub4_done', emoji:'📏',title:'Measurements Done',   sub:'Finish Measurements',            detail:'Subject 4/11 done!'},
+  {id:'sub5_done', emoji:'⚡',title:'EMFT Complete',       sub:'Finish EMFT',                    detail:'Subject 5/11 done!'},
+  {id:'sub6_done', emoji:'🔌',title:'Machines Complete',   sub:'Finish Electrical Machines',     detail:'Subject 6/11 done!'},
+  {id:'sub7_done', emoji:'🔋',title:'Power System Done',   sub:'Finish Power System',            detail:'Subject 7/11 done!'},
+  {id:'sub8_done', emoji:'💡',title:'PE Complete',         sub:'Finish Power Electronics',       detail:'Subject 8/11 done!'},
+  {id:'sub9_done', emoji:'💻',title:'Digital Done',        sub:'Finish Digital Electronics',     detail:'Subject 9/11 done!'},
+  {id:'sub10_done',emoji:'🔊',title:'Analog Done',         sub:'Finish Analog Electronics',      detail:'Subject 10/11 done!'},
+  {id:'sub11_done',emoji:'🧮',title:'Aptitude Done',       sub:'Finish Aptitude + Maths',        detail:'All 11 subjects complete!'},
+  {id:'streak_7',  emoji:'🔥',title:'Week Warrior',        sub:'7-day GATE streak',              detail:'7 days in a row!'},
+  {id:'streak_14', emoji:'🔥',title:'Fortnight Fire',      sub:'14-day GATE streak',             detail:'14 consecutive days!'},
+  {id:'streak_21', emoji:'🔥',title:'3-Week Blazer',       sub:'21-day GATE streak',             detail:'3 weeks straight!'},
+  {id:'streak_30', emoji:'🏆',title:'Month Master',        sub:'30-day GATE streak',             detail:'30-day streak!'},
+  {id:'streak_50', emoji:'👑',title:'50-Day Legend',       sub:'50-day GATE streak',             detail:'50 consecutive days!'},
+  {id:'streak_100',emoji:'🌟',title:'Century Streak',      sub:'100-day GATE streak',            detail:'100 days straight!'},
+  {id:'day_30',    emoji:'📅',title:'30 Days In',          sub:'Day 30 of the journey',          detail:'One month done!'},
+  {id:'day_60',    emoji:'📅',title:'60 Days In',          sub:'Day 60 of the journey',          detail:'Two months in!'},
+  {id:'day_100',   emoji:'📅',title:'100 Days In',         sub:'Day 100 of the journey',         detail:'100 days of dedication!'},
+  {id:'day_150',   emoji:'📅',title:'150 Days In',         sub:'Day 150 of the journey',         detail:'150 days strong!'},
+  {id:'day_193',   emoji:'🎓',title:'Journey Complete',    sub:'Day 193 — exam day',             detail:'Made it to GATE!'},
+  {id:'hrs_50',    emoji:'⏰',title:'50 Hours',            sub:'50 study hours logged',          detail:'First 50 hours!'},
+  {id:'hrs_100',   emoji:'⏰',title:'Century Hours',       sub:'100 study hours logged',         detail:'100 hours of GATE prep!'},
+  {id:'hrs_200',   emoji:'⏰',title:'200 Hours',           sub:'200 study hours logged',         detail:'200 hours — serious grind!'},
+  {id:'hrs_300',   emoji:'⏰',title:'300 Hours',           sub:'300 study hours logged',         detail:'300 hours of dedication!'},
+  {id:'hrs_400',   emoji:'⏰',title:'400 Hours',           sub:'400 study hours logged',         detail:'400 hours — elite level!'},
+  {id:'hrs_500',   emoji:'🏅',title:'500 Hours',           sub:'500 study hours logged',         detail:'500 hours — legendary!'},
+  {id:'rev1_start',emoji:'📖',title:'Revision 1 Started',  sub:'First revision logged',          detail:'Started notes revision!'},
+  {id:'rev1_done', emoji:'📗',title:'Revision 1 Complete', sub:'All subjects revised',           detail:'Revision 1 complete!'},
+  {id:'mock_first',emoji:'📝',title:'First Mock Done',     sub:'Completed Mock 1',               detail:'First full mock done!'},
+  {id:'mock_all',  emoji:'🎯',title:'All Mocks Done',      sub:'All 5 mocks completed',          detail:'Full mock series done!'},
+  {id:'mock_65',   emoji:'🌟',title:'65+ Score',           sub:'Mock score ≥ 65%',               detail:'Hit 65% in a mock!'},
+];
+
+/* ── STATE ── */
+let subjects=[], daily={}, settings={}, earnedMilestones=new Set();
+let celebQueue=[], isCelebrating=false;
+let entryDate=TODAY, rev1Done={}, rev1Notes={}, rev1Pages={}, rev1LogDate=TODAY;
+let subTests={};
+let mockData={};
+let saveTimers={}, subjectOverrideEnabled=false;
+const SCHED_START='2026-08-17';
+
+/* ── PYQ DATA ── */
+const PYQ_SUBJECTS=[
+  {id:1, name:'Network Theory',       short:'NET',  url:'https://hub.prepfusion.in/subject/nexus_x?path=Network+Theory%2CEE',   total:233, pyqMonth:'Sep',
+   topics:[
+    {name:'Basic Concepts of Networks',                  qs:42},
+    {name:'Transient Analysis',                          qs:50},
+    {name:'Network Theorems For DC & Misc Topics',       qs:36},
+    {name:'2nd Order Dynamics and Complex Impedance',    qs:7},
+    {name:'AC Circuit Analysis',                         qs:41},
+    {name:'Resonance',                                   qs:18},
+    {name:'Complex Power',                               qs:20},
+    {name:'Two Port Parameters',                         qs:19},
+  ]},
+  {id:2, name:'Signals & Systems',    short:'S&S',  url:'https://hub.prepfusion.in/subject/nexus_x?path=Signals%2CEE',          total:170, pyqMonth:'Sep',
+   topics:[
+    {name:'Basics of Signals',                           qs:28},
+    {name:'Basics of Systems',                           qs:44},
+    {name:'Continuous Time Fourier Series',              qs:20},
+    {name:'Continuous Time Fourier Transform',           qs:32},
+    {name:'Laplace Transform',                           qs:22},
+    {name:'Z Transform, DTFS and DTFT',                  qs:24},
+  ]},
+  {id:3, name:'Control Systems',      short:'CS',   url:'https://hub.prepfusion.in/subject/nexus_x?path=Control+Systems%2CEE',  total:246, pyqMonth:'Oct',
+   topics:[
+    {name:'Basics of Control Systems',                   qs:12},
+    {name:'Block Diagram and Signal Flow Graph',         qs:18},
+    {name:'Time Response Analysis',                      qs:34},
+    {name:'Routh\'s Stability Criterion',                qs:34},
+    {name:'Root Locus',                                  qs:22},
+    {name:'Polar Plot and Freq Response (2nd Order)',    qs:25},
+    {name:'Nyquist Plot',                                qs:17},
+    {name:'Bode Plot',                                   qs:19},
+    {name:'State Space Analysis',                        qs:47},
+    {name:'Controllers and Compensators',                qs:18},
+  ]},
+  {id:4, name:'Measurements',         short:'MEAS', url:'https://hub.prepfusion.in/subject/power_x?path=Measurements%2CEE',     total:128, pyqMonth:'Oct',
+   topics:[
+    {name:'Error Analysis',                              qs:13},
+    {name:'Analog Measuring Instruments',                qs:65},
+    {name:'DC And AC Bridges',                           qs:13},
+    {name:'Measurement of Resistance',                   qs:5},
+    {name:'Electronic Measurement and Instrument Transformer', qs:32},
+  ]},
+  {id:5, name:'EMFT',                 short:'EMFT', url:'https://hub.prepfusion.in/subject/power_x?path=Electromagnetic+Fields%2CEE', total:105, pyqMonth:'Oct',
+   topics:[
+    {name:'Electrostatics',                              qs:65},
+    {name:'Magnetostatics',                              qs:40},
+  ]},
+  {id:6, name:'Electrical Machines',  short:'EM',   url:'https://hub.prepfusion.in/subject/power_x?path=Electrical+Machines%2CEE',   total:388, pyqMonth:'Oct',
+   topics:[
+    {name:'Magnetic Circuits',                           qs:17},
+    {name:'Transformers',                                qs:102},
+    {name:'DC Machines',                                 qs:75},
+    {name:'Three Phase Induction Machines',              qs:90},
+    {name:'Synchronous Machines',                        qs:79},
+    {name:'Miscellaneous Topics',                        qs:25},
+  ]},
+  {id:7, name:'Power Systems',        short:'PS',   url:'https://hub.prepfusion.in/subject/power_x?path=Power+Systems%2CEE',     total:258, pyqMonth:'Nov',
+   topics:[
+    {name:'Basics of Power System',                      qs:24},
+    {name:'Distribution Systems, HVDC, Sag & Corona',    qs:9},
+    {name:'Relays Circuit Breakers',                     qs:28},
+    {name:'Power System Faults',                         qs:44},
+    {name:'Power System Stability',                      qs:28},
+    {name:'Power System Matrices and Load Flow',         qs:42},
+    {name:'Performance & Models of Transmission Lines',  qs:22},
+    {name:'Parameters of Transmission Lines',            qs:15},
+    {name:'Power Factor Improvement & Voltage Control',  qs:21},
+    {name:'Economic Load Dispatch',                      qs:12},
+    {name:'Overhead Transmission Lines & UG Cable',      qs:13},
+  ]},
+  {id:8, name:'Power Electronics',    short:'PE',   url:'https://hub.prepfusion.in/subject/power_x?path=Power+Electronics%2CEE', total:222, pyqMonth:'Nov',
+   topics:[
+    {name:'Power Semiconductor Devices',                 qs:50},
+    {name:'AC to DC Converters / Phase Controlled Rectifiers', qs:82},
+    {name:'DC to DC Converters - Choppers',              qs:48},
+    {name:'DC to AC Converter - Inverter',               qs:37},
+    {name:'Miscellaneous Topics',                        qs:5},
+  ]},
+  {id:9, name:'Digital Electronics',  short:'DE',   url:'https://hub.prepfusion.in/subject/nexus_x?path=Digital+Electronics%2CEE', total:99,  pyqMonth:'Nov',
+   topics:[
+    {name:'Logic Gates and Boolean Algebra',             qs:14},
+    {name:'Representation of Boolean Expressions & K-Maps', qs:17},
+    {name:'Number Systems',                              qs:2},
+    {name:'Combinational Circuits',                      qs:13},
+    {name:'Sequential Circuits',                         qs:34},
+    {name:'ADC & DAC',                                   qs:11},
+    {name:'Logic Families and Semiconductor Memories',   qs:8},
+  ]},
+  {id:10,name:'Analog Electronics',   short:'AE',   url:'https://hub.prepfusion.in/subject/nexus_x?path=Analog+Electronics%2CEE', total:164, pyqMonth:'Dec',
+   topics:[
+    {name:'Diode Circuits and Applications',             qs:39},
+    {name:'MOSFETs',                                     qs:15},
+    {name:'Operational Amplifier',                       qs:81},
+    {name:'BJTs',                                        qs:28},
+    {name:'Miscellaneous Topics',                        qs:1},
+  ]},
+];
+
+/* pyqData structure:
+   pyqData[subId][topicIdx] = [ {date, correct, wrong}, ... ]
+   Each entry = one logged session
+*/
+let pyqData={}, pyqActiveSubId=1;
+let pyqChart=null;
+let pyqQuizData={};
+
+function loadPyq(){pyqData=lsGet('gate-pyq-data')||{};pyqQuizData=lsGet('gate-pyq-quiz')||{};}
+function savePyq(){lsSet('gate-pyq-data',pyqData);lsSet('gate-pyq-quiz',pyqQuizData);showSaveToast();}
+
+function getPyqTopic(subId,ti){return(pyqData[subId]||{})[ti]||[];}
+function getPyqTotals(subId,ti){
+  const sessions=getPyqTopic(subId,ti);
+  const c=sessions.reduce((t,s)=>t+(+s.correct||0),0);
+  const w=sessions.reduce((t,s)=>t+(+s.wrong||0),0);
+  return{correct:c,wrong:w,total:c+w,pct:c+w>0?Math.round(c/(c+w)*100):null,sessions:sessions.length};
+}
+function getPyqSubTotals(subId){
+  const sub=PYQ_SUBJECTS.find(s=>s.id===subId);if(!sub)return{correct:0,wrong:0,total:0,pct:null};
+  let c=0,w=0;
+  sub.topics.forEach((_,ti)=>{const t=getPyqTotals(subId,ti);c+=t.correct;w+=t.wrong;});
+  return{correct:c,wrong:w,total:c+w,pct:c+w>0?Math.round(c/(c+w)*100):null};
+}
+function confClass(pct){if(pct===null)return'none';if(pct>=75)return'strong';if(pct>=50)return'moderate';return'weak';}
+function confLabel(pct){if(pct===null)return{cls:'conf-badge-none',txt:'Not attempted'};if(pct>=75)return{cls:'conf-badge-strong',txt:'🟢 Strong'};if(pct>=50)return{cls:'conf-badge-moderate',txt:'🟡 Moderate'};return{cls:'conf-badge-weak',txt:'🔴 Needs work'};}
+
+function pyqLogSession(subId,ti,correct,wrong){
+  if(!pyqData[subId])pyqData[subId]={};
+  if(!pyqData[subId][ti])pyqData[subId][ti]=[];
+  pyqData[subId][ti].push({date:TODAY,correct:+correct||0,wrong:+wrong||0});
+  savePyq();
+  renderPyqTopics();
+  renderPyqSummaryBar();
+  renderPyqWeakSection();
+  renderPyqChart();
+}
+
+function renderPyqSummaryBar(){
+  const el=$('pyq-summary-bar');if(!el)return;
+  let totalC=0,totalW=0,topicsAttempted=0,topicsStrong=0;
+  PYQ_SUBJECTS.forEach(sub=>{
+    sub.topics.forEach((topic,ti)=>{
+      const t=getPyqTotals(sub.id,ti);
+      totalC+=t.correct;totalW+=t.wrong;
+      if(t.total>=topic.qs)topicsAttempted++;
+      if(confClass(t.pct)==='strong')topicsStrong++;
+    });
+  });
+  const totalTopics=PYQ_SUBJECTS.reduce((t,s)=>t+s.topics.length,0);
+  const overallPct=totalC+totalW>0?Math.round(totalC/(totalC+totalW)*100):null;
+  const pctCol=overallPct===null?'var(--muted)':overallPct>=75?'#4ade80':overallPct>=50?'#fbbf24':'#ef4444';
+  el.innerHTML=`<div class="pyq-summary-bar">
+    <div class="pyq-summary-item"><div class="pyq-summary-label">Overall Accuracy</div><div class="pyq-summary-val" style="color:${pctCol}">${overallPct!==null?overallPct+'%':'—'}</div></div>
+    <div style="width:1px;background:var(--border);align-self:stretch;margin:0 4px;"></div>
+    <div class="pyq-summary-item"><div class="pyq-summary-label">Correct</div><div class="pyq-summary-val" style="color:#4ade80">${totalC}</div></div>
+    <div class="pyq-summary-item"><div class="pyq-summary-label">Wrong</div><div class="pyq-summary-val" style="color:#ef4444">${totalW}</div></div>
+    <div class="pyq-summary-item"><div class="pyq-summary-label">Total Attempted</div><div class="pyq-summary-val" style="color:var(--text)">${totalC+totalW}</div></div>
+    <div style="width:1px;background:var(--border);align-self:stretch;margin:0 4px;"></div>
+    <div class="pyq-summary-item"><div class="pyq-summary-label">Topics Done</div><div class="pyq-summary-val" style="color:var(--acc)">${topicsAttempted}<span style="font-size:13px;color:var(--faint);font-weight:400">/${totalTopics}</span></div></div>
+    <div class="pyq-summary-item"><div class="pyq-summary-label">Topics Strong</div><div class="pyq-summary-val" style="color:#4ade80">${topicsStrong}</div></div>
+    <a href="${PYQ_SUBJECTS.find(s=>s.id===pyqActiveSubId)?.url||'https://hub.prepfusion.in'}" target="_blank" class="pyq-open-link" style="margin-left:auto;">🔗 Open PrepFusion</a>
+  </div>`;
+}
+
+function renderPyqSubTabs(){
+  const el=$('pyq-sub-tabs');if(!el)return;
+  el.innerHTML=PYQ_SUBJECTS.map(s=>{
+    const tot=getPyqSubTotals(s.id);
+    const col=tot.pct===null?'':(tot.pct>=75?' style="border-color:#4ade8066;color:#4ade80"':tot.pct>=50?' style="border-color:#fbbf2466;color:#fbbf24"':' style="border-color:#ef444466;color:#ef4444"');
+    return`<button class="pyq-sub-tab${s.id===pyqActiveSubId?' active':''}"${col} onclick="pyqSelectSub(${s.id})">${s.short}${tot.pct!==null?' '+tot.pct+'%':''}${s.pyqMonth?'<span style="font-size:9px;opacity:.6;margin-left:3px;">'+ s.pyqMonth+'</span>':''}</button>`;
+  }).join('');
+}
+
+function pyqSelectSub(id){
+  pyqActiveSubId=id;
+  if(pyqChartTopic){pyqChartTopic.destroy();pyqChartTopic=null;}
+  if(pyqChart){pyqChart.destroy();pyqChart=null;}
+  renderPyqSubTabs();
+  renderPyqTopics();
+  renderPyqWeakSection();
+  renderPyqChart();
+  renderPyqSummaryBar();
+}
+
+function renderPyqTopics(){
+  const el=$('pyq-topic-area');if(!el)return;
+  const sub=PYQ_SUBJECTS.find(s=>s.id===pyqActiveSubId);if(!sub)return;
+  const subTot=getPyqSubTotals(sub.id);
+  const subPctCol=subTot.pct===null?'var(--muted)':subTot.pct>=75?'#4ade80':subTot.pct>=50?'#fbbf24':'#ef4444';
+
+  let html=`<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;"><div style="font-size:15px;font-weight:700;">${esc(sub.name)}</div>${sub.pyqMonth?`<span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:10px;background:#001e2e;color:#00d4ff;border:1px solid #00d4ff44;">🎯 ${sub.pyqMonth}</span>`:''}</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px;">${sub.topics.length} topics · ${sub.total} total GATE questions</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+      <div style="text-align:center;"><div style="font-size:10px;color:var(--faint);font-weight:700;text-transform:uppercase;letter-spacing:.5px;">Subject Accuracy</div><div style="font-size:22px;font-weight:800;color:${subPctCol}">${subTot.pct!==null?subTot.pct+'%':'—'}</div><div style="font-size:10px;color:var(--faint);">${subTot.correct}✓ &nbsp; ${subTot.wrong}✗</div></div>
+      <a href="${sub.url}" target="_blank" class="pyq-open-link">🔗 Open Topic List</a>
+    </div>
+  </div>`;
+
+  html+=renderPyqQuizCard(sub);
+  html+=`<div class="pyq-topic-grid">`;
+  sub.topics.forEach((topic,ti)=>{
+    const totals=getPyqTotals(sub.id,ti);
+    const sessions=getPyqTopic(sub.id,ti);
+    const cc=confClass(totals.pct);
+    const lbl=confLabel(totals.pct);
+    const pctBar=totals.pct!==null?totals.pct:0;
+    const barCol=cc==='strong'?'#4ade80':cc==='moderate'?'#fbbf24':cc==='weak'?'#ef4444':'var(--border)';
+
+    const histId=`pyq-hist-${sub.id}-${ti}`;
+    const inputCId=`pyq-c-${sub.id}-${ti}`;
+    const inputWId=`pyq-w-${sub.id}-${ti}`;
+
+    const histRows=sessions.length===0?`<div style="font-size:11px;color:var(--faint);padding:4px 0;">No sessions yet</div>`
+      :sessions.map((s,si)=>{const p=s.correct+s.wrong>0?Math.round(s.correct/(s.correct+s.wrong)*100):0;const pc=p>=75?'#4ade80':p>=50?'#fbbf24':'#ef4444';return`<div class="pyq-hist-row"><span class="pyq-hist-date">${fmt(s.date)}</span><span class="pyq-hist-c">${s.correct}✓</span><span class="pyq-hist-w">${s.wrong}✗</span><span class="pyq-hist-pct" style="color:${pc}">${p}%</span><span style="font-size:10px;color:var(--faint);cursor:pointer;" onclick="pyqDeleteSession(${sub.id},${ti},${si})" title="Delete this session">✕</span></div>`;}).join('');
+
+    html+=`<div class="pyq-topic-card conf-${cc}">
+      <div class="pyq-topic-name">${esc(topic.name)}</div>
+      <div class="pyq-topic-meta">${topic.qs} GATE questions · ${sessions.length} session${sessions.length!==1?'s':''}</div>
+      <span class="pyq-conf-badge ${lbl.cls}">${lbl.txt}${totals.pct!==null?' · '+totals.pct+'%':''}</span>
+      ${totals.total>0?`<div class="pyq-pbar-wrap"><div class="pyq-pbar-bg"><div class="pyq-pbar-fill" style="width:${pctBar}%;background:${barCol}"></div></div></div>
+      <div class="pyq-totals"><div class="pyq-tot-item">Correct: <b style="color:#4ade80">${totals.correct}</b></div><div class="pyq-tot-item">Wrong: <b style="color:#ef4444">${totals.wrong}</b></div><div class="pyq-tot-item">Total: <b>${totals.total}</b></div></div>`:''}
+      <div class="pyq-log-row">
+        <span class="pyq-log-lbl">Log new:</span>
+        <input type="number" class="pyq-num-inp" id="${inputCId}" min="0" placeholder="✓" title="Correct answers" style="border-color:#4ade8044;">
+        <input type="number" class="pyq-num-inp" id="${inputWId}" min="0" placeholder="✗" title="Wrong answers" style="border-color:#ef444444;">
+        <button class="pyq-log-btn" onclick="pyqSubmit(${sub.id},${ti},'${inputCId}','${inputWId}')">Log Session</button>
+      </div>
+      ${sessions.length>0?`<button class="pyq-history-btn" onclick="pyqToggleHist('${histId}')">▾ history (${sessions.length})</button>
+      <div class="pyq-history" id="${histId}">${histRows}</div>`:''}
+    </div>`;
+  });
+  html+=`</div>`;
+  el.innerHTML=html;
+}
+
+function pyqSubmit(subId,ti,cId,wId){
+  const c=parseInt($(cId)?.value)||0;
+  const w=parseInt($(wId)?.value)||0;
+  if(c===0&&w===0){$(cId).focus();return;}
+  pyqLogSession(subId,ti,c,w);
+  if($(cId))$(cId).value='';
+  if($(wId))$(wId).value='';
+}
+
+function pyqDeleteSession(subId,ti,si){
+  if(!confirm('Delete this session entry?'))return;
+  if(pyqData[subId]&&pyqData[subId][ti]){
+    pyqData[subId][ti].splice(si,1);
+    savePyq();
+    renderPyqTopics();
+    renderPyqSummaryBar();
+    renderPyqWeakSection();
+    renderPyqChart();
+    renderPyqSubTabs();
+  }
+}
+
+function pyqToggleHist(id){const el=$(id);if(!el)return;el.classList.toggle('open');}
+
+function renderPyqWeakSection(){
+  const el=$('pyq-weak-section');if(!el)return;
+  const sub=PYQ_SUBJECTS.find(s=>s.id===pyqActiveSubId);if(!sub){el.innerHTML='';return;}
+  const weak=[];
+  sub.topics.forEach((topic,ti)=>{
+    const t=getPyqTotals(sub.id,ti);
+    if(t.pct!==null&&t.pct<60)weak.push({name:topic.name,pct:t.pct,total:t.total,qs:topic.qs});
+  });
+  if(weak.length===0){el.innerHTML='';return;}
+  weak.sort((a,b)=>a.pct-b.pct);
+  el.innerHTML=`<div class="card" style="margin-bottom:16px;border-color:#ef444422;">
+    <div class="pyq-section-hdr">⚠️ Topics Needing Work <span style="font-size:12px;font-weight:400;color:var(--muted);">(accuracy below 60%)</span></div>
+    <div class="pyq-weak-list">
+      ${weak.map(w=>`<div class="pyq-weak-item">
+        <div class="pyq-weak-name">${esc(w.name)}</div>
+        <div style="font-size:10px;color:var(--faint);">${w.qs} Qs</div>
+        <div class="pyq-weak-pct">${w.pct}%</div>
+        <div style="width:80px;"><div class="pyq-pbar-bg"><div class="pyq-pbar-fill" style="width:${w.pct}%;background:#ef4444;"></div></div></div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+let pyqChartTopic=null;
+function renderPyqChart(){
+  const el=$('pyq-chart-section');if(!el)return;
+  const sub=PYQ_SUBJECTS.find(s=>s.id===pyqActiveSubId);if(!sub){el.innerHTML='';return;}
+
+  // Gather sessions grouped by date (for trend chart)
+  const dateMap={};
+  sub.topics.forEach((topic,ti)=>{
+    const sessions=getPyqTopic(sub.id,ti);
+    sessions.forEach(s=>{
+      if(!dateMap[s.date])dateMap[s.date]={correct:0,wrong:0,label:s.date};
+      dateMap[s.date].correct+=+s.correct||0;
+      dateMap[s.date].wrong+=+s.wrong||0;
+    });
+  });
+  const dates=Object.keys(dateMap).sort();
+
+  // Topic-wise data (always computed for right column)
+  const tData=sub.topics.map((_,ti)=>getPyqTotals(sub.id,ti));
+  const hasAny=tData.some(t=>t.total>0);
+
+  if(!hasAny){el.innerHTML='';return;}
+
+  // Two-column layout: left=trend/placeholder, right=topic bar
+  const leftTitle = dates.length>=2 ? '📈 Accuracy Trend Over Time' : '📊 Session Summary';
+  el.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div class="pyq-chart-wrap" style="margin-bottom:0">
+        <div class="pyq-section-hdr">${leftTitle}</div>
+        <canvas id="pyq-chart-canvas" height="150"></canvas>
+      </div>
+      <div class="pyq-chart-wrap" style="margin-bottom:0">
+        <div class="pyq-section-hdr">📊 Topic-wise Accuracy</div>
+        <canvas id="pyq-topic-chart-canvas" height="150"></canvas>
+      </div>
+    </div>`;
+
+  setTimeout(()=>{
+    // ── Left chart ──
+    const ctx=document.getElementById('pyq-chart-canvas');
+    if(ctx){
+      if(pyqChart){pyqChart.destroy();pyqChart=null;}
+      if(dates.length>=2){
+        let cumC=0,cumW=0;
+        const trendData=dates.map(d=>{cumC+=dateMap[d].correct;cumW+=dateMap[d].wrong;return cumC+cumW>0?Math.round(cumC/(cumC+cumW)*100):null;});
+        pyqChart=new Chart(ctx,{type:'line',data:{
+          labels:dates.map(d=>fmt(d)),
+          datasets:[{
+            label:'Cumulative Accuracy %',data:trendData,
+            borderColor:'#00d4ff',backgroundColor:'rgba(0,212,255,.08)',
+            borderWidth:2,pointBackgroundColor:'#00d4ff',pointRadius:4,tension:0.3,fill:true
+          },{
+            label:'75% target',data:dates.map(()=>75),
+            borderColor:'rgba(74,222,128,.4)',borderDash:[5,5],borderWidth:1,
+            pointRadius:0,fill:false
+          }]
+        },options:{responsive:true,plugins:{legend:{labels:{color:'#7a9ab5',font:{size:11}}},tooltip:{mode:'index',intersect:false}},scales:{y:{min:0,max:100,ticks:{color:'#4a6a80',font:{size:11},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,.05)'}},x:{ticks:{color:'#4a6a80',font:{size:11}},grid:{display:false}}}}});
+      } else {
+        // Single session: show bar of correct vs wrong per date
+        const dKeys=Object.keys(dateMap).sort();
+        pyqChart=new Chart(ctx,{type:'bar',data:{
+          labels:dKeys.map(d=>fmt(d)),
+          datasets:[
+            {label:'Correct',data:dKeys.map(d=>dateMap[d].correct),backgroundColor:'rgba(74,222,128,.7)',borderRadius:4},
+            {label:'Wrong',data:dKeys.map(d=>dateMap[d].wrong),backgroundColor:'rgba(239,68,68,.7)',borderRadius:4}
+          ]
+        },options:{responsive:true,plugins:{legend:{labels:{color:'#7a9ab5',font:{size:11}}}},scales:{y:{ticks:{color:'#4a6a80',font:{size:11}},grid:{color:'rgba(255,255,255,.05)'}},x:{ticks:{color:'#4a6a80',font:{size:11}},grid:{display:false}}}}});
+      }
+    }
+
+    // ── Right chart: topic-wise accuracy ──
+    const ctx2=document.getElementById('pyq-topic-chart-canvas');
+    if(ctx2){
+      if(pyqChartTopic){pyqChartTopic.destroy();pyqChartTopic=null;}
+      pyqChartTopic=new Chart(ctx2,{type:'bar',data:{
+        labels:sub.topics.map(t=>t.name.length>18?t.name.substring(0,16)+'…':t.name),
+        datasets:[{
+          label:'Accuracy %',
+          data:tData.map(t=>t.pct),
+          backgroundColor:tData.map(t=>t.pct===null?'rgba(74,106,128,.3)':t.pct>=75?'rgba(74,222,128,.7)':t.pct>=50?'rgba(251,191,36,.7)':'rgba(239,68,68,.7)'),
+          borderRadius:4
+        }]
+      },options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw===null?'Not attempted':c.raw+'% accuracy'}}},scales:{y:{min:0,max:100,ticks:{color:'#4a6a80',font:{size:11},callback:v=>v+'%'},grid:{color:'rgba(255,255,255,.05)'}},x:{ticks:{color:'#4a6a80',font:{size:10},maxRotation:45},grid:{display:false}}}}});
+    }
+  },50);
+}
+
+function pyqQuizGetTotals(subId){
+  const sessions=pyqQuizData[subId]||[];
+  const c=sessions.reduce((t,s)=>t+(+s.correct||0),0);
+  const w=sessions.reduce((t,s)=>t+(+s.wrong||0),0);
+  return{correct:c,wrong:w,total:c+w,pct:c+w>0?Math.round(c/(c+w)*100):null,sessions:sessions.length};
+}
+function pyqQuizLog(subId){
+  const cEl=$('pyq-quiz-c-'+subId),wEl=$('pyq-quiz-w-'+subId);
+  const c=parseInt(cEl?.value)||0,w=parseInt(wEl?.value)||0;
+  if(c===0&&w===0){cEl?.focus();return;}
+  if(!pyqQuizData[subId])pyqQuizData[subId]=[];
+  pyqQuizData[subId].push({date:TODAY,correct:c,wrong:w});
+  savePyq();if(cEl)cEl.value='';if(wEl)wEl.value='';
+  renderPyqTopics();renderPyqSummaryBar();
+}
+function pyqQuizDelete(subId,si){
+  if(!confirm('Delete this quiz entry?'))return;
+  if(pyqQuizData[subId])pyqQuizData[subId].splice(si,1);
+  savePyq();renderPyqTopics();renderPyqSummaryBar();
+}
+function pyqQuizToggleHist(id){const el=$(id);if(!el)return;el.classList.toggle('open');}
+function renderPyqQuizCard(sub){
+  const tot=pyqQuizGetTotals(sub.id);
+  const sessions=pyqQuizData[sub.id]||[];
+  const pctCol=tot.pct===null?'var(--muted)':tot.pct>=75?'#4ade80':tot.pct>=50?'#fbbf24':'#ef4444';
+  const histId='pyq-quiz-hist-'+sub.id;
+  const histRows=sessions.length===0
+    ?'<div style="font-size:11px;color:var(--faint);padding:4px 0;">No quiz sessions yet</div>'
+    :sessions.map((s,si)=>{
+      const p=s.correct+s.wrong>0?Math.round(s.correct/(s.correct+s.wrong)*100):0;
+      const pc=p>=75?'#4ade80':p>=50?'#fbbf24':'#ef4444';
+      return`<div style="display:flex;gap:8px;font-size:11px;color:var(--muted);padding:3px 0;align-items:center;"><span style="min-width:72px;color:var(--faint);">${fmt(s.date)}</span><span style="color:#4ade80;font-weight:700">${s.correct}✓</span><span style="color:#ef4444;font-weight:700">${s.wrong}✗</span><span style="background:#0d1e2e;border-radius:6px;padding:1px 7px;font-size:10px;font-weight:700;color:${pc}">${p}%</span><span style="font-size:10px;color:var(--faint);cursor:pointer;margin-left:4px;" onclick="pyqQuizDelete(${sub.id},${si})">✕</span></div>`;
+    }).join('');
+  return`<div class="pyq-quiz-card">
+    <div class="pyq-quiz-title">⚡ Subject Quiz — <span style="font-size:11px;font-weight:400;color:var(--muted);">mixed topics</span></div>
+    <div class="pyq-quiz-sub">Attempted a random/mixed-topic quiz on <b>${esc(sub.name)}</b>? Log it here.</div>
+    ${tot.total>0?`<div class="pyq-quiz-stats">
+      <div><div class="pyq-quiz-stat-lbl">Quiz Accuracy</div><div class="pyq-quiz-stat-val" style="color:${pctCol}">${tot.pct}%</div></div>
+      <div><div class="pyq-quiz-stat-lbl">Correct</div><div class="pyq-quiz-stat-val" style="color:#4ade80">${tot.correct}</div></div>
+      <div><div class="pyq-quiz-stat-lbl">Wrong</div><div class="pyq-quiz-stat-val" style="color:#ef4444">${tot.wrong}</div></div>
+      <div><div class="pyq-quiz-stat-lbl">Sessions</div><div class="pyq-quiz-stat-val">${tot.sessions}</div></div>
+    </div>
+    <div class="pyq-pbar-wrap" style="margin-bottom:10px;"><div class="pyq-pbar-bg"><div class="pyq-pbar-fill" style="width:${tot.pct}%;background:${pctCol}"></div></div></div>`:''}
+    <div class="pyq-quiz-log-row">
+      <span class="pyq-log-lbl">Log quiz:</span>
+      <input type="number" class="pyq-quiz-inp" id="pyq-quiz-c-${sub.id}" min="0" placeholder="✓" style="border-color:#4ade8044;">
+      <input type="number" class="pyq-quiz-inp" id="pyq-quiz-w-${sub.id}" min="0" placeholder="✗" style="border-color:#ef444444;">
+      <button class="pyq-quiz-btn" onclick="pyqQuizLog(${sub.id})">Log Quiz</button>
+    </div>
+    ${sessions.length>0?`<button class="pyq-history-btn" onclick="pyqQuizToggleHist('${histId}')">▾ quiz history (${sessions.length})</button>
+    <div class="pyq-history" id="${histId}">${histRows}</div>`:''}
+  </div>`;
+}
+function renderPyq(){
+  loadPyq();
+  renderPyqSummaryBar();
+  renderPyqSubTabs();
+  renderPyqWeakSection();
+  renderPyqChart();
+  renderPyqTopics();
+}
+const REV1_START='2026-08-31';
+function applyTabLock(wrapId,isLocked,startLabel){
+  const wrap=$(wrapId);if(!wrap)return;
+  // remove existing banner if any
+  const old=wrap.querySelector('.tab-locked-banner');if(old)old.remove();
+  const content=wrap.querySelector('.wrap')||wrap.firstElementChild;
+  if(isLocked){
+    const banner=document.createElement('div');
+    banner.className='tab-locked-banner';
+    banner.innerHTML=`🔒 Read-only &nbsp;·&nbsp; <span>Opens ${startLabel}</span>`;
+    wrap.insertBefore(banner,wrap.firstChild);
+    if(content)content.classList.add('tab-locked-content');
+  } else {
+    if(content)content.classList.remove('tab-locked-content');
+  }
+}
+
+const MIGRATION_KEY='gate-v20-migrated';
+function runMigration(){
+  if(lsGet(MIGRATION_KEY))return;
+  lsSet('gate-subjects',JSON.parse(JSON.stringify(SEED_SUBJECTS)));
+  lsSet('gate-daily',JSON.parse(JSON.stringify(DAILY_SEED)));
+  lsSet('gate-settings',JSON.parse(JSON.stringify(SEED_SETTINGS)));
+  lsSet('gate-milestones',SEED_MILESTONES);
+  lsSet(MIGRATION_KEY,'1');
+}
+
+// ═══════════════════════════════════════════════
+// FIREBASE CONFIG — gate2027 project
+// ═══════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyDMdcoWnuALN-ZK3HzRpNrQuLl2TIdtiTY",
+  authDomain: "gate2027-1d144.firebaseapp.com",
+  projectId: "gate2027-1d144",
+  storageBucket: "gate2027-1d144.firebasestorage.app",
+  messagingSenderId: "726897574466",
+  appId: "1:726897574466:web:072a328fa91f2afbd0e3db"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const DOC_REF = db.collection('users').doc('aswith');
+
+// In-memory cache — Firestore is source of truth
+let _cache = {};
+let _pendingSaves = {};
+let _saveTimer = null;
+let _fbReady = false;
+
+// All keys managed by Firestore
+const FB_KEYS = [
+  'gate-subjects','gate-daily','gate-settings','gate-milestones',
+  'gate-sub-tests','gate-rev1-done','gate-rev1-notes','gate-rev1-pages',
+  'gate-mocks','gate-pyq-data','gate-pyq-quiz','gate-discipline',
+  'gate-theme', 'gate-v20-migrated'
+];
+
+function lsGet(k){
+  // Return from cache (loaded from Firestore on startup)
+  if(k in _cache) return _cache[k];
+  // Fallback to localStorage during init
+  try{const v=localStorage.getItem(k);return v?JSON.parse(v):null;}catch(e){return null;}
+}
+
+function lsSet(k,v){
+  _cache[k]=v;
+  // Also write to localStorage as offline fallback
+  try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}
+  // Batch writes to Firestore — debounce 1s
+  _pendingSaves[k]=v;
+  clearTimeout(_saveTimer);
+  _saveTimer=setTimeout(()=>{
+    if(!_fbReady) return;
+    const batch={};
+    Object.entries(_pendingSaves).forEach(([key,val])=>{batch[key]=JSON.stringify(val);});
+    _pendingSaves={};
+    DOC_REF.set(batch,{merge:true}).catch(e=>console.warn('Firestore write error:',e));
+  },1000);
+}
+
+let lsOK=true; // Firestore is always available
+
+// Load all data from Firestore on startup
+async function fbInit(){
+  const bar=$('fb-bar'), status=$('fb-status');
+  function setBar(pct,msg){if(bar)bar.style.width=pct+'%';if(status)status.textContent=msg;}
+  try{
+    setBar(20,'Connecting to cloud...');
+    const snap = await DOC_REF.get();
+    setBar(60,'Loading your data...');
+    if(snap.exists){
+      const data=snap.data();
+      Object.entries(data).forEach(([k,v])=>{
+        try{
+          _cache[k]=JSON.parse(v);
+          // Sync to localStorage as offline backup
+          localStorage.setItem(k,v);
+        }catch(e){_cache[k]=v;}
+      });
+    }
+    _fbReady=true;
+    setBar(100,'Ready!');
+    setTimeout(()=>{
+      const overlay=$('fb-loading');
+      if(overlay){overlay.style.opacity='0';overlay.style.transition='opacity 0.4s';setTimeout(()=>overlay.remove(),400);}
+    },300);
+  }catch(e){
+    // Firestore failed — fall back to localStorage silently
+    console.warn('Firestore unavailable, using localStorage:',e);
+    _fbReady=false;
+    setBar(100,'Using offline mode');
+    setTimeout(()=>{
+      const overlay=$('fb-loading');
+      if(overlay){overlay.style.opacity='0';overlay.style.transition='opacity 0.4s';setTimeout(()=>overlay.remove(),400);}
+    },800);
+  }
+}
+function showSaveToast(){const t=$('toast');t.classList.add('show');clearTimeout(saveTimers._t);saveTimers._t=setTimeout(()=>t.classList.remove('show'),1400);}
+function dataStatus(msg,col){const el=$('data-status');if(!el)return;el.textContent=msg;el.style.color=col||'var(--muted)';setTimeout(()=>{el.textContent='All changes auto-saved';el.style.color='';},3000);}
+
+function loadAll(){
+  runMigration();
+  subjects=lsGet('gate-subjects')||JSON.parse(JSON.stringify(SEED_SUBJECTS));
+  // Always sync static fields from SEED_SUBJECTS to fix stale localStorage values
+  SEED_SUBJECTS.forEach(seed=>{
+    const s=subjects.find(x=>x.id===seed.id);
+    if(s){s.name=seed.name;s.faculty=seed.faculty;s.videos=seed.videos;s.targetHrs=seed.targetHrs;s.start=seed.start;s.end=seed.end;s.days=seed.days;}
+    else{subjects.push(JSON.parse(JSON.stringify(seed)));}
+  });
+  subjects.sort((a,b)=>a.id-b.id);
+  lsSet('gate-subjects',subjects);
+  daily=lsGet('gate-daily')||JSON.parse(JSON.stringify(DAILY_SEED));
+  settings=lsGet('gate-settings')||JSON.parse(JSON.stringify(SEED_SETTINGS));
+  earnedMilestones=new Set(lsGet('gate-milestones')||SEED_MILESTONES);
+  subTests=lsGet('gate-sub-tests')||{};
+  // storage-warn not needed — using Firestore cloud storage
+}
+function loadRev1(){rev1Done=lsGet('gate-rev1-done')||{};rev1Notes=lsGet('gate-rev1-notes')||{};rev1Pages=lsGet('gate-rev1-pages')||{};}
+function loadMocks(){mockData=lsGet('gate-mocks')||{};subTests=lsGet('gate-sub-tests')||{};}
+function saveDay(d,data){daily[d]=data;lsSet('gate-daily',daily);showSaveToast();}
+function saveSubjects(){lsSet('gate-subjects',subjects);showSaveToast();}
+
+function getActualHrs(sub){return Object.entries(daily).filter(([d,v])=>d>=sub.start&&d<=sub.end&&v.subjectId===sub.id).reduce((t,[,v])=>t+(parseFloat(v.studyHrs)||0),0).toFixed(1);}
+function getActualVids(sub){return Object.entries(daily).filter(([d,v])=>d>=sub.start&&d<=sub.end&&v.subjectId===sub.id).reduce((t,[,v])=>t+(parseInt(v.videosToday)||0),0);}
+function getTotalStudyHrs(){return Object.values(daily).reduce((t,v)=>t+(parseFloat(v.studyHrs)||0),0);}
+function getTotalVideos(){return subjects.reduce((t,s)=>t+s.videos,0);}
+function getTotalVideosWatched(){return subjects.reduce((t,s)=>t+getActualVids(s),0);}
+function calcStreak(habit){let start=daily[TODAY]?.habits?.[habit]?TODAY:addDays(TODAY,-1);let streak=0,d=start;for(let i=0;i<200;i++){if(!daily[d]?.habits?.[habit])break;streak++;d=addDays(d,-1);}return streak;}
+function autoDetectSubject(date){return subjects.find(s=>date>=s.start&&date<=s.end)||null;}
+
+function checkMilestones(){
+  const newly=[];const totHrs=getTotalStudyHrs(),dayN=diffDays(START,TODAY)+1,gStreak=calcStreak('gate');
+  function chk(id,cond){if(cond&&!earnedMilestones.has(id)){earnedMilestones.add(id);newly.push(id);}}
+  subjects.forEach((s,i)=>chk('sub'+(i+1)+'_done',s.status==='Completed'));
+  chk('streak_7',gStreak>=7);chk('streak_14',gStreak>=14);chk('streak_21',gStreak>=21);chk('streak_30',gStreak>=30);chk('streak_50',gStreak>=50);chk('streak_100',gStreak>=100);
+  chk('day_30',dayN>=30);chk('day_60',dayN>=60);chk('day_100',dayN>=100);chk('day_150',dayN>=150);chk('day_193',dayN>=193);
+  chk('hrs_50',totHrs>=50);chk('hrs_100',totHrs>=100);chk('hrs_200',totHrs>=200);chk('hrs_300',totHrs>=300);chk('hrs_400',totHrs>=400);chk('hrs_500',totHrs>=500);
+  const anyRev=subjects.some(s=>pagesDone(s.id)>0);chk('rev1_start',anyRev);
+  chk('rev1_done',subjects.every(s=>rev1Done[s.id]));
+  const mocks=buildMockSchedule(),mDone=mocks.filter(m=>mockRec(m.date).done).length;
+  chk('mock_first',mDone>=1);chk('mock_all',mDone>=5);
+  const best=Math.max(0,...mocks.map(m=>mockRec(m.date)).filter(m=>m.score!==''&&!isNaN(+m.score)).map(m=>+m.score));
+  chk('mock_65',best>=65);
+  if(newly.length){lsSet('gate-milestones',[...earnedMilestones]);newly.forEach(id=>celebQueue.push(id));if(!isCelebrating)nextCelebration();}
+}
+
+let confAnim=null;
+function nextCelebration(){if(!celebQueue.length){isCelebrating=false;return;}isCelebrating=true;const id=celebQueue.shift();const m=MILESTONE_DEFS.find(x=>x.id===id);if(!m)return nextCelebration();$('cel-emoji').textContent=m.emoji||'🏆';$('cel-title').textContent=m.title;$('cel-sub').textContent=m.sub||'';$('cel-detail').textContent=m.detail||'';$('cel-count').textContent=celebQueue.length?`+${celebQueue.length} more…`:'';$('cel-overlay').classList.add('show');startConfetti();}
+function closeCelebration(){$('cel-overlay').classList.remove('show');stopConfetti();setTimeout(nextCelebration,300);}
+function startConfetti(){const c=$('confetti-canvas');c.width=window.innerWidth;c.height=window.innerHeight;const ctx=c.getContext('2d');const p=Array.from({length:120},()=>({x:Math.random()*c.width,y:-20,vx:(Math.random()-.5)*4,vy:2+Math.random()*4,color:['#00d4ff','#4ade80','#fbbf24','#c084fc','#fb923c'][Math.floor(Math.random()*5)],size:6+Math.random()*8,rot:Math.random()*360,vr:(Math.random()-.5)*6}));function draw(){ctx.clearRect(0,0,c.width,c.height);p.forEach(q=>{q.x+=q.vx;q.y+=q.vy;q.rot+=q.vr;ctx.save();ctx.translate(q.x,q.y);ctx.rotate(q.rot*Math.PI/180);ctx.fillStyle=q.color;ctx.fillRect(-q.size/2,-q.size/4,q.size,q.size/2);ctx.restore();});confAnim=requestAnimationFrame(draw);}draw();}
+function stopConfetti(){if(confAnim)cancelAnimationFrame(confAnim);const cv=$('confetti-canvas');if(cv)cv.getContext('2d').clearRect(0,0,cv.width,cv.height);}
+
+
+
+/* ══ STUDY TAB ══ */
+function renderProgress(){
+  const dayN=Math.min(diffDays(START,TODAY)+1,193),daysLeft=Math.max(0,diffDays(TODAY,EXAM));
+  const totHrs=getTotalStudyHrs(),totVids=getTotalVideosWatched(),totalVids=getTotalVideos();
+  const streak=calcStreak('gate'),doneSubs=subjects.filter(s=>s.status==='Completed').length;
+  const logged=Object.keys(daily).length;
+  $('prog-sub').textContent=`${fmtFull(TODAY)} · Day ${dayN} of 193 · ${daysLeft} days to GATE`;
+  $('hero-cards').innerHTML=`
+    <div class="hcard"><div class="hlbl">Day</div><div class="hval" style="color:var(--acc)">${dayN}<span style="font-size:14px;color:var(--faint);font-weight:400">/193</span></div><div class="hsub">${daysLeft} days left</div><div class="pbar-bg"><div class="pbar-fill" style="width:${Math.min(100,dayN/193*100).toFixed(1)}%"></div></div></div>
+    <div class="hcard" style="border:1px solid #fbbf2433"><div class="hlbl">Study Hours</div><div class="hval" style="color:var(--amber)">${totHrs.toFixed(1)}</div><div class="hsub">avg ${logged?(totHrs/logged).toFixed(1):0} hrs/day</div></div>
+    <div class="hcard" style="border:1px solid #4ade8033"><div class="hlbl">Videos</div><div class="hval" style="color:var(--green)">${totVids}<span style="font-size:14px;color:var(--faint);font-weight:400">/${totalVids}</span></div><div class="hsub">${Math.round(totVids/Math.max(1,totalVids)*100)}% of all videos</div></div>
+    <div class="hcard" style="border:1px solid #fbbf2433"><div class="hlbl">GATE Streak</div><div class="hval" style="color:var(--amber)">🔥${streak}</div><div class="hsub">${doneSubs}/11 subjects done</div></div>`;
+  const pct=Math.min(100,dayN/193*100);
+  $('journey-pct').textContent=pct.toFixed(0)+'%';$('journey-bar').style.width=pct.toFixed(1)+'%';
+  $('journey-start').textContent=fmtFull(START);$('journey-end').textContent=fmtFull(EXAM);
+}
+function renderMilestones(){
+  $('ms-sub').textContent=`${earnedMilestones.size} of ${MILESTONE_DEFS.length} earned`;
+  $('ms-grid').innerHTML=MILESTONE_DEFS.map(m=>{const got=earnedMilestones.has(m.id);return`<div class="ms-card ${got?'earned':'pending'}"><div class="ms-emoji">${m.emoji||'🏆'}</div><div class="ms-title">${esc(m.title)}</div><div class="ms-sub">${esc(m.sub||'')}</div><span class="ms-badge ${got?'ms-earned-badge':'ms-locked-badge'}">${got?'✓ Earned':'🔒 Locked'}</span></div>`;}).join('');
+}
+function renderEntry(){
+  const el=$('entry-date');if(el)el.value=entryDate;
+  const dayN=diffDays(START,entryDate)+1,dow=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(entryDate+'T00:00:00').getDay()];
+  $('entry-day-label').textContent=`Day ${dayN} · ${dow}`;
+  const ind=$('entry-date-indicator');
+  if(entryDate<TODAY){ind.className='date-nav-indicator date-past';ind.textContent='Past';}
+  else if(entryDate===TODAY){ind.className='date-nav-indicator date-today';ind.textContent='Today';}
+  else{ind.className='date-nav-indicator date-future';ind.textContent='Future';}
+  const dd=daily[entryDate]||{};
+  const autoSub=autoDetectSubject(entryDate);
+  if(!subjectOverrideEnabled){if(autoSub&&!dd.subjectId)dd.subjectId=autoSub.id;}
+  const selSubId=dd.subjectId||(autoSub?autoSub.id:null);
+  const sel=$('entry-subject');
+  sel.innerHTML='<option value="">— select —</option>'+subjects.map(s=>`<option value="${s.id}" ${s.id===selSubId?'selected':''}>${s.name}</option>`).join('');
+  if(!subjectOverrideEnabled)sel.disabled=!!autoSub;else sel.disabled=false;
+  $('entry-vids').value=dd.videosToday||0;
+  if($('entry-note'))$('entry-note').value=dd.note||'';
+  const HABITS=[{key:'gate',label:'📚 GATE Study'},{key:'exercise',label:'🏃 Exercise'},{key:'chess',label:'♟ Chess'},{key:'perfect',label:'⭐ Perfect Day'}];
+  $('habit-row').innerHTML=HABITS.map(h=>`<button class="habit-btn ${dd.habits?.[h.key]?'active':''}" onclick="toggleHabit('${h.key}')">${h.label}</button>`).join('');
+  /* ── Break period: Aug 27 – Sep 6 ── */
+  const BREAK_START='2026-08-27', BREAK_END='2026-09-06';
+  if(entryDate>=BREAK_START && entryDate<=BREAK_END){
+    const strip=$('sub-strip'), tg=$('target-grid');
+    if(strip) strip.innerHTML='<div style="display:flex;align-items:center;gap:14px;width:100%;flex-wrap:wrap;">'
+      +'<span style="font-size:22px;">☕</span>'
+      +'<div>'
+        +'<div style="font-size:13px;font-weight:800;color:#fbbf24;">Break Time</div>'
+        +'<div style="font-size:12px;color:var(--muted);margin-top:2px;">No subject scheduled &middot; EMFT completed &middot; Electrical Machines restarts <strong style="color:var(--acc);">Sep 7, 2026</strong></div>'
+      +'</div>'
+    +'</div>';
+    if(tg) tg.innerHTML='';
+    $('entry-subject').value=''; $('entry-subject').disabled=true;
+    return;
+  }
+  renderSubjectStrip(selSubId);renderTargetGrid(selSubId);
+}
+function enableSubOverride(){subjectOverrideEnabled=true;$('entry-subject').disabled=false;$('entry-subject').focus();}
+function onSubjectChange(){const newId=+$('entry-subject').value||null;if(newId){const dd=JSON.parse(JSON.stringify(daily[entryDate]||{}));dd.subjectId=newId;saveDay(entryDate,dd);}renderSubjectStrip(newId);renderTargetGrid(newId);}
+function renderSubjectStrip(selSubId){
+  const strip=$('sub-strip');if(!strip)return;
+  const sub=subjects.find(s=>s.id===+selSubId);
+  if(!sub){strip.innerHTML='<span style="font-size:12px;color:var(--faint);">Select a subject to see progress</span>';return;}
+  const hDone=parseFloat(getActualHrs(sub)),hLeft=Math.max(0,sub.targetHrs-hDone).toFixed(1);
+  const vDone=getActualVids(sub),vLeft=Math.max(0,sub.videos-vDone);
+  const dLeft=Math.max(0,diffDays(entryDate,sub.end));
+  const hPct=Math.min(100,Math.round(hDone/sub.targetHrs*100)),vPct=sub.videos>0?Math.min(100,Math.round(vDone/sub.videos*100)):0;
+  strip.innerHTML=`
+    <div class="sub-strip-item"><div class="sub-strip-label">Subject</div><div class="sub-strip-val" style="font-size:12px;color:var(--text);">${esc(sub.name)}</div></div>
+    <div class="sub-strip-item"><div class="sub-strip-label">Hrs Done</div><div class="sub-strip-val ${hPct>=100?'ok':''}">${hDone}h</div></div>
+    <div class="sub-strip-item"><div class="sub-strip-label">Hrs Left</div><div class="sub-strip-val">${hLeft}h</div></div>
+    <div class="sub-strip-item"><div class="sub-strip-label">Vids Done</div><div class="sub-strip-val ${vPct>=100?'ok':''}">${vDone}/${sub.videos}</div></div>
+    <div class="sub-strip-item"><div class="sub-strip-label">Vids Left</div><div class="sub-strip-val">${vLeft}</div></div>
+    <div class="sub-strip-item"><div class="sub-strip-label">Days Left</div><div class="sub-strip-val ${dLeft<=2?'warn':''}">${dLeft}d</div></div>
+    <div class="sub-strip-item"><div class="sub-strip-label">Hrs %</div><div class="sub-strip-val">${hPct}%</div></div>
+    <div class="sub-strip-item"><div class="sub-strip-label">Vids %</div><div class="sub-strip-val">${vPct}%</div></div>`;
+}
+function renderTargetGrid(selSubId){
+  const dd=daily[entryDate]||{};const sub=subjects.find(s=>s.id===+selSubId);
+  const vDone=dd.videosToday||0;
+  const hToday=parseFloat(dd.studyHrs)||0;
+  let hTgt=settings.dailyHrsTarget||5.5;
+  let vTgt=settings.dailyVidsTarget||3;
+  if(sub){
+    const dLeft=Math.max(1,diffDays(entryDate,sub.end)+1);
+    const hLeft=Math.max(0,sub.targetHrs-parseFloat(getActualHrs(sub)));
+    hTgt=Math.max(1,Math.ceil(hLeft/dLeft*10)/10);
+    const vLeft=Math.max(0,sub.videos-getActualVids(sub));
+    vTgt=Math.max(1,Math.ceil(vLeft/dLeft));
+  }
+  const vDelta=vDone-vTgt;
+  const hDelta=hToday-hTgt;
+  function dH(d){if(d>0.05)return`<span class="stepper-delta delta-plus">+${d.toFixed(1)}</span>`;if(d<-0.05)return`<span class="stepper-delta delta-minus">${d.toFixed(1)}</span>`;return`<span class="stepper-delta delta-zero">On target</span>`;}
+  function dI(d){if(d>0)return`<span class="stepper-delta delta-plus">+${d}</span>`;if(d<0)return`<span class="stepper-delta delta-minus">${d}</span>`;return`<span class="stepper-delta delta-zero">On target</span>`;}
+  $('target-grid').innerHTML=`
+    <div class="target-card"><div class="target-label">📚 Study Hours</div>
+      <div class="stepper-row"><button class="stepper-btn minus" onclick="stepField('studyHrs',-0.5)">−</button><div class="stepper-val">${hToday.toFixed(1)}</div><button class="stepper-btn" onclick="stepField('studyHrs',0.5)">+</button>${dH(hDelta)}</div>
+      <div class="vs-target">Target: ${hTgt.toFixed(1)} hrs${sub?' (dynamic)':''}</div></div>
+    <div class="target-card"><div class="target-label">🎬 Videos</div>
+      <div class="stepper-row"><button class="stepper-btn minus" onclick="stepVids(-1)">−</button><div class="stepper-val">${vDone}</div><button class="stepper-btn" onclick="stepVids(1)">+</button>${dI(vDelta)}</div>
+      <div class="vs-target">Target: ${vTgt} videos/day${sub?' (dynamic)':''}</div></div>`;
+}
+function navDate(delta){changeEntryDate(addDays(entryDate,delta));}
+function changeEntryDate(d){entryDate=d;subjectOverrideEnabled=false;renderEntry();}
+function stepField(field,delta){const dd=daily[entryDate]||{};const nv=Math.max(0,Math.round(((parseFloat(dd[field])||0)+delta)*10)/10);saveEntryField(field,nv);}
+function stepVids(delta){const dd=daily[entryDate]||{};const nv=Math.max(0,(parseInt(dd.videosToday)||0)+delta);$('entry-vids').value=nv;saveEntryField('videosToday',nv);}
+function saveEntryField(field,val){
+  const dd=JSON.parse(JSON.stringify(daily[entryDate]||{}));
+  if(field==='studyHrs')dd.studyHrs=Math.max(0,parseFloat(val)||0);
+  else if(field==='videosToday')dd.videosToday=Math.max(0,parseInt(val)||0);
+  const sid=+$('entry-subject')?.value||dd.subjectId||null;if(sid)dd.subjectId=sid;
+  saveDay(entryDate,dd);renderTargetGrid(sid);renderSubjectStrip(sid);renderProgress();checkMilestones();renderSubjects();
+}
+function toggleHabit(key){const dd=JSON.parse(JSON.stringify(daily[entryDate]||{}));if(!dd.habits)dd.habits={};dd.habits[key]=!dd.habits[key];saveDay(entryDate,dd);renderEntry();renderProgress();checkMilestones();}
+function renderSubjects(){
+  const tbody=$('sub-tbody');if(!tbody)return;
+  tbody.innerHTML=subjects.map((s,i)=>{
+    const pct=s.videos?Math.round(getActualVids(s)/s.videos*100):0;
+    const col=pct>=100?'var(--green)':pct>=50?'var(--acc)':'var(--amber)';
+    const isActive=TODAY>=s.start&&TODAY<=s.end;
+    const sp={Completed:'pill-done','In Progress':'pill-prog','Not Started':'pill-pend',Skipped:'pill-skip'}[s.status]||'pill-pend';
+    const breakRow=s.id===6?`<tr style="pointer-events:none"><td colspan="8"><div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:rgba(251,191,36,.04);border-top:1px dashed #fbbf2444;border-bottom:1px dashed #fbbf2444;"><span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fbbf24;">☕ Break</span><span style="font-size:11px;color:var(--muted);">Aug 27 – Sep 6 · 11 days · Restart Sep 7</span></div></td></tr>`:'';
+    return breakRow+`<tr class="sub-expand${s.open?' open':''}" onclick="toggleSubRow(${i})">
+      <td><span style="font-size:11px;color:var(--faint);">${s.id}</span></td>
+      <td><strong>${esc(s.name)}</strong>${isActive?` <span style="font-size:10px;background:#001e2e;color:var(--acc);padding:1px 6px;border-radius:8px;margin-left:6px;">ACTIVE</span>`:''}</td>
+      <td style="font-size:12px;color:var(--muted);">${esc(s.faculty)}</td>
+      <td style="font-size:12px;color:var(--faint);">${fmt(s.start)}–${fmt(s.end)}</td>
+      <td><span class="pill ${sp}">${s.status}</span></td>
+      <td style="font-size:12px;">${getActualVids(s)}/${s.videos}</td>
+      <td style="min-width:120px;"><div class="prog-wrap"><div class="prog-bar"><div class="prog-bar-inner" style="width:${pct}%;background:${col};"></div></div><span class="prog-pct">${pct}%</span></div></td>
+      <td style="font-size:12px;color:var(--acc);">${s.confidence}%</td>
+    </tr>
+    <tr class="sub-detail${s.open?' open':''}"><td colspan="8">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+        <div><label class="lbl">Status</label>
+          <select class="inp-sm" onchange="updateSubject(${i},'status',this.value)" onclick="event.stopPropagation()">
+            ${['Not Started','In Progress','Completed','Skipped'].map(o=>`<option ${s.status===o?'selected':''}>${o}</option>`).join('')}
+          </select></div>
+        <div><label class="lbl">Confidence (${s.confidence}%)</label>
+          <div class="range-wrap"><input type="range" min="0" max="100" value="${s.confidence}" oninput="updateSubject(${i},'confidence',+this.value)" onclick="event.stopPropagation()"><span style="font-size:12px;color:var(--acc);min-width:36px;">${s.confidence}%</span></div></div>
+        <div><label class="lbl">Hours: ${getActualHrs(s)} / ${s.targetHrs}</label>
+          <div style="font-size:12px;color:var(--muted);">${Math.round(parseFloat(getActualHrs(s))/s.targetHrs*100)}% done</div></div>
+      </div>
+      <div style="margin-top:12px;"><label class="lbl">Notes</label>
+        <textarea class="inp" rows="2" onclick="event.stopPropagation()" oninput="updateSubject(${i},'notes',this.value)" placeholder="Key formulas, weak topics…">${esc(s.notes||s.remarks||'')}</textarea></div>
+    </td></tr>`;
+  }).join('');
+}
+function toggleSubRow(i){subjects[i].open=!subjects[i].open;renderSubjects();}
+function updateSubject(i,field,val){subjects[i][field]=val;saveSubjects();renderSubjects();renderProgress();checkMilestones();}
+function renderLearningPath(){
+  const grid=$('lp-grid');if(!grid)return;
+  grid.innerHTML=subjects.map(s=>{
+    const lk=SUBJECT_LINKS[s.id]||{},isActive=TODAY>=s.start&&TODAY<=s.end;
+    let links='';
+    if(lk.yt)links+=`<a href="${lk.yt}" target="_blank" class="lp-link-y">▶ YouTube</a>`;
+    if(lk.yt_a)links+=`<a href="${lk.yt_a}" target="_blank" class="lp-link-y">▶ ${s.id===11?'Aptitude':'Analog'}</a>`;
+    if(lk.yt_d)links+=`<a href="${lk.yt_d}" target="_blank" class="lp-link-y">▶ Digital</a>`;
+    if(lk.yt_m)links+=`<a href="${lk.yt_m}" target="_blank" class="lp-link-y">▶ Maths</a>`;
+    if(lk.pf)links+=`<a href="${lk.pf}" target="_blank" class="lp-link-c">🎓 PrepFusion</a>`;
+    if(lk.pf_m)links+=`<a href="${lk.pf_m}" target="_blank" class="lp-link-c">🎓 Maths</a>`;
+    if(lk.pf_a)links+=`<a href="${lk.pf_a}" target="_blank" class="lp-link-c">🎓 Aptitude</a>`;
+    return`<div class="lp-card ${isActive?'active-sub':''}">
+      <div class="lp-name">${esc(s.name)}${isActive?' <span style="font-size:10px;color:var(--acc);">● ACTIVE</span>':''}</div>
+      <div class="lp-faculty">${esc(s.faculty)} · ${fmt(s.start)}–${fmt(s.end)}</div>
+      <div style="margin-bottom:8px;font-size:11px;color:var(--muted);">Videos: <strong style="color:var(--acc);">${s.videos}</strong> &nbsp;·&nbsp; Target: <strong style="color:var(--amber);">${s.targetHrs}h</strong></div>
+      <div class="lp-links">${links||'<span style="font-size:12px;color:var(--faint);">No links</span>'}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ══ REVISION 1 ── NEW SCHEDULE FROM IMAGE ══ */
+const REV1_NOTES={
+  1:[{file:'Network Analysis.pdf',pages:393}],
+  2:[{file:'Signal & Systems .pdf',pages:526}],
+  3:[{file:'Control Systems .pdf',pages:736}],
+  4:[{file:'Electrical and Electronics Measurements .pdf',pages:170}],
+  5:[{file:'Electromagnetic Fields(EMFT_EMT).pdf',pages:322}],
+  6:[{file:'Electrical Machines .pdf',pages:624}],
+  7:[{file:'Power System .pdf',pages:1091}],
+  8:[{file:'Power Electronics .pdf',pages:902}],
+  9:[{file:'Digital Electronics .pdf',pages:390}],
+  10:[{file:'Analog Electronics .pdf',pages:476}],
+  11:[{file:'Aptitude Simplified .pdf',pages:385},{file:'Engineering Mathematics .pdf',pages:184}]
+};
+/* REV1 SCHEDULE — updated Sep 3 2026 */
+const REV1_SCHEDULE={
+  1:{start:'2026-08-31',end:'2026-09-06',days:7, perDay:56},  /* 393p / 7d  = 56 */
+  2:{start:'2026-09-07',end:'2026-09-20',days:14,perDay:38},  /* 526p / 14d = 38 */
+  3:{start:'2026-09-21',end:'2026-10-04',days:14,perDay:53},  /* 736p / 14d = 53 */
+  4:{start:'2026-10-05',end:'2026-10-07',days:3, perDay:57},  /* 170p / 3d  = 57 */
+  5:{start:'2026-10-08',end:'2026-10-11',days:4, perDay:80},  /* 322p / 4d  = 80 */
+  6:{start:'2026-10-12',end:'2026-11-01',days:21,perDay:30},  /* 624p / 21d = 30 */
+  7:{start:'2026-11-02',end:'2026-11-22',days:21,perDay:52},  /* 1091p/ 21d = 52 */
+  8:{start:'2026-11-23',end:'2026-12-13',days:21,perDay:43},  /* 902p / 21d = 43 */
+  9:{start:'2026-12-14',end:'2027-01-03',days:21,perDay:19},  /* 390p / 21d = 19 */
+  10:{start:'2026-12-14',end:'2027-01-03',days:21,perDay:23},  /* 476p / 21d = 23 */
+  11:{start:'2027-01-04',end:'2027-01-17',days:14,perDay:41},  /* 569p / 14d = 41 */
+};
+function subPages(id){return(REV1_NOTES[id]||[]).reduce((t,p)=>t+p.pages,0);}
+function allPages(){return subjects.reduce((t,s)=>t+subPages(s.id),0);}
+function pagesDone(id){return Object.values(rev1Pages[id]||{}).reduce((t,v)=>t+(+v||0),0);}
+function pagesOn(id,date){return+((rev1Pages[id]||{})[date]||0);}
+function setRevPages(id,date,val){const v=Math.max(0,Math.round(+val||0));if(!rev1Pages[id])rev1Pages[id]={};if(v===0)delete rev1Pages[id][date];else rev1Pages[id][date]=v;lsSet('gate-rev1-pages',rev1Pages);showSaveToast();renderRevision1();checkMilestones();}
+function stepRevPages(id,delta){setRevPages(id,rev1LogDate,pagesOn(id,rev1LogDate)+delta);}
+function toggleRev1Done(id){rev1Done[id]=!rev1Done[id];lsSet('gate-rev1-done',rev1Done);showSaveToast();renderRevision1();checkMilestones();}
+function setRev1Note(id,val){rev1Notes[id]=val;clearTimeout(saveTimers['rn']);saveTimers['rn']=setTimeout(()=>{lsSet('gate-rev1-notes',rev1Notes);showSaveToast();},600);}
+function setRev1LogDate(d){rev1LogDate=d;renderRevision1();}
+function navRev1Date(delta){setRev1LogDate(addDays(rev1LogDate,delta));}
+function pageTarget(id,slot){const total=subPages(id);if(!total)return 0;const left=Math.max(0,total-pagesDone(id));let dl;if(TODAY<slot.start)dl=slot.days;else if(TODAY>slot.end)dl=1;else dl=Math.max(1,diffDays(TODAY,slot.end)+1);return Math.ceil(left/dl);}
+function rev1Status(sub,slot){if(rev1Done[sub.id])return'done';if(slot.overflow)return'overflow';if(sub.status!=='Completed')return'locked';if(TODAY>=slot.start&&TODAY<=slot.end)return'active';if(TODAY>slot.end)return'overdue';return'ready';}
+const REV1_TAG={done:['#003d1f','#4ade80','Revised ✓'],active:['#001e2e','#00d4ff','In progress'],ready:['#1a0d2e','#c084fc','Ready'],overdue:['#2d1900','#fbbf24','Overdue'],locked:['#0d1b2a','#4a7a9b','Locked'],overflow:['#1a0800','#ef4444','→ Rev 2']};
+function renderRevision1(){
+  loadRev1();
+  const locked=TODAY<REV1_START;
+  const sched={};subjects.forEach(s=>{const sl=REV1_SCHEDULE[s.id];sched[s.id]=sl?{...sl,overflow:sl.end>'2027-01-03'}:{start:'',end:'',days:0,perDay:0,overflow:false};});
+  const doneCount=subjects.filter(s=>rev1Done[s.id]).length;
+  const totalPages=allPages(),donePages=subjects.reduce((t,s)=>t+Math.min(pagesDone(s.id),subPages(s.id)),0);
+  const pagePct=totalPages?Math.round(donePages/totalPages*100):0;
+  const pagesToday=subjects.reduce((t,s)=>t+pagesOn(s.id,rev1LogDate),0);
+  const activeSubs=subjects.filter(s=>['active','ready','overdue'].includes(rev1Status(s,sched[s.id])));
+  const todayTarget=activeSubs.reduce((t,s)=>t+pageTarget(s.id,sched[s.id]),0);
+  let cards='';
+  subjects.forEach(sub=>{
+    const slot=sched[sub.id],st=rev1Status(sub,slot);
+    const[bg,col,label]=REV1_TAG[st];
+    const pdfs=REV1_NOTES[sub.id]||[],dim=(st==='locked'||st==='overflow')?'opacity:.6;':'';
+    const tot=subPages(sub.id),dn=Math.min(pagesDone(sub.id),tot),pct=tot?Math.round(dn/tot*100):0;
+    const tgt=pageTarget(sub.id,slot),today=pagesOn(sub.id,rev1LogDate);
+    const pace=tgt>0?(today>=tgt?['#003d1f','#4ade80','✓ ON TRACK']:today>=tgt*0.6?['#2d1900','#fbbf24','⚡ CLOSE']:['#2d0000','#ef4444','⚠ BEHIND']):null;
+    const pcol=pct>=100?'#4ade80':pct>=50?'#00d4ff':'#fb923c';
+    const notesPath=`C:\\Users\\AswithGiduturi\\OneDrive - DESRI\\Documents\\G2027_2028\\Notes`;
+    const pdfBtns=pdfs.length===0?`<div style="font-size:11px;color:#ef4444;padding:7px 11px;background:#1a0800;border-radius:6px;border:1px solid #ef444433">⚠ No PDF mapped</div>`
+      :pdfs.map(p=>{const fp=notesPath+'\\'+p.file;return`<a href="file:///${fp.replace(/\\/g,'/')}" target="_blank" class="lp-link-c" style="font-size:11px;padding:6px 12px">📄 ${esc(p.file.replace(/\.pdf$/i,'').trim())}<span style="opacity:.55"> · ${p.pages}p ↗</span></a><button class="btn-sm" style="font-size:11px;" onclick="navigator.clipboard.writeText('${fp.replace(/'/g,"\\'")}').then(()=>{this.textContent='✓ Copied';setTimeout(()=>this.textContent='⧉ Copy path',1500)},()=>{})" title="Copy full path">⧉ Copy path</button>`;}).join('');
+    const tracker=!tot?'':`<div style="background:var(--navy);border-radius:8px;padding:12px 14px;margin-bottom:12px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px"><span style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px">📖 Pages revised</span>${pace?`<span style="font-size:10px;background:${pace[0]};color:${pace[1]};padding:2px 8px;border-radius:4px;font-weight:700">${pace[2]}</span>`:''}</div><div style="display:flex;align-items:baseline;gap:7px;margin-bottom:6px"><span style="font-size:24px;font-weight:800;color:${pcol}">${dn}</span><span style="font-size:13px;color:var(--faint)">/ ${tot} pages</span><span style="margin-left:auto;font-size:11px;color:var(--faint)">${tot-dn} left</span></div><div style="height:7px;background:var(--card);border-radius:4px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${pcol};border-radius:4px;transition:width .35s"></div></div><div style="font-size:10px;color:var(--faint);margin-top:4px;margin-bottom:10px">${pct}% complete${tgt>0?` · need <strong style="color:${col}">${tgt} pages/day</strong> to finish by ${fmt(slot.end)}`:''} · planned: ${slot.perDay}pg/day</div><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:9px;border-top:1px solid var(--border)"><span style="font-size:11px;color:var(--muted)">Pages on ${fmt(rev1LogDate)}:</span><button onclick="stepRevPages(${sub.id},-5)" style="background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:5px;width:30px;height:28px;font-size:12px;cursor:pointer">−5</button><input class="inp-sm" type="number" min="0" value="${today}" onchange="setRevPages(${sub.id},'${rev1LogDate}',this.value)" style="width:62px;text-align:center;font-weight:700;color:${today>0?'#4ade80':'var(--text)'}"><button onclick="stepRevPages(${sub.id},5)" style="background:var(--acc);border:none;color:var(--navy);border-radius:5px;width:30px;height:28px;font-size:12px;font-weight:700;cursor:pointer">+5</button>${tgt>0?`<span style="font-size:11px;color:var(--faint)">target ${tgt}</span>`:''}</div></div>`;
+    cards+=`<div class="card" style="${dim}padding:16px 18px;border-left:3px solid ${col}"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px"><div style="flex:1;min-width:170px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:3px"><span style="font-size:11px;font-weight:700;color:var(--faint)">#${sub.id}</span><span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:12px;background:${bg};color:${col};border:1px solid ${col}44">${label}</span></div><div style="font-size:14px;font-weight:700">${sub.name}</div><div style="font-size:11px;color:var(--faint);margin-top:2px">${sub.faculty} · ${tot||'—'} pages · ${fmt(slot.start)} – ${fmt(slot.end)} (${slot.days}d)</div></div><button class="btn-g" style="font-size:11px;padding:5px 12px;${rev1Done[sub.id]?'color:#4ade80;border-color:#4ade8066':''}" onclick="toggleRev1Done(${sub.id})">${rev1Done[sub.id]?'✓ Revised':'Mark revised'}</button></div><div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px">${pdfBtns}</div>${tracker}<label class="lbl">Revision remarks</label><textarea class="inp" rows="2" style="font-size:12px;margin-top:4px" placeholder="Weak topics, formulas to recheck…" oninput="setRev1Note(${sub.id},this.value)">${esc(rev1Notes[sub.id]||'')}</textarea></div>`;
+  });
+  $('sec-rev1').innerHTML=`<div class="section"><div class="sec-hdr"><h2>Revision 1 — Notes Review</h2><div class="sub">Updated: 31 Aug 2026 – 3 Jan 2027</div></div>
+    <div class="g4" style="margin-bottom:16px"><div class="hcard" style="border:1px solid #00d4ff22"><div class="hlbl">Pages revised</div><div class="hval" style="color:#00d4ff">${donePages}<span style="font-size:13px;color:var(--faint);font-weight:400">/${totalPages}</span></div><div class="pbar-bg"><div class="pbar-fill" style="width:${pagePct}%;background:#00d4ff"></div></div></div>
+    <div class="hcard" style="border:1px solid #4ade8022"><div class="hlbl">Subjects revised</div><div class="hval" style="color:#4ade80">${doneCount}<span style="font-size:13px;color:var(--faint);font-weight:400">/${subjects.length}</span></div><div class="hsub">${activeSubs.length} available now</div></div>
+    <div class="hcard" style="border:1px solid #a855f722"><div class="hlbl">Pages today</div><div class="hval" style="color:${pagesToday>=todayTarget&&todayTarget>0?'#4ade80':'#a855f7'}">${pagesToday}</div><div class="hsub">${todayTarget>0?'target '+todayTarget:'no active sub'}</div></div>
+    <div class="hcard" style="border:1px solid #fbbf2422"><div class="hlbl">Window</div><div class="hval" style="color:#fbbf24;font-size:15px">31 Aug → 3 Jan</div><div class="hsub">126 days</div></div></div>
+    <div class="card" style="padding:11px 15px;margin-bottom:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span class="lbl" style="margin:0">Logging pages for</span>
+      <button onclick="navRev1Date(-1)" style="background:var(--navy);border:1px solid var(--border);border-radius:7px;width:30px;height:30px;cursor:pointer;color:var(--text);font-size:13px;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;" onmouseover="this.style.borderColor='var(--acc)';this.style.color='var(--acc)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">&#9664;</button>
+      <input type="date" value="${rev1LogDate}" onchange="setRev1LogDate(this.value)" style="background:var(--navy);border:1px solid var(--acc);border-radius:6px;padding:5px 9px;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;outline:none">
+      <button onclick="navRev1Date(1)" style="background:var(--navy);border:1px solid var(--border);border-radius:7px;width:30px;height:30px;cursor:pointer;color:var(--text);font-size:13px;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;" onmouseover="this.style.borderColor='var(--acc)';this.style.color='var(--acc)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">&#9654;</button>
+      ${rev1LogDate!==TODAY?`<button class="btn-g" style="font-size:11px;padding:4px 10px" onclick="setRev1LogDate('${TODAY}')">&#8629; Today</button>`:''}
+    </div>
+    <div class="g2">${cards}</div></div>`;
+  applyTabLock('rev1-wrap',locked,'31 Aug 2026');
+}
+function buildMockSchedule(){const s=[];let d='2027-01-03',n=1;while(d<='2027-01-31'&&n<=5){if(new Date(d+'T00:00:00').getDay()===0){s.push({n,date:d,revStart:addDays(d,1),revEnd:addDays(d,5),buffer:addDays(d,6)});n++;}d=addDays(d,1);}return s;}
+function mockRec(date){return mockData[date]||{done:false,score:'',weak:''};}
+function toggleMock(date){loadMocks();const r={...mockRec(date),done:!mockRec(date).done};mockData[date]=r;lsSet('gate-mocks',mockData);showSaveToast();renderRevision2();checkMilestones();}
+function updMock(date,field,val){loadMocks();const r={...mockRec(date)};r[field]=val;mockData[date]=r;lsSet('gate-mocks',mockData);showSaveToast();}
+function getSubTest(subId,key){return((subTests[subId]||{})[key])||{done:false,date:'',score:'',notes:''};}
+function updSubTest(subId,key,field,val){
+  if(!subTests[subId])subTests[subId]={};
+  if(!subTests[subId][key])subTests[subId][key]={done:false,date:'',score:'',notes:''};
+  subTests[subId][key][field]=val;
+  lsSet('gate-sub-tests',subTests);showSaveToast();
+}
+function toggleSubTest(subId,key){
+  if(!subTests[subId])subTests[subId]={};
+  if(!subTests[subId][key])subTests[subId][key]={done:false,date:'',score:'',notes:''};
+  subTests[subId][key].done=!subTests[subId][key].done;
+  lsSet('gate-sub-tests',subTests);showSaveToast();renderRevision2();checkMilestones();
+}
+const REV2_START='2027-01-01';
+function renderRevision2(){
+  loadMocks();
+  const locked=TODAY<REV2_START;
+  const mockSched=buildMockSchedule();
+  const mockScores=mockSched.map(m=>mockRec(m.date)).filter(m=>m.score!==''&&!isNaN(+m.score)).map(m=>+m.score);
+  const avgScore=mockScores.length?Math.round(mockScores.reduce((a,b)=>a+b,0)/mockScores.length):null;
+  const bestScore=mockScores.length?Math.max(...mockScores):null;
+  const TEST_KEYS=['s1','s2','m1','m2'];
+  let testDone=0,testTotal=subjects.length*4;
+  subjects.forEach(s=>TEST_KEYS.forEach(k=>{if(getSubTest(s.id,k).done)testDone++;}));
+  const mockCards=mockSched.map(m=>{const r=mockRec(m.date);const isToday=TODAY===m.date;const sc=r.score!==''?+r.score:null;const scCol=sc!==null?(sc>=65?'#4ade80':sc>=45?'#fbbf24':'#ef4444'):'var(--text)';return`<div class="mock-card ${r.done?'done-mock':isToday?'active-mock':''}"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div><div style="font-size:13px;font-weight:700">Mock ${m.n}</div><div style="font-size:11px;color:var(--muted)">${fmtFull(m.date)}${isToday?' · TODAY':''}</div></div><button class="btn-sm" onclick="toggleMock('${m.date}')" style="${r.done?'color:#4ade80;border-color:#4ade8044':''}">${r.done?'✓ Done':'Mark done'}</button></div><div style="font-size:11px;color:var(--faint);margin-bottom:10px">Review: ${fmt(m.revStart)}–${fmt(m.revEnd)} · Buffer: ${fmt(m.buffer)}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div><label class="lbl">Score %</label><input class="inp-sm" type="number" min="0" max="100" value="${r.score}" oninput="updMock('${m.date}','score',+this.value)" style="width:100%;${sc!==null?'color:'+scCol:''}"></div><div><label class="lbl">Weak areas</label><input class="inp-sm" type="text" value="${esc(r.weak||'')}" oninput="updMock('${m.date}','weak',this.value)" style="width:100%;" placeholder="e.g. Machines, CS"></div></div></div>`;}).join('');
+  function testRow(subId,key,label,color){
+    const t=getSubTest(subId,key);
+    const sc=t.score!==''?+t.score:null;
+    const scCol=sc!==null?(sc>=75?'#4ade80':sc>=50?'#fbbf24':'#ef4444'):'var(--text)';
+    return`<div style="display:grid;grid-template-columns:130px 1fr 90px 90px 86px;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--border)">
+      <div style="font-size:12px;font-weight:700;color:${color}">${label}</div>
+      <input class="inp-sm" type="text" value="${esc(t.notes||'')}" placeholder="Notes / weak areas" oninput="updSubTest(${subId},'${key}','notes',this.value)" style="width:100%;">
+      <input class="inp-sm" type="date" value="${t.date||''}" onchange="updSubTest(${subId},'${key}','date',this.value)" style="width:100%;">
+      <input class="inp-sm" type="number" min="0" max="100" value="${t.score||''}" placeholder="Score %" oninput="updSubTest(${subId},'${key}','score',+this.value)" style="width:100%;${sc!==null?'color:'+scCol:''}">
+      <button class="btn-sm" onclick="toggleSubTest(${subId},'${key}')" style="${t.done?'color:#4ade80;border-color:#4ade8044':''}">${t.done?'✓ Done':'Mark done'}</button>
+    </div>`;
+  }
+  const testHtml=subjects.map(s=>{
+    const doneCount=TEST_KEYS.filter(k=>getSubTest(s.id,k).done).length;
+    const allDone=doneCount===4;
+    const scores=TEST_KEYS.map(k=>getSubTest(s.id,k)).filter(t=>t.score!=='').map(t=>+t.score);
+    const avg=scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length):null;
+    const avgCol=avg!==null?(avg>=75?'#4ade80':avg>=50?'#fbbf24':'#ef4444'):'var(--muted)';
+    return`<div class="card" style="margin-bottom:10px;padding:14px 16px;${allDone?'border-color:#4ade8044':''}">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px">
+        <div>
+          <div style="font-size:13px;font-weight:700">${esc(s.name)}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">${doneCount}/4 tests done${avg!==null?' · avg <b style="color:'+avgCol+'">'+avg+'%</b>':''}</div>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center;">
+          ${TEST_KEYS.map(k=>`<div style="width:10px;height:10px;border-radius:50%;background:${getSubTest(s.id,k).done?'#4ade80':'var(--border)'}" title="${{s1:'Subject Test 1',s2:'Subject Test 2',m1:'Mixed Test 1',m2:'Mixed Test 2'}[k]}"></div>`).join('')}
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:130px 1fr 90px 90px 86px;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint)">Test</div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint)">Notes / Weak Areas</div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint)">Date</div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint)">Score %</div>
+        <div></div>
+      </div>
+      ${testRow(s.id,'s1','📘 Subject T1','#00d4ff')}
+      ${testRow(s.id,'s2','📘 Subject T2','#00d4ff')}
+      ${testRow(s.id,'m1','🔀 Mixed T1','#c084fc')}
+      ${testRow(s.id,'m2','🔀 Mixed T2','#c084fc')}
+    </div>`;
+  }).join('');
+  $('sec-rev2').innerHTML=`<div class="section"><div class="sec-hdr"><h2>Revision 2 + Full-length Mocks</h2><div class="sub">Starts Jan 1, 2027 · Mock every Sunday from Jan 3 · prep ends Feb 5</div></div>
+    <div class="g4" style="margin-bottom:16px"><div class="hcard" style="border:1px solid #00d4ff22"><div class="hlbl">Tests Done</div><div class="hval" style="color:#00d4ff">${testDone}<span style="font-size:13px;color:var(--faint);font-weight:400">/${testTotal}</span></div><div class="hsub">4 per subject (2 subject + 2 mixed)</div></div><div class="hcard" style="border:1px solid #4ade8022"><div class="hlbl">Subjects Full</div><div class="hval" style="color:#4ade80">${subjects.filter(s=>TEST_KEYS.every(k=>getSubTest(s.id,k).done)).length}<span style="font-size:13px;color:var(--faint);font-weight:400">/${subjects.length}</span></div><div class="hsub">all 4 tests cleared</div></div><div class="hcard" style="border:1px solid #fbbf2422"><div class="hlbl">Mock avg</div><div class="hval" style="color:${avgScore>=65?'#4ade80':avgScore>=45?'#fbbf24':'#ef4444'}">${avgScore!==null?avgScore+'%':'—'}</div><div class="hsub">Best: ${bestScore!==null?bestScore+'%':'—'}</div></div><div class="hcard" style="border:1px solid #c084fc22"><div class="hlbl">Mocks done</div><div class="hval" style="color:#c084fc">${mockSched.filter(m=>mockRec(m.date).done).length}<span style="font-size:13px;color:var(--faint);font-weight:400">/${mockSched.length}</span></div></div></div>
+    <div class="section"><div class="sec-hdr"><h2>Mock Test Schedule</h2><div class="sub">5 Sundays · Jan 3 → Jan 31, 2027</div></div><div class="mock-grid">${mockCards}</div></div>
+    <div class="section"><div class="sec-hdr"><h2>Test Tracker</h2><div class="sub">2 Subject tests + 2 Mixed-topic tests per subject &nbsp;&middot;&nbsp; <a href="https://learn.examdost.com/ots/ee?mode=topics#topics" target="_blank" style="color:var(--acc);text-decoration:none;font-weight:700;font-size:12px;">🔗 ExamDost Topic Tests ↗</a></div></div>${testHtml}</div></div>`;
+  applyTabLock('rev2-wrap',locked,'1 Jan 2027');
+}
+
+/* ══ EXPORT / IMPORT ══ */
+function exportData(){loadDisc();const data={subjects,daily,settings,milestones:[...earnedMilestones],subTests,rev1Done,rev1Notes,rev1Pages,mockData,pyqData,discData};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`gate2027-backup-${TODAY}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);dataStatus('✓ Backup exported','#4ade80');}
+function importData(){const inp=document.createElement('input');inp.type='file';inp.accept='.json';inp.onchange=e=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(d.subjects)subjects=d.subjects;if(d.daily)daily=d.daily;if(d.settings)settings=d.settings;if(d.milestones)earnedMilestones=new Set(d.milestones);if(d.subTests)subTests=d.subTests;if(d.rev1Done)rev1Done=d.rev1Done;if(d.rev1Notes)rev1Notes=d.rev1Notes;if(d.rev1Pages)rev1Pages=d.rev1Pages;if(d.mockData)mockData=d.mockData;if(d.pyqData)pyqData=d.pyqData;if(d.discData)discData=d.discData;lsSet('gate-discipline',discData);lsSet('gate-subjects',subjects);lsSet('gate-daily',daily);lsSet('gate-settings',settings);lsSet('gate-milestones',[...earnedMilestones]);lsSet('gate-sub-tests',subTests);lsSet('gate-rev1-done',rev1Done);lsSet('gate-rev1-notes',rev1Notes);lsSet('gate-rev1-pages',rev1Pages);lsSet('gate-mocks',mockData);lsSet('gate-pyq-data',pyqData);lsSet(MIGRATION_KEY,'1');renderAll();dataStatus('✓ Data imported','#4ade80');}catch(err){dataStatus('✗ Import failed: '+err.message,'#ef4444');}};reader.readAsText(file);};document.body.appendChild(inp);inp.click();inp.remove();}
+function copyData(){loadDisc();const data={subjects,daily,settings,milestones:[...earnedMilestones],subTests,rev1Done,rev1Notes,rev1Pages,mockData,pyqData,discData};const txt=JSON.stringify(data);navigator.clipboard.writeText(txt).then(()=>dataStatus('✓ Copied','#4ade80')).catch(()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();dataStatus('✓ Copied (fallback)','#4ade80');});}
+
+function dbThreeCards(
+  activeSub,hDone,vDone,hPct,vPct,dLeft,subCol,
+  r1ActiveSub,r1Slot,r1TodayPg,r1Target,r1PgsDone,r1TotPg,r1PgPct,r1Col2,
+  pyqMonthSubs,pyqMonthSubNames,pyqMonthAcc,pyqMonthCol,pyqMonthC,pyqMonthW,pyqPendingNames
+){
+  /* ── Study card ── */
+  var studyCard='<div class="db-today-card" style="margin-bottom:0;padding:12px 14px;">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
+      +'<div class="db-today-lbl" style="color:var(--acc);margin:0;">📚 STUDY</div>'
+      +'<div style="font-size:10px;color:var(--faint);">'+dLeft+'d · '+activeSub.status+'</div>'
+    +'</div>'
+    +'<div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:8px;line-height:1.2;">'+esc(activeSub.name)+'</div>'
+    +'<div style="display:flex;gap:10px;">'
+      +'<div style="flex:1;">'
+        +'<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:3px;">'
+          +'<div style="font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;">Hours</div>'
+          +'<div style="font-size:13px;font-weight:800;color:'+subCol+';">'+hDone.toFixed(1)+'<span style="font-size:9px;color:var(--faint);font-weight:400;">/'+activeSub.targetHrs+'</span></div>'
+        +'</div>'
+        +'<div class="db-pbar" style="margin-top:0;"><div class="db-pbar-fill" style="width:'+hPct+'%;background:'+subCol+'"></div></div>'
+        +'<div style="font-size:9px;color:var(--faint);margin-top:2px;">'+hPct+'%</div>'
+      +'</div>'
+      +'<div style="flex:1;">'
+        +'<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:3px;">'
+          +'<div style="font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;">Videos</div>'
+          +'<div style="font-size:13px;font-weight:800;color:var(--acc);">'+vDone+'<span style="font-size:9px;color:var(--faint);font-weight:400;">/'+activeSub.videos+'</span></div>'
+        +'</div>'
+        +'<div class="db-pbar" style="margin-top:0;"><div class="db-pbar-fill" style="width:'+vPct+'%;background:var(--acc)"></div></div>'
+        +'<div style="font-size:9px;color:var(--faint);margin-top:2px;">'+vPct+'%</div>'
+      +'</div>'
+    +'</div>'
+  +'</div>';
+
+  /* ── Rev1 card ── */
+  var r1Inner;
+  if(r1ActiveSub){
+    r1Inner='<div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:8px;line-height:1.2;">'+esc(r1ActiveSub.name)+'</div>'
+      +'<div style="font-size:10px;color:var(--muted);margin-bottom:8px;">'+fmt(r1Slot.start)+' \u2013 '+fmt(r1Slot.end)+' \u00b7 '+r1Slot.days+'d</div>'
+      +'<div style="display:flex;gap:10px;">'
+        +'<div style="flex:1;">'
+          +'<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:3px;">'
+            +'<div style="font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;">Today</div>'
+            +'<div style="font-size:13px;font-weight:800;color:'+r1Col2+';">'+r1TodayPg+'<span style="font-size:9px;color:var(--faint);font-weight:400;">/'+r1Target+'</span></div>'
+          +'</div>'
+        +'</div>'
+        +'<div style="flex:1;">'
+          +'<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:3px;">'
+            +'<div style="font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;">Total</div>'
+            +'<div style="font-size:13px;font-weight:800;color:#c084fc;">'+r1PgsDone+'<span style="font-size:9px;color:var(--faint);font-weight:400;">/'+r1TotPg+'p</span></div>'
+          +'</div>'
+        +'</div>'
+      +'</div>'
+      +'<div style="margin-top:6px;">'
+        +'<div style="font-size:9px;color:var(--faint);margin-bottom:2px;">Progress '+r1PgPct+'%</div>'
+        +'<div class="db-pbar"><div class="db-pbar-fill" style="width:'+r1PgPct+'%;background:#c084fc"></div></div>'
+      +'</div>';
+  } else {
+    r1Inner='<div style="font-size:11px;color:var(--faint);margin-top:8px;">Not started yet \u00b7 begins '+REV1_START+'</div>';
+  }
+  var rev1Card='<div class="db-today-card" style="margin-bottom:0;border-color:#c084fc33;padding:12px 14px;">'
+    +'<div class="db-today-lbl" style="color:#c084fc;margin-bottom:6px;">\u{1f4d6} REVISION 1</div>'
+    +r1Inner
+  +'</div>';
+
+  /* ── PYQ card ── */
+  var pyqInner;
+  if(pyqMonthSubs.length>0){
+    pyqInner='<div style="font-size:11px;color:var(--muted);margin-top:4px;">'+esc(pyqMonthSubNames.join(', '))+'</div>'
+      +'<div style="margin-top:10px;display:flex;gap:16px;">'
+        +'<div><div style="font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Accuracy</div>'
+        +'<div style="font-size:22px;font-weight:800;color:'+pyqMonthCol+';">'+(pyqMonthAcc!==null?pyqMonthAcc+'%':'\u2014')+'</div></div>'
+        +'<div><div style="font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Questions</div>'
+        +'<div style="font-size:22px;font-weight:800;color:#fbbf24;">'+(pyqMonthC+pyqMonthW)+'</div></div>'
+      +'</div>'
+      +'<div style="font-size:10px;color:var(--faint);margin-top:6px;">'+pyqMonthC+' correct \u00b7 '+pyqMonthW+' wrong</div>';
+  } else {
+    var pendMsg=pyqPendingNames&&pyqPendingNames.length>0
+      ?'<div style="font-size:10px;color:var(--faint);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-top:8px;">Complete this month</div>'
+       +'<div style="font-size:11px;color:#fbbf24;margin-top:4px;line-height:1.5;">'+esc(pyqPendingNames.join(', '))+'</div>'
+      :'<div style="font-size:11px;color:#4ade80;margin-top:8px;">✓ All completed subjects have PYQ logged</div>';
+    pyqInner='<div style="font-size:11px;color:var(--faint);margin-top:4px;">No sessions this month</div>'+pendMsg;
+  }
+  var pyqCard='<div class="db-today-card" style="margin-bottom:0;border-color:#fbbf2433;padding:12px 14px;">'
+    +'<div class="db-today-lbl" style="color:#fbbf24;margin-bottom:6px;">\u{1f3af} PYQ \u2014 THIS MONTH</div>'
+    +pyqInner
+  +'</div>';
+
+  return '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;">'
+    +studyCard+rev1Card+pyqCard
+  +'</div>';
+}
+
+function renderDashboard(){
+  const el=$('db-root');if(!el)return;
+  loadMocks();loadPyq();
+  const dd=daily[TODAY]||{};
+  const hToday=parseFloat(dd.studyHrs)||0,vToday=parseInt(dd.videosToday)||0;
+  const activeSub=autoDetectSubject(TODAY)||subjects.find(s=>s.id===dd.subjectId);
+  const streak=calcStreak('gate'),gateHabit=(dd.habits||{}).gate;
+  const dayN=Math.min(diffDays(START,TODAY)+1,193),daysLeft=Math.max(0,diffDays(TODAY,EXAM));
+  const totHrs=getTotalStudyHrs(),totVids=getTotalVideosWatched(),totalVids=getTotalVideos();
+  const doneSubs=subjects.filter(s=>s.status==='Completed').length;
+  const journeyPct=Math.min(100,dayN/193*100).toFixed(1);
+  let r1Done=0;subjects.forEach(s=>{if(rev1Done[s.id])r1Done++;});
+  let pyqC=0,pyqW=0,pyqTopicsStrong=0,pyqTopicsTotal=0;
+  PYQ_SUBJECTS.forEach(sub=>{sub.topics.forEach((_,ti)=>{pyqTopicsTotal++;const t=getPyqTotals(sub.id,ti);pyqC+=t.correct;pyqW+=t.wrong;if(confClass(t.pct)==='strong')pyqTopicsStrong++;});});
+  const pyqPct=pyqC+pyqW>0?Math.round(pyqC/(pyqC+pyqW)*100):null;
+  const pyqCol=pyqPct===null?'var(--muted)':pyqPct>=75?'#4ade80':pyqPct>=50?'#fbbf24':'#ef4444';
+    const mockSched=buildMockSchedule(),mocksDone=mockSched.filter(m=>mockRec(m.date).done).length;
+  const mockScores=mockSched.map(m=>mockRec(m.date)).filter(m=>m.score!==''&&!isNaN(+m.score)).map(m=>+m.score);
+  const mockAvg=mockScores.length?Math.round(mockScores.reduce((a,b)=>a+b,0)/mockScores.length):null;
+  const TK=['s1','s2','m1','m2'];
+  let subTestDone=0;subjects.forEach(s=>TK.forEach(k=>{if(getSubTest(s.id,k).done)subTestDone++;}));
+  const subTestTotal=subjects.length*4;
+  const studyCol=journeyPct>=75?'#4ade80':journeyPct>=40?'#fbbf24':'#ef4444';
+  const r1Pct=Math.round(r1Done/subjects.length*100);
+  const r1Col=r1Pct>=80?'#4ade80':r1Pct>=40?'#fbbf24':'#ef4444';
+  const r1Next=subjects.find(s=>!rev1Done[s.id]&&s.status==='Completed');
+  const r2Col=subTestDone>=subTestTotal?'#4ade80':subTestDone>0?'#fbbf24':'var(--muted)';
+  const todayHrsCol=hToday>=5?'#4ade80':hToday>=3?'#fbbf24':'#ef4444';
+
+  let activeSubCard='';
+  if(activeSub){
+    const hDone=parseFloat(getActualHrs(activeSub)),vDone=getActualVids(activeSub);
+    const hPct=Math.min(100,Math.round(hDone/activeSub.targetHrs*100));
+    const vPct=activeSub.videos>0?Math.min(100,Math.round(vDone/activeSub.videos*100)):0;
+    const dLeft=Math.max(0,diffDays(TODAY,activeSub.end));
+    const subCol=hPct>=100?'#4ade80':hPct>=60?'#fbbf24':'#ef4444';
+    const asLk=SUBJECT_LINKS[activeSub.id]||{};
+    const asYtUrl=asLk.yt||asLk.yt_a||asLk.yt_d||asLk.yt_m||'';
+    const asYtBtn=asYtUrl?`<a href="${asYtUrl}" target="_blank" class="lp-link-y" style="font-size:12px;padding:6px 13px;">▶ YouTube</a>`:'';
+    /* ── Rev1 mini card data ── */
+    const r1ActiveSub=subjects.find(s=>{const sl=REV1_SCHEDULE[s.id];return sl&&TODAY>=sl.start&&TODAY<=sl.end&&!rev1Done[s.id];})
+      ||subjects.find(s=>{const sl=REV1_SCHEDULE[s.id];return sl&&TODAY>sl.start&&!rev1Done[s.id]&&s.status==='Completed';});
+    const r1Slot=r1ActiveSub?REV1_SCHEDULE[r1ActiveSub.id]:null;
+    const r1PgsDone=r1ActiveSub?pagesDone(r1ActiveSub.id):0;
+    const r1TotPg=r1ActiveSub?subPages(r1ActiveSub.id):0;
+    const r1TodayPg=r1ActiveSub?pagesOn(r1ActiveSub.id,TODAY):0;
+    const r1Target=r1Slot?r1Slot.perDay:0;
+    const r1PgPct=r1TotPg>0?Math.min(100,Math.round(r1PgsDone/r1TotPg*100)):0;
+    const r1StatusLabel=r1ActiveSub?(rev1Done[r1ActiveSub.id]?'✓ Revised':TODAY>=(r1Slot&&r1Slot.start||'9999')?'Active':'Ready'):'All done';
+    const r1Col2=r1TodayPg>=r1Target&&r1Target>0?'#4ade80':r1TodayPg>0?'#fbbf24':'#ef4444';
+
+    /* ── PYQ mini card data ── */
+    const pyqMonthSubs=PYQ_SUBJECTS.filter(ps=>{
+      return Object.values(pyqData[ps.id]||{}).some(arr=>arr.some(s=>{
+        const m=s.date?s.date.slice(0,7):''; return m===TODAY.slice(0,7);
+      }));
+    });
+    const pyqMonthSubNames=pyqMonthSubs.map(s=>s.name.replace('ANALOG + DIGITAL ELECTRONICS','ANALOG+DIGITAL').replace(' ELECTRONICS','').replace(' SYSTEMS','').replace(' ANALYSIS','').replace(' MACHINES',''));
+    let pyqMonthC=0,pyqMonthW=0;
+    pyqMonthSubs.forEach(ps=>{Object.values(pyqData[ps.id]||{}).forEach(arr=>arr.forEach(s=>{if(s.date&&s.date.slice(0,7)===TODAY.slice(0,7)){pyqMonthC+=s.correct||0;pyqMonthW+=s.wrong||0;}}));});
+    const pyqMonthAcc=pyqMonthC+pyqMonthW>0?Math.round(pyqMonthC/(pyqMonthC+pyqMonthW)*100):null;
+    const pyqMonthCol=pyqMonthAcc===null?'var(--muted)':pyqMonthAcc>=75?'#4ade80':pyqMonthAcc>=50?'#fbbf24':'#ef4444';
+    /* subjects completed but with zero PYQ sessions at all */
+    const curMonth=TODAY.slice(0,7);
+    /* map month name -> YYYY-MM for comparison */
+    const monthMap={'Jan':'01','Feb':'02','Mar':'03','Apr':'04','May':'05','Jun':'06','Jul':'07','Aug':'08','Sep':'09','Oct':'10','Nov':'11','Dec':'12'};
+    const curYear=TODAY.slice(0,4);
+    const pyqPendingNames=PYQ_SUBJECTS.filter(ps=>{
+      const s=subjects.find(sub=>sub.id===ps.id); if(!s||s.status!=='Completed') return false;
+      /* check pyqMonth target <= current month */
+      const mo=monthMap[ps.pyqMonth]; if(!mo) return false;
+      const targetYM=curYear+'-'+mo;
+      if(targetYM>curMonth) return false;
+      const total=ps.topics.reduce((t,_,ti)=>{return t+(pyqData[ps.id]&&pyqData[ps.id][ti]?pyqData[ps.id][ti].length:0);},0);
+      return total===0;
+    }).map(ps=>ps.short);
+
+    activeSubCard=dbThreeCards(
+      activeSub,hDone,vDone,hPct,vPct,dLeft,subCol,
+      r1ActiveSub,r1Slot,r1TodayPg,r1Target,r1PgsDone,r1TotPg,r1PgPct,r1Col2,
+      pyqMonthSubs,pyqMonthSubNames,pyqMonthAcc,pyqMonthCol,pyqMonthC,pyqMonthW,pyqPendingNames
+    );
+  }
+
+  const todayCard=`<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:24px;">
+    <div style="font-size:12px;font-weight:700;color:var(--acc);margin-bottom:14px;">📅 TODAY — ${fmtFull(TODAY)}${gateHabit?' &nbsp;🔥 Streak: '+streak:' &nbsp;· No study logged yet'}</div>
+    <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end;">
+      <div class="db-today-item"><div class="db-today-lbl">Hours Today</div><div class="db-today-val" style="color:${todayHrsCol}">${hToday.toFixed(1)}</div></div>
+      <div class="db-today-item"><div class="db-today-lbl">Videos Today</div><div class="db-today-val" style="color:var(--acc)">${vToday}</div></div>
+      <div class="db-today-item"><div class="db-today-lbl">Streak</div><div class="db-today-val" style="color:var(--amber)">🔥${streak}</div></div>
+      <div class="db-today-item"><div class="db-today-lbl">Milestones</div><div class="db-today-val" style="color:var(--purple)">${earnedMilestones.size}<span style="font-size:12px;color:var(--faint);font-weight:400">/${MILESTONE_DEFS.length}</span></div></div>
+      <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <button class="db-go-btn" onclick="switchMainTab('study')">📚 Study log →</button>
+        ${TODAY>=REV1_START?`<button class="db-go-btn" style="background:transparent;border-color:#c084fc;color:#c084fc;" onclick="switchMainTab('rev1')">📖 Rev 1 log →</button>`:''}
+        ${TODAY>='2026-09-01'?`<button class="db-go-btn" style="background:transparent;border-color:#fbbf24;color:#fbbf24;" onclick="switchMainTab('pyq')">🎯 PYQ log →</button>`:''}
+        <button class="db-go-btn" style="background:transparent;border-color:#4ade80;color:#4ade80;" onclick="switchMainTab('rev2')">🚀 Rev 2 & Mocks →</button>
+      </div>
+    </div>
+  </div>`;
+
+
+
+  el.innerHTML=`
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px;">
+      <div>
+        <div style="font-size:22px;font-weight:800;color:var(--text);">Dashboard</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:2px;">${fmtFull(TODAY)} · Day ${dayN} of 193 · ${daysLeft} days to GATE 2027</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-g" onclick="exportData()">📤 Export</button>
+        <button class="btn-g" onclick="importData()">📥 Import</button>
+      </div>
+    </div>
+    ${todayCard}
+    ${activeSubCard}
+    <div class="db-section-hdr" style="margin-bottom:10px;">🎯 Discipline Score</div>
+    <div id="disc-card-root"></div>`;
+  renderDiscCard();
+}
+/* ══ TAB NAV ══ */
+function switchMainTab(id){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach((t,i)=>t.classList.toggle('active',['dashboard','study','rev1','pyq','rev2'][i]===id));
+  $('panel-'+id).classList.add('active');
+  if(id==='dashboard')renderDashboard();
+  if(id==='rev1')renderRevision1();
+  if(id==='rev2')renderRevision2();
+  if(id==='pyq')renderPyq();
+  window.scrollTo(0,0);
+}
+/* ══════════════════════════════════════════
+   DISCIPLINE SCORE SYSTEM
+   Storage key: gate-discipline
+   Structure: { plans: { "YYYY-MM-DD": { wakeTime, blocks:[{time,desc,status}] } },
+                logs:  { "YYYY-MM-DD": { noSocial, scores:{...} } } }
+════════════════════════════════════════════ */
+var DISC_START='2026-09-07';
+var discData = { plans:{}, logs:{} };
+function loadDisc(){ var d=lsGet('gate-discipline'); if(d){ discData.plans=d.plans||{}; discData.logs=d.logs||{}; } }
+function saveDisc(){ lsSet('gate-discipline', discData); }
+
+/* ── FIXED DAILY BLOCKS — always present, not stored in plans ── */
+var FIXED_BLOCKS = [
+  { id:'notes',  start:'06:00', end:'07:00', icon:'📝', label:'Short Notes Revision',  desc:'Revise handwritten short notes',       key:'notes'  },
+  { id:'study',  start:'08:00', end:'12:00', icon:'📚', label:'Study Videos',           desc:'Watch videos as per study schedule',    key:'study'  },
+  { id:'rev1',   start:'15:00', end:'18:00', icon:'📖', label:'Revision 1',             desc:'Revise notes as per Rev1 target',       key:'rev1'   },
+  { id:'pyq',    start:'23:00', end:'00:00', icon:'🎯', label:'PYQ Practice',           desc:'PYQ practice as per target',            key:'pyq'    },
+];
+
+/* ── score computation for a given date ── */
+function calcDiscScore(date){
+  loadDisc();
+  var dd = daily[date]||{};
+  var log = discData.logs[date]||{};
+  var result = { total:0, signals:[] };
+
+  /* Fixed blocks — 20 pts each (80 pts total) */
+  FIXED_BLOCKS.forEach(function(fb){
+    var done = !!(log['fb_'+fb.key]);
+    var earned = done ? 20 : 0;
+    result.signals.push({ icon:fb.icon, name:fb.label, note:fb.start+' – '+fb.end+' · '+fb.desc, pts:20, earned:earned, auto:false, fixedKey:'fb_'+fb.key });
+    result.total += earned;
+  });
+
+  /* Exercise (10 pts) — from Study tab habit */
+  var exDone = !!(dd.habits&&dd.habits.exercise);
+  var exEarned = exDone ? 10 : 0;
+  result.signals.push({ icon:'🏃', name:'Exercise', note: exDone?'Habit toggled ✓':'Toggle in Study tab', pts:10, earned:exEarned, auto:true });
+  result.total += exEarned;
+
+  /* Woke up at 6:00 AM (10 pts) */
+  var wakeEarned = 0;
+  var wakeNote = 'Mark below';
+  if(log.wokeOnTime===true){ wakeEarned=10; wakeNote='On time ✓ (6:00 AM)'; }
+  else if(log.wokeOnTime===false){ wakeNote='Missed (6:00 AM target)'; }
+  result.signals.push({ icon:'⏰', name:'Woke Up at 6:00 AM', note:wakeNote, pts:10, earned:wakeEarned, auto:false, key:'wokeOnTime', isPlan:true });
+  result.total += wakeEarned;
+
+  result.total = Math.min(100, result.total);
+  return result;
+}
+
+/* ── streak of days with score ≥ 80 ── */
+function calcDiscStreak(){
+  var streak = 0;
+  var d = addDays(TODAY, 0);
+  for(var i=0;i<193;i++){
+    if(d < DISC_START) break;
+    var sc = calcDiscScore(d);
+    if(sc.total >= 80) streak++;
+    else break;
+    d = addDays(d, -1);
+  }
+  return streak;
+}
+
+/* ── 7-day rolling average ── */
+function calcDiscAvg7(){
+  var sum=0, cnt=0;
+  for(var i=0;i<7;i++){
+    var d=addDays(TODAY,-i);
+    if(d<DISC_START) break;
+    sum+=calcDiscScore(d).total; cnt++;
+  }
+  return cnt>0 ? Math.round(sum/cnt) : 0;
+}
+
+/* ── score color ── */
+function discColor(sc){ return sc>=80?'#4ade80':sc>=50?'#fbbf24':'#ef4444'; }
+
+/* ── SVG ring ── */
+function discRingHtml(score, size, sw){
+  size=size||64; sw=sw||6;
+  var r=(size-sw)/2; var circ=2*Math.PI*r;
+  var col=discColor(score);
+  var dash=(score/100)*circ;
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'" style="display:block;transform:rotate(-90deg)">'
+    +'<circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="var(--border)" stroke-width="'+sw+'"/>'
+    +'<circle cx="'+size/2+'" cy="'+size/2+'" r="'+r+'" fill="none" stroke="'+col+'" stroke-width="'+sw+'" stroke-linecap="round"'
+    +' stroke-dasharray="'+dash+' '+circ+'" style="transition:stroke-dasharray .5s"/>'
+    +'</svg>';
+}
+
+/* ── plan helpers ── */
+function discGetPlan(date){ loadDisc(); return discData.plans[date]||{wakeTime:'',blocks:[]}; }
+function discSetWake(date, t){ loadDisc(); if(!discData.plans[date])discData.plans[date]={blocks:[]}; discData.plans[date].wakeTime=t; saveDisc(); renderDiscCard(); }
+/* helper: get YouTube link for a subject id */
+function discGetYt(subId){
+  var lk=SUBJECT_LINKS[subId]||{};
+  return lk.yt||lk.yt_a||lk.yt_d||lk.yt_m||'';
+}
+/* helper: get PrepFusion PYQ link for a subject id */
+function discGetPyqUrl(subId){
+  var ps=PYQ_SUBJECTS.find(function(s){return s.id===subId;});
+  return ps?ps.url:'https://hub.prepfusion.in';
+}
+/* helper: get OneDrive notes path for a subject */
+function discGetNotesPath(subId){
+  var base='C:\\Users\\AswithGiduturi\\OneDrive - DESRI\\Documents\\G2027_2028\\Notes\\';
+  var pdfs=REV1_NOTES[subId];
+  if(pdfs&&pdfs.length>0) return base+pdfs[0].file;
+  return base;
+}
+/* helper: calc duration string from start/end HH:MM */
+function discCalcDur(start, end){
+  if(!start||!end) return '';
+  var s=start.split(':'), e=end.split(':');
+  var sm=parseInt(s[0])*60+parseInt(s[1]);
+  var em=parseInt(e[0])*60+parseInt(e[1]);
+  var diff=em-sm;
+  if(diff<=0) return '';
+  var h=Math.floor(diff/60), m=diff%60;
+  return h>0?(h+'h'+(m>0?' '+m+'m':'')):(m+'m');
+}
+var discFormAct='study'; /* tracks selected activity in the add-block form */
+function discSetAct(act){
+  discFormAct=act;
+  ['study','rev1','pyq'].forEach(function(a){
+    var btn=document.getElementById('disc-act-'+a);
+    if(btn) btn.className='disc-act-btn'+(a===act?' sel-'+a:'');
+  });
+  /* show/hide topic row based on activity */
+  var topicRow=document.getElementById('disc-topic-row');
+  if(topicRow) topicRow.style.display=act==='pyq'?'flex':'none';
+  /* repopulate topic dropdown when subject changes to pyq */
+  if(act==='pyq') discUpdateTopics();
+}
+function discUpdateTopics(){
+  var sb=document.getElementById('disc-block-sub-inp');
+  var td=document.getElementById('disc-block-topic-inp');
+  if(!sb||!td) return;
+  var subId=parseInt(sb.value)||0;
+  var pyqSub=PYQ_SUBJECTS.find(function(s){ return s.id===subId; });
+  td.innerHTML='<option value="-1">-- Topic (optional) --</option>';
+  if(pyqSub){
+    pyqSub.topics.forEach(function(t,i){
+      td.innerHTML+='<option value="'+i+'">'+esc(t.name)+'</option>';
+    });
+  }
+}
+function discAddBlock(date){
+  var ts=$('disc-block-start-inp'); var te=$('disc-block-end-inp');
+  var tg=$('disc-block-target-inp'); var sb=$('disc-block-sub-inp');
+  var td=document.getElementById('disc-block-topic-inp');
+  if(!ts||!te||!tg||!sb) return;
+  var startV=ts.value.trim(); var endV=te.value.trim();
+  var targetV=tg.value.trim(); var subId=parseInt(sb.value)||0;
+  var topicIdx=td?parseInt(td.value):-1;
+  if(!startV||!endV){ alert('Set start and end time'); return; }
+  if(!subId){ alert('Pick a subject'); return; }
+  loadDisc();
+  if(!discData.plans[date]) discData.plans[date]={blocks:[]};
+  if(!discData.plans[date].blocks) discData.plans[date].blocks=[];
+  discData.plans[date].blocks.push({
+    start:startV, end:endV, target:targetV,
+    subId:subId, act:discFormAct,
+    topicIdx: discFormAct==='pyq' ? topicIdx : -1,
+    status:'pending'
+  });
+  saveDisc();
+  ts.value=''; te.value=''; tg.value=''; sb.value='0';
+  if(td) td.value='-1';
+  discFormAct='study'; renderDiscCard();
+}
+function discSetBlockStatus(date, idx, status){
+  loadDisc();
+  if(!discData.plans[date]||!discData.plans[date].blocks) return;
+  discData.plans[date].blocks[idx].status=status;
+  saveDisc(); renderDiscCard();
+}
+function discDeleteBlock(date, idx){
+  loadDisc();
+  if(!discData.plans[date]||!discData.plans[date].blocks) return;
+  discData.plans[date].blocks.splice(idx,1);
+  saveDisc(); renderDiscCard();
+}
+function discToggleEditRow(rowId){
+  var row=document.getElementById(rowId);
+  if(!row) return;
+  row.classList.toggle('visible');
+  if(row.classList.contains('visible')){
+    var inp=row.querySelector('.disc-edit-inp');
+    if(inp) inp.focus();
+  }
+}
+function discSaveTarget(date, idx){
+  loadDisc();
+  var inp=document.getElementById('disc-ei-'+date+'-'+idx);
+  if(!inp) return;
+  var val=inp.value.trim();
+  if(discData.plans[date]&&discData.plans[date].blocks&&discData.plans[date].blocks[idx]){
+    discData.plans[date].blocks[idx].target=val;
+    saveDisc(); renderDiscCard();
+  }
+}
+function discToggleLog(date, key, val){
+  loadDisc(); if(!discData.logs[date])discData.logs[date]={};
+  discData.logs[date][key]=val; saveDisc(); renderDiscCard();
+}
+
+/* ── heatmap ── */
+function discHeatmapHtml(){
+  var cells=''; var d=DISC_START;
+  while(d<=EXAM){
+    var sc=calcDiscScore(d).total;
+    var bg;
+    if(d>TODAY){ bg='var(--border)'; }
+    else if(sc>=80){ bg='#4ade80'; }
+    else if(sc>=50){ bg='#fbbf24'; }
+    else if(sc>=1){ bg='#ef4444'; }
+    else { bg='#1a3248'; }
+    var opacity = d<=TODAY ? '1' : '0.3';
+    cells+='<div class="disc-hm-cell" style="background:'+bg+';opacity:'+opacity+';" title="'+d+': '+sc+' pts"></div>';
+    d=addDays(d,1);
+  }
+  return cells;
+}
+
+/* ── main render ── */
+/* ── render one enriched block row ── */
+function discBlockRowHtml(b, i, date, showStatus){
+  var sub = subjects.find(function(s){ return s.id===b.subId; });
+  var subName = sub?sub.name:'Unknown';
+  var dur = discCalcDur(b.start, b.end);
+  var actMap = {study:'📚 Study', rev1:'📖 Rev1', pyq:'🎯 PYQ'};
+  var actCls = {study:'study', rev1:'rev1', pyq:'pyq'};
+  var actLabel = actMap[b.act]||b.act;
+  var actClass = actCls[b.act]||'study';
+  /* auto link */
+  var linkHtml = '';
+  if(b.act==='study' && b.subId){
+    var ytUrl = discGetYt(b.subId);
+    if(ytUrl) linkHtml='<a href="'+ytUrl+'" target="_blank" class="disc-block-link yt">▶ YouTube</a>';
+  } else if(b.act==='rev1' && b.subId){
+    var notesPath = discGetNotesPath(b.subId);
+    var notesUrl='file:///'+encodeURI(notesPath.replace(/\\/g,'/'));    var safeP=notesPath.replace(/"/g,'');    linkHtml='<a href="'+notesUrl+'" target="_blank" class="disc-block-link rev" title="Click to open notes PDF">📄 Notes ↗</a><button onclick="navigator.clipboard.writeText('+JSON.stringify(notesPath)+')" style="background:transparent;border:none;cursor:pointer;font-size:10px;color:var(--muted);padding:0 4px;" title="Copy folder path">⧉</button>';
+  } else if(b.act==='pyq' && b.subId){
+    var pyqUrl = discGetPyqUrl(b.subId);
+    linkHtml='<a href="'+pyqUrl+'" target="_blank" class="disc-block-link pq">🔗 PrepFusion</a>';
+  }
+  var cls = showStatus&&b.status==='done'?'done-block':showStatus&&b.status==='missed'?'missed-block':'';
+  var statusBtns = '';
+  if(showStatus){
+    var doneCls = b.status==='done'?'done':'';
+    var missCls = b.status==='missed'?'miss':'';
+    statusBtns = '<div class="disc-block-btns">'
+      +'<button class="disc-block-btn '+doneCls+'" onclick="discSetBlockStatus(\''+date+'\','+i+',\'done\')">✓</button>'
+      +'<button class="disc-block-btn '+missCls+'" onclick="discSetBlockStatus(\''+date+'\','+i+',\'missed\')">✗</button>'
+      +'<button class="disc-block-btn" onclick="discToggleEditRow(\'disc-er-'+date+'-'+i+'\')" style="font-size:9px;">edit</button>'
+      +'<button class="disc-block-btn" onclick="discDeleteBlock(\''+date+'\','+i+')" style="font-size:9px;">del</button>'
+      +'</div>';
+  } else {
+    statusBtns = '<div class="disc-block-btns">'
+      +'<button class="disc-block-btn" onclick="discToggleEditRow(\'disc-er-'+date+'-'+i+'\')" style="font-size:9px;">edit</button>'
+      +'<button class="disc-block-btn" onclick="discDeleteBlock(\''+date+'\','+i+')" style="font-size:9px;">del</button>'
+      +'</div>';
+  }
+  return '<div class="disc-block '+cls+'">'
+    +'<div class="disc-block-info">'
+      +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
+        +'<div class="disc-block-time">'+b.start+' – '+b.end+'</div>'
+        +(dur?'<span class="disc-block-dur">'+dur+'</span>':'')
+        +'<span class="disc-block-act '+actClass+'">'+actLabel+'</span>'
+        +linkHtml
+      +'</div>'
+      +'<div class="disc-block-desc" style="margin-top:3px;">'+esc(subName)+(function(){
+        if(b.act==='pyq'&&b.topicIdx>=0){
+          var ps=PYQ_SUBJECTS.find(function(s){return s.id===b.subId;});
+          var tn=ps&&ps.topics[b.topicIdx]?ps.topics[b.topicIdx].name:'';
+          return tn?' · Topic: '+esc(tn):'';
+        } return '';
+      }())+(b.target?' · '+esc(b.target):'')+'</div>'
+      +'<div class="disc-edit-row" id="disc-er-'+date+'-'+i+'">'
+        +'<span style="font-size:10px;color:var(--muted);white-space:nowrap;">Target:</span>'
+        +'<input class="disc-edit-inp" type="text" value="'+esc(b.target||'')+'" placeholder="e.g. 5 videos, DC Machines" id="disc-ei-'+date+'-'+i+'"/>'
+        +'<button class="disc-edit-save" onclick="discSaveTarget(\''+date+'\','+i+')">Save</button>'
+        +'<button class="disc-edit-cancel" onclick="discToggleEditRow(\'disc-er-'+date+'-'+i+'\');">Cancel</button>'
+      +'</div>'
+    +'</div>'
+    +statusBtns
+    +'</div>';
+}
+
+/* ── build the add-block form for a given date ── */
+function discBlockFormHtml(date){
+  var subOpts = '<option value="0">-- Subject --</option>';
+  subjects.forEach(function(s){ subOpts+='<option value="'+s.id+'">'+esc(s.name)+'</option>'; });
+  return '<div style="margin-top:10px;">'
+    +'<div class="disc-act-btns">'
+      +'<span style="font-size:10px;font-weight:700;color:var(--muted);align-self:center;margin-right:4px;">Type:</span>'
+      +'<button id="disc-act-study" class="disc-act-btn sel-study" onclick="discSetAct(\'study\')">📚 Study</button>'
+      +'<button id="disc-act-rev1"  class="disc-act-btn" onclick="discSetAct(\'rev1\')">📖 Rev1</button>'
+      +'<button id="disc-act-pyq"   class="disc-act-btn" onclick="discSetAct(\'pyq\')">🎯 PYQ</button>'
+    +'</div>'
+    +'<div class="disc-form-row">'
+      +'<span class="disc-form-lbl">Subject:</span>'
+      +'<select class="disc-inp" id="disc-block-sub-inp" style="flex:1;min-width:140px;" onchange="if(discFormAct===\'pyq\')discUpdateTopics()">'+subOpts+'</select>'
+    +'</div>'
+    +'<div class="disc-form-row" id="disc-topic-row" style="display:none;">'
+      +'<span class="disc-form-lbl">Topic:</span>'
+      +'<select class="disc-inp" id="disc-block-topic-inp" style="flex:1;min-width:140px;"><option value="-1">-- Topic (optional) --</option></select>'
+    +'</div>'
+    +'<div class="disc-form-row">'
+      +'<span class="disc-form-lbl">Start:</span>'
+      +'<input class="disc-inp" type="time" id="disc-block-start-inp" style="width:100px;"/>'
+      +'<span class="disc-form-lbl" style="margin-left:6px;">End:</span>'
+      +'<input class="disc-inp" type="time" id="disc-block-end-inp" style="width:100px;"/>'
+    +'</div>'
+    +'<div class="disc-form-row">'
+      +'<span class="disc-form-lbl">Target:</span>'
+      +'<input class="disc-inp" type="text" id="disc-block-target-inp" placeholder="e.g. 3 videos, 20 pages, DC Machines topics" style="flex:1;min-width:160px;"/>'
+    +'</div>'
+    +'<button class="disc-btn-add" style="margin-top:6px;" onclick="discAddBlock(\''+date+'\')">+ Add Block</button>'
+    +'</div>';
+}
+
+var discOpen = false;
+function toggleDiscDetail(){ discOpen=!discOpen; renderDiscCard(); }
+
+function renderDiscCard(){
+  loadAll(); loadRev1(); loadPyq();
+  var el = document.getElementById('disc-card-root');
+  if(!el) return;
+  /* If today is before DISC_START, show a countdown card instead */
+  if(TODAY < DISC_START){
+    var daysTo = diffDays(TODAY, DISC_START);
+    el.innerHTML = '<div class="disc-card" style="text-align:center;padding:32px 20px;">'
+      +'<div style="font-size:36px;margin-bottom:10px;">🎯</div>'
+      +'<div style="font-size:16px;font-weight:800;color:var(--acc);margin-bottom:8px;">Discipline Tracking Starts Sep 7, 2026</div>'
+      +'<div style="font-size:13px;color:var(--muted);margin-bottom:16px;">'+daysTo+' day'+(daysTo===1?'':'s')+' to go</div>'
+      +'<div style="background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:14px 18px;text-align:left;max-width:420px;margin:0 auto;">'
+        +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">Your Daily Fixed Schedule</div>'
+        +'<div style="display:flex;flex-direction:column;gap:7px;font-size:12px;">'
+          +'<div style="display:flex;gap:10px;"><span style="color:var(--acc);font-weight:700;min-width:110px;">06:00 – 07:00</span><span>📝 Revise Short Notes</span></div>'
+          +'<div style="display:flex;gap:10px;"><span style="color:var(--acc);font-weight:700;min-width:110px;">08:00 – 12:00</span><span>📚 Study Videos</span></div>'
+          +'<div style="display:flex;gap:10px;"><span style="color:var(--acc);font-weight:700;min-width:110px;">15:00 – 18:00</span><span>📖 Revision 1</span></div>'
+          +'<div style="display:flex;gap:10px;"><span style="color:var(--acc);font-weight:700;min-width:110px;">23:00 – 00:00</span><span>🎯 PYQ Practice</span></div>'
+        +'</div>'
+      +'</div>'
+      +'</div>';
+    return;
+  }
+  var sc = calcDiscScore(TODAY);
+  var streak = calcDiscStreak();
+  var avg7 = calcDiscAvg7();
+  var col = discColor(sc.total);
+  var plan = discGetPlan(TODAY);
+  var log = discData.logs[TODAY]||{};
+  var tmrw = addDays(TODAY,1);
+  var tmrwPlan = discGetPlan(tmrw);
+
+  /* signals HTML */
+  var sigHtml = sc.signals.map(function(sig, idx){
+    var isEarned = sig.earned >= sig.pts;
+    var cls = isEarned?'earned': sig.earned===0?'missed':'';
+    var ptsCls = isEarned?'earned':'missed';
+    var ptsStr = (isEarned?'+':'')+sig.earned+'/'+sig.pts;
+    var toggleHtml = '';
+    if(sig.isPlan){
+      var wOT = log.wokeOnTime;
+      var wYesCls = wOT===true?'on':'';
+      var wNoCls = wOT===false?'on':'';
+      var wNoStyle = wOT===false?'background:#2a0000;border-color:#ef4444;color:#ef4444;':'';
+      toggleHtml = '<div style="display:flex;gap:5px;">'
+        +'<button class="disc-manual-toggle '+wYesCls+'" onclick="discToggleLog(\''+TODAY+'\',\'wokeOnTime\',true)">✓ Yes</button>'
+        +'<button class="disc-manual-toggle '+wNoCls+'" style="'+wNoStyle+'" onclick="discToggleLog(\''+TODAY+'\',\'wokeOnTime\',false)">✗ No</button>'
+        +'</div>';
+    }
+    return '<div class="disc-signal '+cls+'">'
+      +'<span class="disc-sig-icon">'+sig.icon+'</span>'
+      +'<div class="disc-sig-body"><div class="disc-sig-name">'+sig.name+'</div><div class="disc-sig-note">'+sig.note+'</div>'
+      +(toggleHtml?'<div style="margin-top:5px;">'+toggleHtml+'</div>':'')
+      +'</div>'
+      +'<span class="disc-sig-pts '+ptsCls+'">'+ptsStr+'</span>'
+      +'</div>';
+  }).join('');
+
+  /* today's fixed blocks + extra blocks */
+  /* auto-detect current subject for links */
+  var _fbSub = autoDetectSubject(TODAY) || subjects.find(function(s){ return s.id===(daily[TODAY]||{}).subjectId; });
+  var _fbSubId = _fbSub ? _fbSub.id : 0;
+  var _fbYtUrl = _fbSubId ? discGetYt(_fbSubId) : '';
+  var _fbNotesPath = _fbSubId ? discGetNotesPath(_fbSubId) : '';
+  var _fbNotesUrl = _fbNotesPath ? 'file:///'+encodeURI(_fbNotesPath.replace(/\\/g,'/')) : '';
+  var _fbPyqUrl = _fbSubId ? discGetPyqUrl(_fbSubId) : 'https://hub.prepfusion.in';
+
+  var fixedBlocksHtml = FIXED_BLOCKS.map(function(fb){
+    var done = !!(log['fb_'+fb.key]);
+    var cls = done ? 'done-block' : '';
+    var doneCls = done ? 'done' : '';
+    /* pick the right resource link per block type */
+    var linkHtml = '';
+    if(fb.key==='study' && _fbYtUrl){
+      linkHtml = '<a href="'+_fbYtUrl+'" target="_blank" class="disc-block-link yt">▶ YouTube</a>';
+    } else if(fb.key==='rev1' && _fbNotesUrl){
+      linkHtml = '<a href="'+_fbNotesUrl+'" target="_blank" class="disc-block-link rev" title="Open notes PDF">📄 Notes ↗</a>'
+        +'<button onclick="navigator.clipboard.writeText('+JSON.stringify(_fbNotesPath)+')" style="background:transparent;border:none;cursor:pointer;font-size:10px;color:var(--muted);padding:0 4px;" title="Copy path">⧉</button>';
+    } else if(fb.key==='pyq'){
+      linkHtml = '<a href="'+_fbPyqUrl+'" target="_blank" class="disc-block-link pq">🔗 PrepFusion</a>';
+    }
+    return '<div class="disc-block '+cls+'" style="border-left:3px solid '+(done?'#4ade80':'var(--border)')+';">'
+      +'<div class="disc-block-info">'
+        +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
+          +'<div class="disc-block-time">'+fb.start+' – '+fb.end+'</div>'
+          +'<span class="disc-block-dur">'+(fb.id==='notes'?'1h':fb.id==='study'?'4h':fb.id==='rev1'?'3h':'1h')+'</span>'
+          +'<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;background:rgba(0,212,255,.1);color:var(--acc);">'+fb.icon+' '+fb.label+'</span>'
+          +linkHtml
+        +'</div>'
+        +'<div class="disc-block-desc" style="margin-top:3px;color:var(--muted);">'+fb.desc+'</div>'
+      +'</div>'
+      +'<div class="disc-block-btns">'
+        +'<button class="disc-block-btn '+doneCls+'" onclick="discToggleLog(\''+TODAY+'\',\'fb_'+fb.key+'\','+(done?'false':'true')+')">'+( done?'✓':'Mark done')+'</button>'
+      +'</div>'
+      +'</div>';
+  }).join('');
+  var extraBlocks = (plan.blocks||[]);
+  var extraBlocksHtml = extraBlocks.length===0 ? '' : extraBlocks.map(function(b,i){ return discBlockRowHtml(b,i,TODAY,true); }).join('');
+
+  /* tomorrow's plan editor */
+  var tmrwBlocks = tmrwPlan.blocks||[];
+  var tmrwBlocksHtml = tmrwBlocks.length===0
+    ? '<div style="font-size:11px;color:var(--faint);padding:4px 0;">No blocks added yet — plan tonight!</div>'
+    : tmrwBlocks.map(function(b,i){ return discBlockRowHtml(b,i,tmrw,false); }).join('');
+
+  el.innerHTML = '<div class="disc-card">'
+    /* compact header */
+    +'<div class="disc-compact" onclick="toggleDiscDetail()">'
+      +'<div class="disc-ring-wrap">'
+        +discRingHtml(sc.total,64,6)
+        +'<div class="disc-ring-lbl"><div class="disc-ring-score" style="color:'+col+'">'+sc.total+'</div><div class="disc-ring-txt">score</div></div>'
+      +'</div>'
+      +'<div class="disc-stats">'
+        +'<div class="disc-stat"><div class="disc-stat-val" style="color:'+(streak>=7?'#4ade80':streak>=3?'#fbbf24':'var(--acc)')+'">🔥'+streak+'</div><div class="disc-stat-lbl">Disc. Streak</div></div>'
+        +'<div class="disc-stat"><div class="disc-stat-val" style="color:'+discColor(avg7)+'">'+avg7+'</div><div class="disc-stat-lbl">7-Day Avg</div></div>'
+        +'<div class="disc-stat"><div class="disc-stat-val" style="color:'+col+'">'+scoreLabel(sc.total)+'</div><div class="disc-stat-lbl">Today</div></div>'
+      +'</div>'
+      +'<button class="disc-expand-btn" onclick="event.stopPropagation();toggleDiscDetail();">'+(discOpen?'▲ Close':'▼ Details')+'</button>'
+    +'</div>'
+    /* expandable detail */
+    +'<div class="disc-detail '+(discOpen?'open':'')+'">'
+      +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Score Breakdown - Today</div>'
+      +'<div class="disc-signals">'+sigHtml+'</div>'
+      /* today's plan adherence */
+      +'<div class="disc-plan-section">'        +'<div class="disc-plan-hdr"><div class="disc-plan-title">📋 Daily Fixed Blocks <span style="font-size:10px;color:var(--muted);">'+TODAY+'</span></div></div>'        +'<div style="font-size:10px;color:var(--faint);margin-bottom:8px;">These 4 blocks are your non-negotiable daily targets. Mark each done when complete.</div>'        +fixedBlocksHtml        +(extraBlocksHtml?'<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:10px 0 6px;">Extra Blocks</div>'+extraBlocksHtml:'')        +'<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:10px 0 6px;">+ Add Extra Block</div>'        +discBlockFormHtml(TODAY)      +'</div>'      /* tomorrow plan editor */
+      +'<div class="disc-plan-section" style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px;">'
+        +'<div class="disc-plan-hdr"><div class="disc-plan-title">🌙 Plan Tomorrow <span style="font-size:10px;color:var(--muted);">'+tmrw+'</span></div></div>'
+        +'<div class="disc-plan-editor">'
+          +'<div class="disc-wake-row"><span class="disc-wake-lbl">⏰ Wake time:</span>'
+            +'<input class="disc-inp" type="time" id="disc-wake-inp" value="'+(tmrwPlan.wakeTime||'05:00')+'" onchange="discSetWake(\''+tmrw+'\',this.value)" style="width:110px;"/>'
+          +'</div>'
+          +'<div class="disc-section-mini">Study Blocks</div>'
+          +tmrwBlocksHtml
+          +discBlockFormHtml(tmrw)
+        +'</div>'
+      +'</div>'
+      /* heatmap */
+      +'<div class="disc-heatmap">'
+        +'<div class="disc-hm-title">Discipline Heatmap · Sep 7 – Dec 31</div>'
+        +'<div style="display:flex;gap:8px;font-size:9px;color:var(--faint);margin-bottom:6px;">'
+          +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#4ade80;border-radius:2px;"></span>≥80</span>'
+          +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#fbbf24;border-radius:2px;"></span>50–79</span>'
+          +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#ef4444;border-radius:2px;"></span>&lt;50</span>'
+          +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#1a3248;border-radius:2px;"></span>future</span>'
+        +'</div>'
+        +'<div class="disc-hm-grid">'+discHeatmapHtml()+'</div>'
+      +'</div>'
+    +'</div>'
+  +'</div>';
+}
+
+function scoreLabel(sc){ return sc>=80?'Disciplined':sc>=60?'Good':sc>=40?'Average':'Needs work'; }
+
+function renderAll(){renderProgress();renderMilestones();renderEntry();renderSubjects();renderLearningPath();}
+
+document.addEventListener('DOMContentLoaded',async ()=>{
+  // Boot: load from Firestore first, then init app
+  await fbInit();
+  loadAll();loadRev1();loadMocks();loadPyq();loadDisc();renderAll();checkMilestones();renderDashboard();
+  /* restore saved theme */
+  const theme=lsGet('gate-theme');
+  if(theme==='light'){applyLight();}
+});
+function applyLight(){
+  document.documentElement.classList.add('light');
+  var ic=$('tt-icon'),lb=$('tt-label');
+  if(ic)ic.textContent='☀️';
+  if(lb)lb.textContent='Light';
+}
+function applyDark(){
+  document.documentElement.classList.remove('light');
+  var ic=$('tt-icon'),lb=$('tt-label');
+  if(ic)ic.textContent='🌙';
+  if(lb)lb.textContent='Dark';
+}
+function toggleTheme(){
+  var isLight=document.documentElement.classList.contains('light');
+  if(isLight){applyDark();lsSet('gate-theme','dark');}
+  else{applyLight();lsSet('gate-theme','light');}
+}
+
+
+</script>
+</body>
+</html>
