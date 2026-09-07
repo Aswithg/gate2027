@@ -474,12 +474,27 @@ select.inp-sm{cursor:pointer;}
 <div class="tab-panel" id="panel-pyq">
 <div class="wrap">
   <div class="section">
-    <div class="sec-hdr"><h2>PYQ Confidence Tracker</h2><div class="sub">Log your PrepFusion PYQ sessions — track correct/wrong per topic, monitor improvement over time</div></div>
-    <div id="pyq-summary-bar"></div>
-    <div class="pyq-sub-tabs" id="pyq-sub-tabs"></div>
-    <div id="pyq-weak-section"></div>
-    <div id="pyq-chart-section"></div>
-    <div id="pyq-topic-area"></div>
+    <div class="sec-hdr">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;width:100%">
+        <div><h2>PYQ Practice</h2><div class="sub">Log PrepFusion sessions · track accuracy · follow the topic-wise plan</div></div>
+        <div style="display:flex;gap:6px">
+          <button id="pyq-view-tracker" onclick="pyqSetView('tracker')" style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--acc);background:#001e2e;color:var(--acc);transition:all .2s">🎯 Tracker</button>
+          <button id="pyq-view-plan" onclick="pyqSetView('plan')" style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--navy);color:var(--muted);transition:all .2s">📅 Plan</button>
+        </div>
+      </div>
+    </div>
+    <!-- Tracker view -->
+    <div id="pyq-tracker-view">
+      <div id="pyq-summary-bar"></div>
+      <div class="pyq-sub-tabs" id="pyq-sub-tabs"></div>
+      <div id="pyq-weak-section"></div>
+      <div id="pyq-chart-section"></div>
+      <div id="pyq-topic-area"></div>
+    </div>
+    <!-- Plan view -->
+    <div id="pyq-plan-view" style="display:none">
+      <div id="pyq-plan-content"></div>
+    </div>
   </div>
 </div>
 </div>
@@ -1563,7 +1578,7 @@ let pyqData={}, pyqActiveSubId=1;
 let pyqChart=null;
 let pyqQuizData={};
 
-function loadPyq(){pyqData=lsGet('gate-pyq-data')||{};pyqQuizData=lsGet('gate-pyq-quiz')||{};}
+function loadPyq(){pyqData=lsGet('gate-pyq-data')||{};pyqQuizData=lsGet('gate-pyq-quiz')||{};pyqPlanData=lsGet('gate-pyq-plan')||{};}
 function savePyq(){lsSet('gate-pyq-data',pyqData);lsSet('gate-pyq-quiz',pyqQuizData);showSaveToast();}
 
 function getPyqTopic(subId,ti){return(pyqData[subId]||{})[ti]||[];}
@@ -1881,6 +1896,244 @@ function renderPyqQuizCard(sub){
     <div class="pyq-history" id="${histId}">${histRows}</div>`:''}
   </div>`;
 }
+
+/* ══════════════════════════════════════════════════
+   PYQ PLAN — Topic-wise auto-scheduled practice
+   pyqPlanData: { 'YYYY-MM-DD': attempted }
+   PYQ_PLAN: static array of scheduled slots (computed)
+   ══════════════════════════════════════════════════ */
+
+// Static auto-generated plan (post-Rev1, 1 topic/day, >40q = 2 days)
+const PYQ_PLAN = (function(){
+  const slots = [];
+  const subTopics = [
+    {subId:1, topics:[
+      {ti:0,name:'Basic Network Concepts & KVL/KCL',qs:24},
+      {ti:1,name:'Network Theorems',qs:41},
+      {ti:2,name:'Transient Analysis',qs:42},
+      {ti:3,name:'Steady State AC Analysis',qs:30},
+      {ti:4,name:'Two-Port Networks',qs:40},
+      {ti:5,name:'Graph Theory & Network Matrices',qs:23},
+      {ti:6,name:'Resonance & Coupled Circuits',qs:16},
+      {ti:7,name:'Miscellaneous Topics',qs:17},
+    ], rev1End:'2026-09-13'},
+    {subId:2, topics:[
+      {ti:0,name:'Signals and Systems Basics',qs:20},
+      {ti:1,name:'Fourier Series & Fourier Transform',qs:36},
+      {ti:2,name:'Laplace Transform',qs:43},
+      {ti:3,name:'Z-Transform',qs:30},
+      {ti:4,name:'Sampling & Discrete Systems',qs:22},
+      {ti:5,name:'Miscellaneous Topics',qs:19},
+    ], rev1End:'2026-09-20'},
+    {subId:3, topics:[
+      {ti:0,name:'Introduction & Block Diagrams',qs:22},
+      {ti:1,name:'Time Domain Analysis',qs:40},
+      {ti:2,name:'Steady State Error & System Types',qs:22},
+      {ti:3,name:'Frequency Domain Analysis',qs:35},
+      {ti:4,name:'Stability Analysis',qs:31},
+      {ti:5,name:'Root Locus',qs:28},
+      {ti:6,name:'Bode Plot',qs:20},
+      {ti:7,name:'Compensators & Controllers',qs:19},
+      {ti:8,name:'State Space Analysis',qs:19},
+      {ti:9,name:'Miscellaneous Topics',qs:10},
+    ], rev1End:'2026-09-27'},
+    {subId:4, topics:[
+      {ti:0,name:'Basic Measuring Instruments',qs:32},
+      {ti:1,name:'Bridges & Potentiometers',qs:30},
+      {ti:2,name:'Transducers & Sensors',qs:29},
+      {ti:3,name:'Signal Conditioning & CRO',qs:22},
+      {ti:4,name:'Miscellaneous Topics',qs:15},
+    ], rev1End:'2026-09-30'},
+    {subId:5, topics:[
+      {ti:0,name:'Electromagnetic Fields',qs:60},
+      {ti:1,name:'Electromagnetic Waves',qs:45},
+    ], rev1End:'2026-10-04'},
+    {subId:6, topics:[
+      {ti:0,name:'DC Machines',qs:80},
+      {ti:1,name:'Transformers',qs:85},
+      {ti:2,name:'Induction Machines',qs:90},
+      {ti:3,name:'Synchronous Machines',qs:75},
+      {ti:4,name:'Special Machines',qs:30},
+      {ti:5,name:'Miscellaneous Topics',qs:28},
+    ], rev1End:'2026-10-18'},
+    {subId:7, topics:[
+      {ti:0,name:'Power System Basics & Per Unit',qs:28},
+      {ti:1,name:'Transmission Lines',qs:35},
+      {ti:2,name:'Underground Cables',qs:12},
+      {ti:3,name:'System Stability',qs:30},
+      {ti:4,name:'Load Flow Analysis',qs:20},
+      {ti:5,name:'Fault Analysis',qs:32},
+      {ti:6,name:'Protection & Relays',qs:35},
+      {ti:7,name:'Circuit Breakers & Switchgear',qs:20},
+      {ti:8,name:'Economic Operation',qs:18},
+      {ti:9,name:'HVDC & FACTS',qs:15},
+      {ti:10,name:'Miscellaneous Topics',qs:13},
+    ], rev1End:'2026-11-01'},
+    {subId:8, topics:[
+      {ti:0,name:'Power Semiconductor Devices',qs:50},
+      {ti:1,name:'AC to DC Converters / Phase Controlled Rectifiers',qs:82},
+      {ti:2,name:'DC to DC Converters - Choppers',qs:48},
+      {ti:3,name:'DC to AC Converter - Inverter',qs:37},
+      {ti:4,name:'Miscellaneous Topics',qs:5},
+    ], rev1End:'2026-11-15'},
+    {subId:9, topics:[
+      {ti:0,name:'Logic Gates and Boolean Algebra',qs:14},
+      {ti:1,name:'Representation of Boolean Expressions & K-Maps',qs:17},
+      {ti:2,name:'Number Systems',qs:2},
+      {ti:3,name:'Combinational Circuits',qs:13},
+      {ti:4,name:'Sequential Circuits',qs:34},
+      {ti:5,name:'ADC & DAC',qs:11},
+      {ti:6,name:'Logic Families and Semiconductor Memories',qs:8},
+    ], rev1End:'2026-11-22'},
+    {subId:10, topics:[
+      {ti:0,name:'Diode Circuits and Applications',qs:39},
+      {ti:1,name:'MOSFETs',qs:15},
+      {ti:2,name:'Operational Amplifier',qs:81},
+      {ti:3,name:'BJTs',qs:28},
+      {ti:4,name:'Miscellaneous Topics',qs:1},
+    ], rev1End:'2026-12-06'},
+  ];
+  const SPLIT=40;
+  function addDaysLocal(d,n){const dt=new Date(d+'T00:00:00');dt.setDate(dt.getDate()+n);return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;}
+  subTopics.forEach(function(sub){
+    let cursor=addDaysLocal(sub.rev1End,1);
+    sub.topics.forEach(function(t){
+      const days=t.qs>SPLIT?2:1;
+      const qPerDay=days===2?Math.ceil(t.qs/2):t.qs;
+      for(let d=0;d<days;d++){
+        slots.push({date:cursor,subId:sub.subId,ti:t.ti,name:t.name,qs:t.qs,totalDays:days,part:d+1,target:qPerDay});
+        cursor=addDaysLocal(cursor,1);
+      }
+    });
+  });
+  return slots;
+})();
+
+let pyqPlanData={};
+let pyqPlanView='tracker';
+
+function loadPyqPlan(){pyqPlanData=lsGet('gate-pyq-plan')||{};}
+function savePyqPlan(){lsSet('gate-pyq-plan',pyqPlanData);showSaveToast();}
+
+function pyqPlanKey(date,subId,ti,part){return date+'|'+subId+'|'+ti+'|'+part;}
+
+function getPyqPlanActual(date,subId,ti,part){
+  return+(pyqPlanData[pyqPlanKey(date,subId,ti,part)]||0);
+}
+function setPyqPlanActual(date,subId,ti,part,val){
+  const k=pyqPlanKey(date,subId,ti,part);
+  const v=Math.max(0,+val||0);
+  if(v===0)delete pyqPlanData[k]; else pyqPlanData[k]=v;
+  savePyqPlan();
+  renderPyqPlan();
+}
+
+function pyqSetView(v){
+  pyqPlanView=v;
+  const tracker=$('pyq-tracker-view'), plan=$('pyq-plan-view');
+  const btnT=$('pyq-view-tracker'), btnP=$('pyq-view-plan');
+  if(tracker)tracker.style.display=v==='tracker'?'':'none';
+  if(plan)plan.style.display=v==='plan'?'':'none';
+  if(btnT){
+    if(v==='tracker'){btnT.style.borderColor='var(--acc)';btnT.style.background='#001e2e';btnT.style.color='var(--acc)';}
+    else{btnT.style.borderColor='var(--border)';btnT.style.background='var(--navy)';btnT.style.color='var(--muted)';}
+  }
+  if(btnP){
+    if(v==='plan'){btnP.style.borderColor='var(--acc)';btnP.style.background='#001e2e';btnP.style.color='var(--acc)';}
+    else{btnP.style.borderColor='var(--border)';btnP.style.background='var(--navy)';btnP.style.color='var(--muted)';}
+  }
+  if(v==='plan')renderPyqPlan();
+}
+
+const SUB_COLORS={1:'#00d4ff',2:'#a78bfa',3:'#34d399',4:'#fbbf24',5:'#f472b6',6:'#fb923c',7:'#60a5fa',8:'#4ade80',9:'#e879f9',10:'#f87171'};
+const SUB_NAMES={1:'Network Theory',2:'Signals & Systems',3:'Control Systems',4:'Measurements',5:'EMFT',6:'Machines',7:'Power Systems',8:'Power Electronics',9:'Digital Electronics',10:'Analog Electronics'};
+
+function renderPyqPlan(){
+  loadPyqPlan();
+  const el=$('pyq-plan-content');if(!el)return;
+
+  // Stats
+  const total=PYQ_PLAN.length;
+  let done=0,ahead=0,behind=0,pending=0;
+  PYQ_PLAN.forEach(function(s){
+    const act=getPyqPlanActual(s.date,s.subId,s.ti,s.part);
+    if(s.date<TODAY){if(act>=s.target)done++;else behind++;}
+    else if(s.date===TODAY){if(act>=s.target)done++;else pending++;}
+    else pending++;
+  });
+  ahead=0;
+
+  // Group by subject for progress summary
+  const subProgress={};
+  PYQ_PLAN.forEach(function(s){
+    if(!subProgress[s.subId])subProgress[s.subId]={total:0,done:0};
+    subProgress[s.subId].total++;
+    const act=getPyqPlanActual(s.date,s.subId,s.ti,s.part);
+    if(act>=s.target)subProgress[s.subId].done++;
+  });
+
+  // Build grouped rows by subject
+  let lastSub=-1;
+  let rows='';
+  PYQ_PLAN.forEach(function(s,idx){
+    const act=getPyqPlanActual(s.date,s.subId,s.ti,s.part);
+    const col=SUB_COLORS[s.subId]||'var(--acc)';
+    const isPast=s.date<TODAY, isToday=s.date===TODAY;
+    let status='',statusCol='';
+    if(isPast){status=act>=s.target?'✓ Done':'⚠ Missed';statusCol=act>=s.target?'#4ade80':'#ef4444';}
+    else if(isToday){status=act>=s.target?'✓ Done':'Today';statusCol=act>=s.target?'#4ade80':'#fbbf24';}
+    else{status='Upcoming';statusCol='var(--muted)';}
+
+    const partLabel=s.totalDays>1?' <span style="font-size:10px;opacity:.6">pt '+s.part+'/'+s.totalDays+'</span>':'';
+
+    // Subject header row
+    if(s.subId!==lastSub){
+      lastSub=s.subId;
+      const sp=subProgress[s.subId]||{total:0,done:0};
+      const pct=sp.total?Math.round(sp.done/sp.total*100):0;
+      rows+=`<div style="display:flex;align-items:center;gap:10px;padding:10px 0 6px;margin-top:${idx>0?'14px':'0'}">
+        <div style="width:4px;height:28px;background:${col};border-radius:2px;flex-shrink:0"></div>
+        <div style="font-size:13px;font-weight:700;color:${col}">${SUB_NAMES[s.subId]}</div>
+        <div style="font-size:11px;color:var(--muted);margin-left:auto">${sp.done}/${sp.total} days · ${pct}%</div>
+      </div>`;
+    }
+
+    const rowBg=isToday?'background:#0a1e0e;border:1px solid #4ade8044':isPast&&act<s.target?'background:#1a0800;border:1px solid #ef444422':'background:var(--navy);border:1px solid var(--border)';
+    rows+=`<div style="${rowBg};border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="min-width:72px;flex-shrink:0">
+        <div style="font-size:12px;font-weight:700;color:${isToday?'#fbbf24':isPast?'var(--muted)':'var(--text)'}">${fmt(s.date)}</div>
+        <div style="font-size:10px;color:var(--faint)">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dayOfWeek(s.date)]}</div>
+      </div>
+      <div style="flex:1;min-width:140px">
+        <div style="font-size:12px;font-weight:600;color:var(--text)">${esc(s.name)}${partLabel}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">Target: <strong style="color:${col}">${s.target}q</strong>${s.totalDays>1?' of '+s.qs+'q total':''}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <span style="font-size:10px;color:${statusCol};font-weight:700;min-width:60px;text-align:right">${status}</span>
+        <button onclick="setPyqPlanActual('${s.date}',${s.subId},${s.ti},${s.part},Math.max(0,getPyqPlanActual('${s.date}',${s.subId},${s.ti},${s.part})-5))" style="background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:5px;width:26px;height:26px;font-size:11px;cursor:pointer;flex-shrink:0">−</button>
+        <input type="number" min="0" value="${act||''}" placeholder="0"
+          onchange="setPyqPlanActual('${s.date}',${s.subId},${s.ti},${s.part},this.value)"
+          style="width:48px;text-align:center;font-weight:700;font-size:13px;color:${act>=s.target&&act>0?'#4ade80':act>0?'#fbbf24':'var(--faint)'};background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px">
+        <button onclick="setPyqPlanActual('${s.date}',${s.subId},${s.ti},${s.part},Math.min(${s.qs},getPyqPlanActual('${s.date}',${s.subId},${s.ti},${s.part})+5))" style="background:var(--acc);border:none;color:var(--navy);border-radius:5px;width:26px;height:26px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">+</button>
+      </div>
+    </div>`;
+  });
+
+  const donePct=total?Math.round(done/total*100):0;
+  el.innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-bottom:20px">
+      <div class="hcard" style="border:1px solid #00d4ff22"><div class="hlbl">Total Days</div><div class="hval" style="color:#00d4ff">${total}</div></div>
+      <div class="hcard" style="border:1px solid #4ade8022"><div class="hlbl">Completed</div><div class="hval" style="color:#4ade80">${done}<span style="font-size:13px;color:var(--faint);font-weight:400">/${total}</span></div><div class="pbar-bg"><div class="pbar-fill" style="width:${donePct}%;background:#4ade80"></div></div></div>
+      <div class="hcard" style="border:1px solid #ef444422"><div class="hlbl">Missed</div><div class="hval" style="color:#ef4444">${behind}</div></div>
+      <div class="hcard" style="border:1px solid #fbbf2422"><div class="hlbl">Upcoming</div><div class="hval" style="color:#fbbf24">${pending}</div></div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;padding:8px 12px;background:var(--navy);border-radius:7px;border:1px solid var(--border)">
+      📋 Auto-plan: 1 topic/day · topics &gt;40q split into 2 days · starts day after Rev 1 ends per subject · closes 31 Dec 2026
+    </div>
+    ${rows}
+  `;
+}
+
 function renderPyq(){
   loadPyq();
   renderPyqSummaryBar();
@@ -1888,8 +2141,10 @@ function renderPyq(){
   renderPyqWeakSection();
   renderPyqChart();
   renderPyqTopics();
+  // Restore correct view pane visibility
+  pyqSetView(pyqPlanView||'tracker');
 }
-const REV1_START='2026-08-31';
+const REV1_START='2026-09-09';
 function applyTabLock(wrapId,isLocked,startLabel){
   const wrap=$(wrapId);if(!wrap)return;
   // remove existing banner if any
@@ -1942,7 +2197,7 @@ const FB_KEYS = [
   'gate-subjects','gate-daily','gate-settings','gate-milestones',
   'gate-sub-tests','gate-rev1-done','gate-rev1-notes','gate-rev1-pages',
   'gate-mocks','gate-pyq-data','gate-pyq-quiz','gate-discipline',
-  'gate-theme', 'gate-v20-migrated'
+  'gate-theme','gate-pyq-plan', 'gate-v20-migrated'
 ];
 
 function lsGet(k){
@@ -2234,31 +2489,31 @@ function renderLearningPath(){
 
 /* ══ REVISION 1 ── NEW SCHEDULE FROM IMAGE ══ */
 const REV1_NOTES={
-  1:[{file:'Network Analysis.pdf',pages:393}],
-  2:[{file:'Signal & Systems .pdf',pages:526}],
-  3:[{file:'Control Systems .pdf',pages:736}],
-  4:[{file:'Electrical and Electronics Measurements .pdf',pages:170}],
+  1:[{file:'Network Analysis.pdf',pages:1196}],
+  2:[{file:'Signal & Systems .pdf',pages:1275}],
+  3:[{file:'Control Systems .pdf',pages:1421}],
+  4:[{file:'Electrical and Electronics Measurements .pdf',pages:761}],
   5:[{file:'Electromagnetic Fields(EMFT_EMT).pdf',pages:322}],
-  6:[{file:'Electrical Machines .pdf',pages:624}],
-  7:[{file:'Power System .pdf',pages:1091}],
-  8:[{file:'Power Electronics .pdf',pages:902}],
-  9:[{file:'Digital Electronics .pdf',pages:390}],
-  10:[{file:'Analog Electronics .pdf',pages:476}],
-  11:[{file:'Aptitude Simplified .pdf',pages:385},{file:'Engineering Mathematics .pdf',pages:184}]
+  6:[{file:'Electrical Machines .pdf',pages:963}],
+  7:[{file:'Power System .pdf',pages:1364}],
+  8:[{file:'Power Electronics .pdf',pages:1344}],
+  9:[{file:'Digital Electronics .pdf',pages:1134}],
+  10:[{file:'Analog Electronics .pdf',pages:1982}],
+  11:[{file:'Engineering Mathematics .pdf',pages:2423}]
 };
-/* REV1 SCHEDULE — updated Sep 3 2026 */
+/* REV1 SCHEDULE — updated Sep 8 2026 */
 const REV1_SCHEDULE={
-  1:{start:'2026-08-31',end:'2026-09-06',days:7, perDay:56},  /* 393p / 7d  = 56 */
-  2:{start:'2026-09-07',end:'2026-09-20',days:14,perDay:38},  /* 526p / 14d = 38 */
-  3:{start:'2026-09-21',end:'2026-10-04',days:14,perDay:53},  /* 736p / 14d = 53 */
-  4:{start:'2026-10-05',end:'2026-10-07',days:3, perDay:57},  /* 170p / 3d  = 57 */
-  5:{start:'2026-10-08',end:'2026-10-11',days:4, perDay:80},  /* 322p / 4d  = 80 */
-  6:{start:'2026-10-12',end:'2026-11-01',days:21,perDay:30},  /* 624p / 21d = 30 */
-  7:{start:'2026-11-02',end:'2026-11-22',days:21,perDay:52},  /* 1091p/ 21d = 52 */
-  8:{start:'2026-11-23',end:'2026-12-13',days:21,perDay:43},  /* 902p / 21d = 43 */
-  9:{start:'2026-12-14',end:'2027-01-03',days:21,perDay:19},  /* 390p / 21d = 19 */
-  10:{start:'2026-12-14',end:'2027-01-03',days:21,perDay:23},  /* 476p / 21d = 23 */
-  11:{start:'2027-01-04',end:'2027-01-17',days:14,perDay:41},  /* 569p / 14d = 41 */
+  1:{start:'2026-09-09',end:'2026-09-13',days:5, perDay:240}, /* 1196p/ 5d  = 240 */
+  2:{start:'2026-09-14',end:'2026-09-20',days:7, perDay:183}, /* 1275p/ 7d  = 183 */
+  3:{start:'2026-09-21',end:'2026-09-27',days:7, perDay:203}, /* 1421p/ 7d  = 203 */
+  4:{start:'2026-09-28',end:'2026-09-30',days:3, perDay:254}, /* 761p / 3d  = 254 */
+  5:{start:'2026-10-01',end:'2026-10-04',days:4, perDay:81},  /* 322p / 4d  = 81  */
+  6:{start:'2026-10-05',end:'2026-10-18',days:14,perDay:69},  /* 963p / 14d = 69  */
+  7:{start:'2026-10-19',end:'2026-11-01',days:14,perDay:98},  /* 1364p/ 14d = 98  */
+  8:{start:'2026-11-02',end:'2026-11-15',days:14,perDay:96},  /* 1344p/ 14d = 96  */
+  9:{start:'2026-11-16',end:'2026-11-22',days:7, perDay:162}, /* 1134p/ 7d  = 162 */
+  10:{start:'2026-11-23',end:'2026-12-06',days:14,perDay:142},/* 1982p/ 14d = 142 */
+  11:{start:'2026-12-07',end:'2026-12-31',days:25,perDay:97}, /* 2423p/ 25d = 97  */
 };
 function subPages(id){return(REV1_NOTES[id]||[]).reduce((t,p)=>t+p.pages,0);}
 function allPages(){return subjects.reduce((t,s)=>t+subPages(s.id),0);}
@@ -2292,17 +2547,16 @@ function renderRevision1(){
     const tgt=pageTarget(sub.id,slot),today=pagesOn(sub.id,rev1LogDate);
     const pace=tgt>0?(today>=tgt?['#003d1f','#4ade80','✓ ON TRACK']:today>=tgt*0.6?['#2d1900','#fbbf24','⚡ CLOSE']:['#2d0000','#ef4444','⚠ BEHIND']):null;
     const pcol=pct>=100?'#4ade80':pct>=50?'#00d4ff':'#fb923c';
-    const GDRIVE_LINKS={'Analog Electronics .pdf':'https://drive.google.com/file/d/1-7KUTqNmcDGpKpkdyGukYI_hFEvHvh-h/view?usp=sharing','Aptitude Simplified .pdf':'https://drive.google.com/file/d/1gQSbvLW5tzLaDE4608j_1PN4klae-kTt/view?usp=sharing','Control Systems .pdf':'https://drive.google.com/file/d/1sy7PiatRZnCU9h7tivF2QR3P-kn-vzYC/view?usp=sharing','Digital Electronics .pdf':'https://drive.google.com/file/d/1FAsHE2PfGGMvq7PxV2ZwCggl9fjlL7bU/view?usp=sharing','Electrical and Electronics Measurements .pdf':'https://drive.google.com/file/d/1kcQC81YXveCDkAnWx7syn3SiX7yuAZ0x/view?usp=sharing','Electrical Machines .pdf':'https://drive.google.com/file/d/1NrSItWd0t8DmmzXZqiRa5JzDm6pFXEWa/view?usp=sharing','Electromagnetic Fields(EMFT_EMT).pdf':'https://drive.google.com/file/d/1PN1vIMuTM87BmfX7Gi99Tz2400hHCseI/view?usp=sharing','Engineering Mathematics .pdf':'https://drive.google.com/file/d/1eDa50THB2M4cpUerP0REuRyPWl3AsDtd/view?usp=sharing','Network Analysis.pdf':'https://drive.google.com/file/d/1o7fFX4Zmkk5ngxWxvW-Hf3jyHEdGCXI0/view?usp=sharing','Power Electronics .pdf':'https://drive.google.com/file/d/1p8uHboEWQnBHFPUtM92OER-U4oWRLKm3/view?usp=sharing','Power System .pdf':'https://drive.google.com/file/d/1TZ0WOZJWmmhqRqy7F7ga18c8Zxl1UseA/view?usp=sharing','Signal & Systems .pdf':'https://drive.google.com/file/d/19_sdtrMrPe1FNNW33GJr4wDpBn0JFLJN/view?usp=sharing'};
-    const pdfBtns=pdfs.length===0?`<div style="font-size:11px;color:#ef4444;padding:7px 11px;background:#1a0800;border-radius:6px;border:1px solid #ef444433">⚠ No PDF mapped</div>`
-      :pdfs.map(p=>{const url=GDRIVE_LINKS[p.file]||'#';return`<a href="${url}" target="_blank" class="lp-link-c" style="font-size:11px;padding:6px 12px">📄 ${esc(p.file.replace(/\.pdf$/i,'').trim())}<span style="opacity:.55"> · ${p.pages}p ↗</span></a>`;}).join('');
+    const OD_PATH='C:\\Users\\AswithGiduturi\\OneDrive - DESRI\\Documents\\G2027_2028\\Video Notes';
+    const pdfBtns=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#0d1b2a;border:1px solid #1e3a5a;border-radius:7px;padding:8px 12px"><span style="font-size:11px;color:var(--muted)">📂 Notes in OneDrive:</span><code style="font-size:10px;color:#7dd3fc;word-break:break-all">${OD_PATH}</code><button onclick="navigator.clipboard.writeText('${OD_PATH}').then(()=>{this.textContent='✓ Copied';setTimeout(()=>this.textContent='Copy',1500);})" style="background:#0f2d4a;border:1px solid #1e3a5a;color:#7dd3fc;border-radius:5px;padding:3px 9px;font-size:10px;cursor:pointer;white-space:nowrap;flex-shrink:0">Copy</button></div>`;
     const tracker=!tot?'':`<div style="background:var(--navy);border-radius:8px;padding:12px 14px;margin-bottom:12px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px"><span style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px">📖 Pages revised</span>${pace?`<span style="font-size:10px;background:${pace[0]};color:${pace[1]};padding:2px 8px;border-radius:4px;font-weight:700">${pace[2]}</span>`:''}</div><div style="display:flex;align-items:baseline;gap:7px;margin-bottom:6px"><span style="font-size:24px;font-weight:800;color:${pcol}">${dn}</span><span style="font-size:13px;color:var(--faint)">/ ${tot} pages</span><span style="margin-left:auto;font-size:11px;color:var(--faint)">${tot-dn} left</span></div><div style="height:7px;background:var(--card);border-radius:4px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${pcol};border-radius:4px;transition:width .35s"></div></div><div style="font-size:10px;color:var(--faint);margin-top:4px;margin-bottom:10px">${pct}% complete${tgt>0?` · need <strong style="color:${col}">${tgt} pages/day</strong> to finish by ${fmt(slot.end)}`:''} · planned: ${slot.perDay}pg/day</div><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:9px;border-top:1px solid var(--border)"><span style="font-size:11px;color:var(--muted)">Pages on ${fmt(rev1LogDate)}:</span><button onclick="stepRevPages(${sub.id},-5)" style="background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:5px;width:30px;height:28px;font-size:12px;cursor:pointer">−5</button><input class="inp-sm" type="number" min="0" value="${today}" onchange="setRevPages(${sub.id},'${rev1LogDate}',this.value)" style="width:62px;text-align:center;font-weight:700;color:${today>0?'#4ade80':'var(--text)'}"><button onclick="stepRevPages(${sub.id},5)" style="background:var(--acc);border:none;color:var(--navy);border-radius:5px;width:30px;height:28px;font-size:12px;font-weight:700;cursor:pointer">+5</button>${tgt>0?`<span style="font-size:11px;color:var(--faint)">target ${tgt}</span>`:''}</div></div>`;
     cards+=`<div class="card" style="${dim}padding:16px 18px;border-left:3px solid ${col}"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px"><div style="flex:1;min-width:170px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:3px"><span style="font-size:11px;font-weight:700;color:var(--faint)">#${sub.id}</span><span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:12px;background:${bg};color:${col};border:1px solid ${col}44">${label}</span></div><div style="font-size:14px;font-weight:700">${sub.name}</div><div style="font-size:11px;color:var(--faint);margin-top:2px">${sub.faculty} · ${tot||'—'} pages · ${fmt(slot.start)} – ${fmt(slot.end)} (${slot.days}d)</div></div><button class="btn-g" style="font-size:11px;padding:5px 12px;${rev1Done[sub.id]?'color:#4ade80;border-color:#4ade8066':''}" onclick="toggleRev1Done(${sub.id})">${rev1Done[sub.id]?'✓ Revised':'Mark revised'}</button></div><div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px">${pdfBtns}</div>${tracker}<label class="lbl">Revision remarks</label><textarea class="inp" rows="2" style="font-size:12px;margin-top:4px" placeholder="Weak topics, formulas to recheck…" oninput="setRev1Note(${sub.id},this.value)">${esc(rev1Notes[sub.id]||'')}</textarea></div>`;
   });
-  $('sec-rev1').innerHTML=`<div class="section"><div class="sec-hdr"><h2>Revision 1 — Notes Review</h2><div class="sub">Updated: 31 Aug 2026 – 3 Jan 2027</div></div>
+  $('sec-rev1').innerHTML=`<div class="section"><div class="sec-hdr"><h2>Revision 1 — Notes Review</h2><div class="sub">Updated: 9 Sep 2026 – 31 Dec 2026</div></div>
     <div class="g4" style="margin-bottom:16px"><div class="hcard" style="border:1px solid #00d4ff22"><div class="hlbl">Pages revised</div><div class="hval" style="color:#00d4ff">${donePages}<span style="font-size:13px;color:var(--faint);font-weight:400">/${totalPages}</span></div><div class="pbar-bg"><div class="pbar-fill" style="width:${pagePct}%;background:#00d4ff"></div></div></div>
     <div class="hcard" style="border:1px solid #4ade8022"><div class="hlbl">Subjects revised</div><div class="hval" style="color:#4ade80">${doneCount}<span style="font-size:13px;color:var(--faint);font-weight:400">/${subjects.length}</span></div><div class="hsub">${activeSubs.length} available now</div></div>
     <div class="hcard" style="border:1px solid #a855f722"><div class="hlbl">Pages today</div><div class="hval" style="color:${pagesToday>=todayTarget&&todayTarget>0?'#4ade80':'#a855f7'}">${pagesToday}</div><div class="hsub">${todayTarget>0?'target '+todayTarget:'no active sub'}</div></div>
-    <div class="hcard" style="border:1px solid #fbbf2422"><div class="hlbl">Window</div><div class="hval" style="color:#fbbf24;font-size:15px">31 Aug → 3 Jan</div><div class="hsub">126 days</div></div></div>
+    <div class="hcard" style="border:1px solid #fbbf2422"><div class="hlbl">Window</div><div class="hval" style="color:#fbbf24;font-size:15px">9 Sep → 31 Dec</div><div class="hsub">114 days</div></div></div>
     <div class="card" style="padding:11px 15px;margin-bottom:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span class="lbl" style="margin:0">Logging pages for</span>
       <button onclick="navRev1Date(-1)" style="background:var(--navy);border:1px solid var(--border);border-radius:7px;width:30px;height:30px;cursor:pointer;color:var(--text);font-size:13px;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;" onmouseover="this.style.borderColor='var(--acc)';this.style.color='var(--acc)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">&#9664;</button>
@@ -2859,9 +3113,9 @@ function discBlockRowHtml(b, i, date, showStatus){
   if(b.act==='study' && b.subId){
     var ytUrl = discGetYt(b.subId);
     if(ytUrl) linkHtml='<a href="'+ytUrl+'" target="_blank" class="disc-block-link yt">▶ YouTube</a>';
-  } else if(b.act==='rev1' && b.subId){
-    var notesPath = discGetNotesPath(b.subId);
-    linkHtml=notesPath?'<a href="'+notesPath+'" target="_blank" class="disc-block-link rev" title="Click to open notes PDF">📄 Notes ↗</a>':'';
+  } else if(b.act==='rev1'){
+    /* Notes stored in OneDrive — no link needed */
+    linkHtml='';
   } else if(b.act==='pyq' && b.subId){
     var pyqUrl = discGetPyqUrl(b.subId);
     linkHtml='<a href="'+pyqUrl+'" target="_blank" class="disc-block-link pq">🔗 PrepFusion</a>';
@@ -3020,9 +3274,9 @@ function renderDiscCard(){
     var linkHtml = '';
     if(fb.key==='study' && _fbYtUrl){
       linkHtml = '<a href="'+_fbYtUrl+'" target="_blank" class="disc-block-link yt">▶ YouTube</a>';
-    } else if(fb.key==='rev1' && _fbNotesUrl){
-      linkHtml = '<a href="'+_fbNotesUrl+'" target="_blank" class="disc-block-link rev" title="Open notes PDF">📄 Notes ↗</a>'
-        +'<button onclick="navigator.clipboard.writeText('+JSON.stringify(_fbNotesPath)+')" style="background:transparent;border:none;cursor:pointer;font-size:10px;color:var(--muted);padding:0 4px;" title="Copy path">⧉</button>';
+    } else if(fb.key==='rev1'){
+      /* Notes stored in OneDrive — no link in app */
+      linkHtml = '';
     } else if(fb.key==='pyq'){
       linkHtml = '<a href="'+_fbPyqUrl+'" target="_blank" class="disc-block-link pq">🔗 PrepFusion</a>';
     }
