@@ -2717,23 +2717,33 @@ function dbThreeCards(
   +'</div>';
 
   /* ── PYQ card ── */
-  /* today's plan slot from PYQ_PLAN */
-  var todayPlanSlot=(typeof PYQ_PLAN!=='undefined'?PYQ_PLAN:[] ).find(function(s){return s.date===TODAY;})||null;
+  /* find today's slot OR the next upcoming slot as preview */
+  var _plan=typeof PYQ_PLAN!=='undefined'?PYQ_PLAN:[];
+  var todayPlanSlot=_plan.find(function(s){return s.date===TODAY;})||null;
+  var nextPlanSlot=!todayPlanSlot?(_plan.find(function(s){return s.date>TODAY;})||null):null;
+  var tpsSlot=todayPlanSlot||nextPlanSlot;  /* whichever is relevant */
   var pyqTodayHtml='';
-  if(todayPlanSlot){
-    var tps=todayPlanSlot;
+  if(tpsSlot){
+    var tps=tpsSlot;
+    var isUpcoming=!todayPlanSlot&&!!nextPlanSlot;
+    var daysUntil=isUpcoming?diffDays(TODAY,tps.date):0;
     var tpSubShort={1:'Network Theory',2:'Signals & Systems',3:'Control Systems',4:'Measurements',5:'EMFT',6:'Machines',7:'Power Systems',8:'Power Electronics',9:'Digital Electronics',10:'Analog Electronics'}[tps.subId]||'';
-    var tpAct=typeof getPyqPlanActual==='function'?getPyqPlanActual(tps.date,tps.subId,tps.ti,tps.part):0;
-    var tpDone=tpAct>=tps.target&&tps.target>0;
+    var tpAct=!isUpcoming&&typeof getPyqPlanActual==='function'?getPyqPlanActual(tps.date,tps.subId,tps.ti,tps.part):0;
+    var tpDone=!isUpcoming&&tpAct>=tps.target&&tps.target>0;
     var tpPartLabel=tps.totalDays>1?' (pt '+tps.part+'/'+tps.totalDays+')':'';
     var tpActCol=tpDone?'#4ade80':tpAct>0?'#fbbf24':'var(--muted)';
+    var tpLabel=isUpcoming?'UPCOMING \u00b7 '+fmt(tps.date)+(daysUntil===1?' (tomorrow)':daysUntil>1?' (in '+daysUntil+' days)':''):'TODAY\u2019S TARGET';
+    var tpLabelCol=isUpcoming?'var(--muted)':'var(--faint)';
     pyqTodayHtml='<div style="margin-top:8px;padding:8px 10px;background:#1a1400;border:1px solid #fbbf2433;border-radius:6px;">'
-      +'<div style="font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">TODAY\u2019S TARGET</div>'
+      +'<div style="font-size:9px;color:'+tpLabelCol+';text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">'+tpLabel+'</div>'
       +'<div style="font-size:11px;font-weight:700;color:#fbbf24;line-height:1.3;">'+esc(tpSubShort)+' \u00b7 '+esc(tps.name)+tpPartLabel+'</div>'
       +'<div style="display:flex;align-items:baseline;gap:6px;margin-top:4px;">'
-        +'<span style="font-size:22px;font-weight:800;color:'+tpActCol+';">'+tpAct+'</span>'
-        +'<span style="font-size:11px;color:var(--faint);">/ '+tps.target+' q</span>'
-        +(tpDone?'<span style="font-size:10px;color:#4ade80;margin-left:auto;">\u2713 Done</span>':'')
+        +(isUpcoming
+          ?'<span style="font-size:13px;color:var(--muted);">Target: <strong style="color:#fbbf24;">'+tps.target+' q</strong></span>'
+          :'<span style="font-size:22px;font-weight:800;color:'+tpActCol+';">'+tpAct+'</span>'
+           +'<span style="font-size:11px;color:var(--faint);">/ '+tps.target+' q</span>'
+           +(tpDone?'<span style="font-size:10px;color:#4ade80;margin-left:auto;">\u2713 Done</span>':'')
+        )
       +'</div>'
     +'</div>';
   }
