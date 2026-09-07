@@ -2532,11 +2532,12 @@ function renderRevision1(){
   loadRev1();
   const locked=TODAY<REV1_START;
   const sched={};subjects.forEach(s=>{const sl=REV1_SCHEDULE[s.id];sched[s.id]=sl?{...sl,overflow:sl.end>'2027-01-03'}:{start:'',end:'',days:0,perDay:0,overflow:false};});
-  const doneCount=subjects.filter(s=>rev1Done[s.id]).length;
+  const rev1Subs=subjects.filter(s=>REV1_SCHEDULE[s.id]&&REV1_SCHEDULE[s.id].days>0);
+  const doneCount=rev1Subs.filter(s=>rev1Done[s.id]).length;
   const totalPages=allPages(),donePages=subjects.reduce((t,s)=>t+Math.min(pagesDone(s.id),subPages(s.id)),0);
   const pagePct=totalPages?Math.round(donePages/totalPages*100):0;
   const pagesToday=subjects.reduce((t,s)=>t+pagesOn(s.id,rev1LogDate),0);
-  const activeSubs=subjects.filter(s=>['active','ready','overdue'].includes(rev1Status(s,sched[s.id])));
+  const activeSubs=locked?[]:subjects.filter(s=>['active','ready','overdue'].includes(rev1Status(s,sched[s.id])));
   const todayTarget=activeSubs.reduce((t,s)=>t+pageTarget(s.id,sched[s.id]),0);
   let cards='';
   subjects.forEach(sub=>{
@@ -2554,8 +2555,8 @@ function renderRevision1(){
   });
   $('sec-rev1').innerHTML=`<div class="section"><div class="sec-hdr"><h2>Revision 1 — Notes Review</h2><div class="sub">Updated: 9 Sep 2026 – 31 Dec 2026</div></div>
     <div class="g4" style="margin-bottom:16px"><div class="hcard" style="border:1px solid #00d4ff22"><div class="hlbl">Pages revised</div><div class="hval" style="color:#00d4ff">${donePages}<span style="font-size:13px;color:var(--faint);font-weight:400">/${totalPages}</span></div><div class="pbar-bg"><div class="pbar-fill" style="width:${pagePct}%;background:#00d4ff"></div></div></div>
-    <div class="hcard" style="border:1px solid #4ade8022"><div class="hlbl">Subjects revised</div><div class="hval" style="color:#4ade80">${doneCount}<span style="font-size:13px;color:var(--faint);font-weight:400">/${subjects.length}</span></div><div class="hsub">${activeSubs.length} available now</div></div>
-    <div class="hcard" style="border:1px solid #a855f722"><div class="hlbl">Pages today</div><div class="hval" style="color:${pagesToday>=todayTarget&&todayTarget>0?'#4ade80':'#a855f7'}">${pagesToday}</div><div class="hsub">${todayTarget>0?'target '+todayTarget:'no active sub'}</div></div>
+    <div class="hcard" style="border:1px solid #4ade8022"><div class="hlbl">Subjects revised</div><div class="hval" style="color:#4ade80">${doneCount}<span style="font-size:13px;color:var(--faint);font-weight:400">/${rev1Subs.length}</span></div><div class="hsub">${locked?'Starts 9 Sep':activeSubs.length+' active now'}</div></div>
+    <div class="hcard" style="border:1px solid #a855f722"><div class="hlbl">Pages today</div><div class="hval" style="color:${pagesToday>=todayTarget&&todayTarget>0?'#4ade80':'#a855f7'}">${pagesToday}</div><div class="hsub">${locked?'starts 9 Sep':todayTarget>0?'target '+todayTarget:'no active sub'}</div></div>
     <div class="hcard" style="border:1px solid #fbbf2422"><div class="hlbl">Window</div><div class="hval" style="color:#fbbf24;font-size:15px">9 Sep → 31 Dec</div><div class="hsub">114 days</div></div></div>
     <div class="card" style="padding:11px 15px;margin-bottom:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
       <span class="lbl" style="margin:0">Logging pages for</span>
@@ -2565,7 +2566,7 @@ function renderRevision1(){
       ${rev1LogDate!==TODAY?`<button class="btn-g" style="font-size:11px;padding:4px 10px" onclick="setRev1LogDate('${TODAY}')">&#8629; Today</button>`:''}
     </div>
     <div class="g2">${cards}</div></div>`;
-  applyTabLock('rev1-wrap',locked,'31 Aug 2026');
+  applyTabLock('rev1-wrap',locked,'9 Sep 2026');
 }
 function buildMockSchedule(){const s=[];let d='2027-01-03',n=1;while(d<='2027-01-31'&&n<=5){if(new Date(d+'T00:00:00').getDay()===0){s.push({n,date:d,revStart:addDays(d,1),revEnd:addDays(d,5),buffer:addDays(d,6)});n++;}d=addDays(d,1);}return s;}
 function mockRec(date){return mockData[date]||{done:false,score:'',weak:''};}
@@ -2705,7 +2706,10 @@ function dbThreeCards(
         +'<div class="db-pbar"><div class="db-pbar-fill" style="width:'+r1PgPct+'%;background:#c084fc"></div></div>'
       +'</div>';
   } else {
-    r1Inner='<div style="font-size:11px;color:var(--faint);margin-top:8px;">Not started yet \u00b7 begins '+REV1_START+'</div>';
+    var r1DaysAway=diffDays(TODAY,REV1_START);
+    var r1StartMsg=r1DaysAway===1?'Starts tomorrow \u00b7 9 Sep':r1DaysAway===0?'Starts today \u00b7 9 Sep':'Starts in '+r1DaysAway+' day'+(r1DaysAway!==1?'s':'')+' \u00b7 9 Sep';
+    r1Inner='<div style="font-size:12px;color:#c084fc;font-weight:700;margin-top:8px;">'+r1StartMsg+'</div>'
+      +'<div style="font-size:10px;color:var(--faint);margin-top:4px;">Network Analysis first \u00b7 240 pages/day</div>';
   }
   var rev1Card='<div class="db-today-card" style="margin-bottom:0;border-color:#c084fc33;padding:12px 14px;">'
     +'<div class="db-today-lbl" style="color:#c084fc;margin-bottom:6px;">\u{1f4d6} REVISION 1</div>'
@@ -2713,22 +2717,43 @@ function dbThreeCards(
   +'</div>';
 
   /* ── PYQ card ── */
+  /* today's plan slot from PYQ_PLAN */
+  var todayPlanSlot=(typeof PYQ_PLAN!=='undefined'?PYQ_PLAN:[] ).find(function(s){return s.date===TODAY;})||null;
+  var pyqTodayHtml='';
+  if(todayPlanSlot){
+    var tps=todayPlanSlot;
+    var tpSubShort={1:'Network Theory',2:'Signals & Systems',3:'Control Systems',4:'Measurements',5:'EMFT',6:'Machines',7:'Power Systems',8:'Power Electronics',9:'Digital Electronics',10:'Analog Electronics'}[tps.subId]||'';
+    var tpAct=typeof getPyqPlanActual==='function'?getPyqPlanActual(tps.date,tps.subId,tps.ti,tps.part):0;
+    var tpDone=tpAct>=tps.target&&tps.target>0;
+    var tpPartLabel=tps.totalDays>1?' (pt '+tps.part+'/'+tps.totalDays+')':'';
+    var tpActCol=tpDone?'#4ade80':tpAct>0?'#fbbf24':'var(--muted)';
+    pyqTodayHtml='<div style="margin-top:8px;padding:8px 10px;background:#1a1400;border:1px solid #fbbf2433;border-radius:6px;">'
+      +'<div style="font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">TODAY\u2019S TARGET</div>'
+      +'<div style="font-size:11px;font-weight:700;color:#fbbf24;line-height:1.3;">'+esc(tpSubShort)+' \u00b7 '+esc(tps.name)+tpPartLabel+'</div>'
+      +'<div style="display:flex;align-items:baseline;gap:6px;margin-top:4px;">'
+        +'<span style="font-size:22px;font-weight:800;color:'+tpActCol+';">'+tpAct+'</span>'
+        +'<span style="font-size:11px;color:var(--faint);">/ '+tps.target+' q</span>'
+        +(tpDone?'<span style="font-size:10px;color:#4ade80;margin-left:auto;">\u2713 Done</span>':'')
+      +'</div>'
+    +'</div>';
+  }
   var pyqInner;
   if(pyqMonthSubs.length>0){
     pyqInner='<div style="font-size:11px;color:var(--muted);margin-top:4px;">'+esc(pyqMonthSubNames.join(', '))+'</div>'
-      +'<div style="margin-top:10px;display:flex;gap:16px;">'
+      +'<div style="margin-top:8px;display:flex;gap:16px;">'
         +'<div><div style="font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Accuracy</div>'
         +'<div style="font-size:22px;font-weight:800;color:'+pyqMonthCol+';">'+(pyqMonthAcc!==null?pyqMonthAcc+'%':'\u2014')+'</div></div>'
         +'<div><div style="font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Questions</div>'
         +'<div style="font-size:22px;font-weight:800;color:#fbbf24;">'+(pyqMonthC+pyqMonthW)+'</div></div>'
       +'</div>'
-      +'<div style="font-size:10px;color:var(--faint);margin-top:6px;">'+pyqMonthC+' correct \u00b7 '+pyqMonthW+' wrong</div>';
+      +'<div style="font-size:10px;color:var(--faint);margin-top:6px;">'+pyqMonthC+' correct \u00b7 '+pyqMonthW+' wrong</div>'
+      +pyqTodayHtml;
   } else {
     var pendMsg=pyqPendingNames&&pyqPendingNames.length>0
       ?'<div style="font-size:10px;color:var(--faint);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-top:8px;">Complete this month</div>'
        +'<div style="font-size:11px;color:#fbbf24;margin-top:4px;line-height:1.5;">'+esc(pyqPendingNames.join(', '))+'</div>'
-      :'<div style="font-size:11px;color:#4ade80;margin-top:8px;">✓ All completed subjects have PYQ logged</div>';
-    pyqInner='<div style="font-size:11px;color:var(--faint);margin-top:4px;">No sessions this month</div>'+pendMsg;
+      :'<div style="font-size:11px;color:#4ade80;margin-top:8px;">\u2713 All completed subjects have PYQ logged</div>';
+    pyqInner='<div style="font-size:11px;color:var(--faint);margin-top:4px;">No sessions this month</div>'+pyqTodayHtml+pendMsg;
   }
   var pyqCard='<div class="db-today-card" style="margin-bottom:0;border-color:#fbbf2433;padding:12px 14px;">'
     +'<div class="db-today-lbl" style="color:#fbbf24;margin-bottom:6px;">\u{1f3af} PYQ \u2014 THIS MONTH</div>'
