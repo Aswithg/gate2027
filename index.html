@@ -393,65 +393,75 @@ select.inp-sm{cursor:pointer;}
     <button class="btn-g" onclick="copyData()">📋 Copy to clipboard</button>
     <span class="data-status" id="data-status">All changes auto-saved</span>
   </div>
-  <div class="section">
-    <div class="sec-hdr"><h2>Journey Progress</h2><div class="sub" id="prog-sub"></div></div>
-    <div class="g4" id="hero-cards"></div>
-    <div class="card" style="margin-top:12px;padding:14px 16px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <span style="font-size:12px;font-weight:700;color:var(--muted);">OVERALL JOURNEY</span>
-        <span id="journey-pct" style="font-size:12px;font-weight:700;color:var(--acc);"></span>
-      </div>
-      <div class="pbar-bg" style="height:8px;"><div class="pbar-fill" id="journey-bar"></div></div>
-      <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:10px;color:var(--faint);">
-        <span id="journey-start"></span><span id="journey-end"></span>
-      </div>
-    </div>
+  <!-- Study sub-tab bar -->
+  <div style="display:flex;gap:6px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+    <button id="study-view-progress" onclick="studySetView('progress')" style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--acc);background:#001e2e;color:var(--acc);transition:all .2s">📊 Progress</button>
+    <button id="study-view-milestones" onclick="studySetView('milestones')" style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--navy);color:var(--muted);transition:all .2s">🏆 Milestones</button>
   </div>
-  <div class="section">
-    <div class="sec-hdr"><h2>Today's Entry</h2><div class="sub">Log your day — navigate dates with arrows</div></div>
-    <div class="card">
-      <div class="date-nav">
-        <button class="btn-sm" onclick="navDate(-1)" style="width:32px;height:32px;font-size:16px;">◀</button>
-        <input type="date" id="entry-date" class="inp-sm" onchange="changeEntryDate(this.value)" style="cursor:pointer;">
-        <button class="btn-sm" onclick="navDate(1)" style="width:32px;height:32px;font-size:16px;">▶</button>
-        <button class="btn-sm" onclick="changeEntryDate(TODAY)">↩ Today</button>
-        <span id="entry-day-label" style="font-size:12px;color:var(--muted);"></span>
-        <span id="entry-date-indicator" class="date-nav-indicator"></span>
-      </div>
-      <div class="sub-strip" id="sub-strip"></div>
-      <div class="target-grid" id="target-grid"></div>
-      <div style="margin-top:16px;"><label class="lbl">Habits</label><div class="habit-row" id="habit-row"></div></div>
-      <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-        <div>
-          <label class="lbl">Subject being studied
-            <button id="sub-override-btn" onclick="enableSubOverride()" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--muted);padding:0 4px;">✏️</button>
-          </label>
-          <select class="inp-sm inp" id="entry-subject" onchange="onSubjectChange()" style="width:100%;"></select>
+  <!-- Progress view -->
+  <div id="study-progress-view">
+    <div class="section">
+      <div class="sec-hdr"><h2>Journey Progress</h2><div class="sub" id="prog-sub"></div></div>
+      <div class="g4" id="hero-cards"></div>
+      <div class="card" style="margin-top:12px;padding:14px 16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <span style="font-size:12px;font-weight:700;color:var(--muted);">OVERALL JOURNEY</span>
+          <span id="journey-pct" style="font-size:12px;font-weight:700;color:var(--acc);"></span>
         </div>
-        <div>
-          <label class="lbl">Videos watched today</label>
-          <input class="inp-sm inp" type="number" min="0" id="entry-vids" oninput="saveEntryField('videosToday',this.value)" style="width:100%;">
+        <div class="pbar-bg" style="height:8px;"><div class="pbar-fill" id="journey-bar"></div></div>
+        <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:10px;color:var(--faint);">
+          <span id="journey-start"></span><span id="journey-end"></span>
         </div>
       </div>
-
+    </div>
+    <div class="section">
+      <div class="sec-hdr"><h2>Today's Entry</h2><div class="sub">Log your day — navigate dates with arrows</div></div>
+      <div class="card">
+        <div class="date-nav">
+          <button class="btn-sm" onclick="navDate(-1)" style="width:32px;height:32px;font-size:16px;">◀</button>
+          <input type="date" id="entry-date" class="inp-sm" onchange="changeEntryDate(this.value)" style="cursor:pointer;">
+          <button class="btn-sm" onclick="navDate(1)" style="width:32px;height:32px;font-size:16px;">▶</button>
+          <button class="btn-sm" onclick="changeEntryDate(TODAY)">↩ Today</button>
+          <span id="entry-day-label" style="font-size:12px;color:var(--muted);"></span>
+          <span id="entry-date-indicator" class="date-nav-indicator"></span>
+        </div>
+        <div class="sub-strip" id="sub-strip"></div>
+        <div class="target-grid" id="target-grid"></div>
+        <div style="margin-top:16px;"><label class="lbl">Habits</label><div class="habit-row" id="habit-row"></div></div>
+        <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+          <div>
+            <label class="lbl">Subject being studied
+              <button id="sub-override-btn" onclick="enableSubOverride()" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--muted);padding:0 4px;">✏️</button>
+            </label>
+            <select class="inp-sm inp" id="entry-subject" onchange="onSubjectChange()" style="width:100%;"></select>
+          </div>
+          <div>
+            <label class="lbl">Videos watched today</label>
+            <input class="inp-sm inp" type="number" min="0" id="entry-vids" oninput="saveEntryField('videosToday',this.value)" style="width:100%;">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="sec-hdr"><h2>Subject Progress</h2><div class="sub">Click row to expand</div></div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <table class="sub-tbl">
+          <thead><tr><th>#</th><th>Subject</th><th>Faculty</th><th>Window</th><th>Status</th><th>Videos</th><th>Progress</th><th>Confidence</th></tr></thead>
+          <tbody id="sub-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="section">
+      <div class="sec-hdr"><h2>Learning Path</h2><div class="sub">Direct links to playlists &amp; courses</div></div>
+      <div class="lp-grid" id="lp-grid"></div>
     </div>
   </div>
-  <div class="section">
-    <div class="sec-hdr"><h2>Subject Progress</h2><div class="sub">Click row to expand</div></div>
-    <div class="card" style="padding:0;overflow:hidden;">
-      <table class="sub-tbl">
-        <thead><tr><th>#</th><th>Subject</th><th>Faculty</th><th>Window</th><th>Status</th><th>Videos</th><th>Progress</th><th>Confidence</th></tr></thead>
-        <tbody id="sub-tbody"></tbody>
-      </table>
+  <!-- Milestones view -->
+  <div id="study-milestones-view" style="display:none">
+    <div class="section">
+      <div class="sec-hdr"><h2>Milestones</h2><div class="sub" id="ms-sub"></div></div>
+      <div class="ms-grid" id="ms-grid"></div>
     </div>
-  </div>
-  <div class="section">
-    <div class="sec-hdr"><h2>Learning Path</h2><div class="sub">Direct links to playlists & courses</div></div>
-    <div class="lp-grid" id="lp-grid"></div>
-  </div>
-  <div class="section">
-    <div class="sec-hdr"><h2>Milestones</h2><div class="sub" id="ms-sub"></div></div>
-    <div class="ms-grid" id="ms-grid"></div>
   </div>
 </div>
 </div>
@@ -459,27 +469,27 @@ select.inp-sm{cursor:pointer;}
 <!-- REVISION 1 TAB -->
 <div class="tab-panel" id="panel-rev1">
 <div class="tab-locked-wrap" id="rev1-wrap">
-<div class="wrap">
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)">
-    <div>
-      <h2 style="font-size:18px;font-weight:700;color:var(--text)">📖 Revision 1</h2>
-      <div style="font-size:12px;color:var(--muted);margin-top:3px">Track your notes review and short-notes writing progress</div>
-    </div>
-    <div style="display:flex;gap:6px">
-      <button id="rev1-view-rev" onclick="rev1SetView('rev1')" style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--acc);background:#001e2e;color:var(--acc);transition:all .2s">📖 Rev1 Notes</button>
-      <button id="rev1-view-sn" onclick="rev1SetView('sn')" style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--navy);color:var(--muted);transition:all .2s">✏️ Short Notes</button>
-    </div>
-  </div>
-  <div id="rev1-rev-view"><div id="sec-rev1"></div></div>
-  <div id="rev1-sn-view" style="display:none"><div id="sec-sn"></div></div>
-</div>
+<div class="wrap"><div id="sec-rev1"></div></div>
 </div>
 </div>
 
 <!-- REVISION 2 TAB -->
 <div class="tab-panel" id="panel-rev2">
 <div class="tab-locked-wrap" id="rev2-wrap">
-<div class="wrap"><div id="sec-rev2"></div></div>
+<div class="wrap">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)">
+    <div>
+      <h2 style="font-size:18px;font-weight:700;color:var(--text)">🚀 Rev 2 &amp; Mocks</h2>
+      <div style="font-size:12px;color:var(--muted);margin-top:3px">Test tracker, mock schedule and sample mock scores</div>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button id="rev2-view-tracker" onclick="rev2SetView('tracker')" style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--acc);background:#001e2e;color:var(--acc);transition:all .2s">📚 Test Tracker</button>
+      <button id="rev2-view-sample" onclick="rev2SetView('sample')" style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--navy);color:var(--muted);transition:all .2s">📝 Sample Mocks</button>
+    </div>
+  </div>
+  <div id="rev2-tracker-view"><div id="sec-rev2"></div></div>
+  <div id="rev2-sample-view" style="display:none"><div id="sec-sample"></div></div>
+</div>
 </div>
 </div>
 
@@ -2213,7 +2223,7 @@ const FB_KEYS = [
   'gate-subjects','gate-daily','gate-settings','gate-milestones',
   'gate-sub-tests','gate-rev1-done','gate-rev1-notes','gate-rev1-pages',
   'gate-mocks','gate-pyq-data','gate-pyq-quiz','gate-discipline',
-  'gate-theme','gate-pyq-plan', 'gate-v20-migrated'
+  'gate-theme','gate-pyq-plan', 'gate-v20-migrated', 'gate-sample-mocks'
 ];
 
 function lsGet(k){
@@ -2544,168 +2554,6 @@ function navRev1Date(delta){setRev1LogDate(addDays(rev1LogDate,delta));}
 function pageTarget(id,slot){const total=subPages(id);if(!total)return 0;const left=Math.max(0,total-pagesDone(id));let dl;if(TODAY<slot.start)dl=slot.days;else if(TODAY>slot.end)dl=1;else dl=Math.max(1,diffDays(TODAY,slot.end)+1);return Math.ceil(left/dl);}
 function rev1Status(sub,slot){if(rev1Done[sub.id])return'done';if(slot.overflow)return'overflow';if(sub.status!=='Completed')return'locked';if(TODAY>=slot.start&&TODAY<=slot.end)return'active';if(TODAY>slot.end)return'overdue';return'ready';}
 const REV1_TAG={done:['#003d1f','#4ade80','Revised ✓'],active:['#001e2e','#00d4ff','In progress'],ready:['#1a0d2e','#c084fc','Ready'],overdue:['#2d1900','#fbbf24','Overdue'],locked:['#0d1b2a','#4a7a9b','Locked'],overflow:['#1a0800','#ef4444','→ Rev 2']};
-/* ══ SHORT NOTES VIEW TOGGLE ══ */
-function rev1SetView(v){
-  snView=v;
-  const rView=$('rev1-rev-view'), snViewEl=$('rev1-sn-view');
-  const btnR=$('rev1-view-rev'), btnS=$('rev1-view-sn');
-  if(rView) rView.style.display=v==='rev1'?'':'none';
-  if(snViewEl) snViewEl.style.display=v==='sn'?'':'none';
-  if(btnR){
-    if(v==='rev1'){btnR.style.borderColor='var(--acc)';btnR.style.background='#001e2e';btnR.style.color='var(--acc)';}
-    else{btnR.style.borderColor='var(--border)';btnR.style.background='var(--navy)';btnR.style.color='var(--muted)';}
-  }
-  if(btnS){
-    if(v==='sn'){btnS.style.borderColor='var(--acc)';btnS.style.background='#001e2e';btnS.style.color='var(--acc)';}
-    else{btnS.style.borderColor='var(--border)';btnS.style.background='var(--navy)';btnS.style.color='var(--muted)';}
-  }
-  if(v==='sn') renderShortNotes();
-}
-
-/* ── SHORT NOTES HELPERS ── */
-function snPagesDone(id){ return Object.values(snPages[id]||{}).reduce((t,v)=>t+(+v||0),0); }
-function snPagesOn(id,date){ return +((snPages[id]||{})[date]||0); }
-function setSnPages(id,date,val){
-  const v=Math.max(0,Math.round(+val||0));
-  if(!snPages[id])snPages[id]={};
-  if(v===0)delete snPages[id][date]; else snPages[id][date]=v;
-  lsSet('gate-sn-pages',snPages);showSaveToast();renderShortNotes();
-}
-function stepSnPages(id,delta){ setSnPages(id,rev1LogDate,snPagesOn(id,rev1LogDate)+delta); }
-function setSnNote(id,val){ snNotes[id]=val; clearTimeout(saveTimers['sn']); saveTimers['sn']=setTimeout(()=>{lsSet('gate-sn-notes',snNotes);showSaveToast();},600); }
-function snPageTarget(id){
-  const tot=subPages(id); if(!tot)return 0;
-  const dn=snPagesDone(id), left=Math.max(0,tot-dn);
-  const slot=REV1_SCHEDULE[id]; if(!slot)return 0;
-  // short notes window: same as rev1 window
-  let dl;
-  if(TODAY<slot.start) dl=slot.days;
-  else if(TODAY>slot.end) dl=1;
-  else dl=Math.max(1,diffDays(TODAY,slot.end)+1);
-  return Math.ceil(left/dl);
-}
-
-/* ══ RENDER SHORT NOTES ══ */
-function renderShortNotes(){
-  loadRev1();
-  const el=$('sec-sn');if(!el)return;
-  const locked=TODAY<REV1_START;
-
-  // Overall summary stats
-  const totalPages=allPages();
-  const donePages=subjects.reduce((t,s)=>t+Math.min(snPagesDone(s.id),subPages(s.id)),0);
-  const pagePct=totalPages?Math.round(donePages/totalPages*100):0;
-  const pagesToday=subjects.reduce((t,s)=>t+snPagesOn(s.id,rev1LogDate),0);
-
-  let cards='';
-  subjects.forEach(function(sub){
-    const slot=REV1_SCHEDULE[sub.id];
-    if(!slot) return;
-    const tot=subPages(sub.id);
-    const dn=Math.min(snPagesDone(sub.id),tot);
-    const pct=tot?Math.round(dn/tot*100):0;
-    const pcol=pct>=100?'#4ade80':pct>=50?'#00d4ff':'#a78bfa';
-    const tgt=snPageTarget(sub.id);
-    const today=snPagesOn(sub.id,rev1LogDate);
-
-    // Status pill — mirrors rev1Status logic
-    let stLabel, stBg, stCol;
-    if(!tot){stLabel='No PDF';stBg='#0d1e2e';stCol='#4a6a80';}
-    else if(pct>=100){stLabel='Done ✓';stBg='#003d1f';stCol='#4ade80';}
-    else if(sub.status!=='Completed'){stLabel='Locked';stBg='#0d1b2a';stCol='#4a7a9b';}
-    else if(TODAY>=slot.start&&TODAY<=slot.end){stLabel='Writing';stBg='#0a1a2e';stCol='#a78bfa';}
-    else if(TODAY>slot.end&&pct<100){stLabel='Overdue';stBg='#2d1900';stCol='#fbbf24';}
-    else{stLabel='Ready';stBg='#1a0d2e';stCol='#c084fc';}
-
-    // Pace indicator
-    let pace=null;
-    if(tgt>0){
-      if(today>=tgt) pace=['#003d1f','#4ade80','✓ ON TRACK'];
-      else if(today>=tgt*0.6) pace=['#2d1900','#fbbf24','⚡ CLOSE'];
-      else pace=['#2d0000','#ef4444','⚠ BEHIND'];
-    }
-
-    const dim=(sub.status!=='Completed'&&pct===0)?'opacity:.65;':'';
-
-    // Estimate short-notes page compression ratio note
-    const compressionNote=tot>0
-      ?`<div style="font-size:10px;color:var(--faint);margin-top:4px;">Source: ${tot} pages of original notes → your condensed short notes</div>`
-      :'';
-
-    const tracker=!tot?'<div style="font-size:12px;color:var(--faint);padding:8px 0;">No PDF mapped for this subject.</div>'
-      :`<div style="background:var(--navy);border-radius:8px;padding:12px 14px;margin-bottom:12px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px">
-          <span style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px">✏️ Short Notes Pages Written</span>
-          ${pace?`<span style="font-size:10px;background:${pace[0]};color:${pace[1]};padding:2px 8px;border-radius:4px;font-weight:700">${pace[2]}</span>`:''}
-        </div>
-        <div style="display:flex;align-items:baseline;gap:7px;margin-bottom:6px">
-          <span style="font-size:24px;font-weight:800;color:${pcol}">${dn}</span>
-          <span style="font-size:13px;color:var(--faint)">/ ${tot} pages</span>
-          <span style="margin-left:auto;font-size:11px;color:var(--faint)">${tot-dn} left</span>
-        </div>
-        <div style="height:7px;background:var(--card);border-radius:4px;overflow:hidden">
-          <div style="height:100%;width:${pct}%;background:${pcol};border-radius:4px;transition:width .35s"></div>
-        </div>
-        ${compressionNote}
-        <div style="font-size:10px;color:var(--faint);margin-top:4px;margin-bottom:10px">
-          ${pct}% complete${tgt>0?` · need <strong style="color:${stCol}">${tgt} pg/day</strong> to finish by ${fmt(slot.end)}`:''} · window: ${fmt(slot.start)} – ${fmt(slot.end)}
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:9px;border-top:1px solid var(--border)">
-          <span style="font-size:11px;color:var(--muted)">Pages on ${fmt(rev1LogDate)}:</span>
-          <button onclick="stepSnPages(${sub.id},-5)" style="background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:5px;width:30px;height:28px;font-size:12px;cursor:pointer">−5</button>
-          <input class="inp-sm" type="number" min="0" value="${today}" onchange="setSnPages(${sub.id},'${rev1LogDate}',this.value)" style="width:62px;text-align:center;font-weight:700;color:${today>0?'#a78bfa':'var(--text)'}">
-          <button onclick="stepSnPages(${sub.id},5)" style="background:#6d28d9;border:none;color:#fff;border-radius:5px;width:30px;height:28px;font-size:12px;font-weight:700;cursor:pointer">+5</button>
-          ${tgt>0?`<span style="font-size:11px;color:var(--faint)">target ${tgt}</span>`:''}
-        </div>
-      </div>`;
-
-    cards+=`<div class="card" style="${dim}padding:16px 18px;border-left:3px solid ${stCol}">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px">
-        <div style="flex:1;min-width:170px">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
-            <span style="font-size:11px;font-weight:700;color:var(--faint)">#${sub.id}</span>
-            <span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:12px;background:${stBg};color:${stCol};border:1px solid ${stCol}44">${stLabel}</span>
-          </div>
-          <div style="font-size:14px;font-weight:700">${sub.name}</div>
-          <div style="font-size:11px;color:var(--faint);margin-top:2px">${sub.faculty} · ${tot||'—'} source pages · ${fmt(slot.start)} – ${fmt(slot.end)}</div>
-        </div>
-      </div>
-      ${tracker}
-      <label class="lbl">Short Notes Remarks</label>
-      <textarea class="inp" rows="2" style="font-size:12px;margin-top:4px" placeholder="Coverage notes, chapters done, topics pending…" oninput="setSnNote(${sub.id},this.value)">${esc(snNotes[sub.id]||'')}</textarea>
-    </div>`;
-  });
-
-  // Summary header stats
-  const activeSubs=locked?[]:subjects.filter(s=>s.status==='Completed'||snPagesDone(s.id)>0);
-  const snTodayTarget=activeSubs.reduce((t,s)=>t+snPageTarget(s.id),0);
-  const startedCount=subjects.filter(s=>snPagesDone(s.id)>0).length;
-
-  el.innerHTML=`<div class="section">
-    <div class="g4" style="margin-bottom:16px">
-      <div class="hcard" style="border:1px solid #a78bfa22"><div class="hlbl">SN Pages Written</div><div class="hval" style="color:#a78bfa">${donePages}<span style="font-size:13px;color:var(--faint);font-weight:400">/${totalPages}</span></div><div class="pbar-bg"><div class="pbar-fill" style="width:${pagePct}%;background:#a78bfa"></div></div></div>
-      <div class="hcard" style="border:1px solid #4ade8022"><div class="hlbl">Subjects Started</div><div class="hval" style="color:#4ade80">${startedCount}<span style="font-size:13px;color:var(--faint);font-weight:400">/${subjects.length}</span></div><div class="hsub">${pagePct}% overall</div></div>
-      <div class="hcard" style="border:1px solid #c084fc22"><div class="hlbl">SN Pages Today</div><div class="hval" style="color:${pagesToday>=snTodayTarget&&snTodayTarget>0?'#4ade80':'#c084fc'}">${pagesToday}</div><div class="hsub">${locked?'starts 9 Sep':snTodayTarget>0?'target '+snTodayTarget:'write away!'}</div></div>
-      <div class="hcard" style="border:1px solid #fbbf2422"><div class="hlbl">Overall Progress</div><div class="hval" style="color:#fbbf24;font-size:20px">${pagePct}%</div><div class="pbar-bg"><div class="pbar-fill" style="width:${pagePct}%;background:#fbbf24"></div></div></div>
-    </div>
-    <div class="card" style="padding:11px 15px;margin-bottom:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span class="lbl" style="margin:0">Logging for</span>
-      <button onclick="navRev1Date(-1)" style="background:var(--navy);border:1px solid var(--border);border-radius:7px;width:30px;height:30px;cursor:pointer;color:var(--text);font-size:13px;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;" onmouseover="this.style.borderColor='var(--acc)';this.style.color='var(--acc)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">&#9664;</button>
-      <input type="date" value="${rev1LogDate}" onchange="setRev1LogDate(this.value);renderShortNotes();" style="background:var(--navy);border:1px solid #a78bfa;border-radius:6px;padding:5px 9px;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;outline:none">
-      <button onclick="navRev1Date(1)" style="background:var(--navy);border:1px solid var(--border);border-radius:7px;width:30px;height:30px;cursor:pointer;color:var(--text);font-size:13px;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;" onmouseover="this.style.borderColor='var(--acc)';this.style.color='var(--acc)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">&#9654;</button>
-      ${rev1LogDate!==TODAY?`<button class="btn-g" style="font-size:11px;padding:4px 10px" onclick="setRev1LogDate('${TODAY}');renderShortNotes();">&#8629; Today</button>`:''}
-      <span style="margin-left:auto;font-size:11px;color:var(--faint)">Date shared with Rev1 tracker</span>
-    </div>
-    <div class="card" style="padding:10px 14px;margin-bottom:16px;background:#0d0a1a;border:1px solid #a78bfa44;">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <span style="font-size:13px;">✏️</span>
-        <div style="font-size:12px;color:var(--muted)"><strong style="color:#a78bfa">Short Notes</strong> are concise handwritten or typed notes you write <em>from</em> the original PDF notes. Track how many pages of short notes you've covered per subject. The target is to cover all <strong>${totalPages}</strong> source pages.</div>
-      </div>
-    </div>
-    <div class="g2">${cards}</div>
-  </div>`;
-}
-
 function renderRevision1(){
   loadRev1();
   const locked=TODAY<REV1_START;
@@ -2824,9 +2672,9 @@ function renderRevision2(){
 }
 
 /* ══ EXPORT / IMPORT ══ */
-function exportData(){loadDisc();const data={subjects,daily,settings,milestones:[...earnedMilestones],subTests,rev1Done,rev1Notes,rev1Pages,snPages,snNotes,mockData,pyqData,discData};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`gate2027-backup-${TODAY}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);dataStatus('✓ Backup exported','#4ade80');}
-function importData(){const inp=document.createElement('input');inp.type='file';inp.accept='.json';inp.onchange=e=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(d.subjects)subjects=d.subjects;if(d.daily)daily=d.daily;if(d.settings)settings=d.settings;if(d.milestones)earnedMilestones=new Set(d.milestones);if(d.subTests)subTests=d.subTests;if(d.rev1Done)rev1Done=d.rev1Done;if(d.rev1Notes)rev1Notes=d.rev1Notes;if(d.rev1Pages)rev1Pages=d.rev1Pages;if(d.mockData)mockData=d.mockData;if(d.pyqData)pyqData=d.pyqData;if(d.discData)discData=d.discData;lsSet('gate-discipline',discData);lsSet('gate-subjects',subjects);lsSet('gate-daily',daily);lsSet('gate-settings',settings);lsSet('gate-milestones',[...earnedMilestones]);lsSet('gate-sub-tests',subTests);lsSet('gate-rev1-done',rev1Done);lsSet('gate-rev1-notes',rev1Notes);lsSet('gate-rev1-pages',rev1Pages);lsSet('gate-mocks',mockData);lsSet('gate-pyq-data',pyqData);lsSet(MIGRATION_KEY,'1');renderAll();dataStatus('✓ Data imported','#4ade80');}catch(err){dataStatus('✗ Import failed: '+err.message,'#ef4444');}};reader.readAsText(file);};document.body.appendChild(inp);inp.click();inp.remove();}
-function copyData(){loadDisc();const data={subjects,daily,settings,milestones:[...earnedMilestones],subTests,rev1Done,rev1Notes,rev1Pages,mockData,pyqData,discData};const txt=JSON.stringify(data);navigator.clipboard.writeText(txt).then(()=>dataStatus('✓ Copied','#4ade80')).catch(()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();dataStatus('✓ Copied (fallback)','#4ade80');});}
+function exportData(){loadDisc();loadSampleMocks();const data={subjects,daily,settings,milestones:[...earnedMilestones],subTests,rev1Done,rev1Notes,rev1Pages,mockData,pyqData,discData,sampleMocks};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`gate2027-backup-${TODAY}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);dataStatus('✓ Backup exported','#4ade80');}
+function importData(){const inp=document.createElement('input');inp.type='file';inp.accept='.json';inp.onchange=e=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(d.subjects)subjects=d.subjects;if(d.daily)daily=d.daily;if(d.settings)settings=d.settings;if(d.milestones)earnedMilestones=new Set(d.milestones);if(d.subTests)subTests=d.subTests;if(d.rev1Done)rev1Done=d.rev1Done;if(d.rev1Notes)rev1Notes=d.rev1Notes;if(d.rev1Pages)rev1Pages=d.rev1Pages;if(d.mockData)mockData=d.mockData;if(d.pyqData)pyqData=d.pyqData;if(d.discData)discData=d.discData;if(d.sampleMocks)sampleMocks=d.sampleMocks;lsSet('gate-sample-mocks',sampleMocks);lsSet('gate-discipline',discData);lsSet('gate-subjects',subjects);lsSet('gate-daily',daily);lsSet('gate-settings',settings);lsSet('gate-milestones',[...earnedMilestones]);lsSet('gate-sub-tests',subTests);lsSet('gate-rev1-done',rev1Done);lsSet('gate-rev1-notes',rev1Notes);lsSet('gate-rev1-pages',rev1Pages);lsSet('gate-mocks',mockData);lsSet('gate-pyq-data',pyqData);lsSet(MIGRATION_KEY,'1');renderAll();dataStatus('✓ Data imported','#4ade80');}catch(err){dataStatus('✗ Import failed: '+err.message,'#ef4444');}};reader.readAsText(file);};document.body.appendChild(inp);inp.click();inp.remove();}
+function copyData(){loadDisc();loadSampleMocks();const data={subjects,daily,settings,milestones:[...earnedMilestones],subTests,rev1Done,rev1Notes,rev1Pages,mockData,pyqData,discData,sampleMocks};const txt=JSON.stringify(data);navigator.clipboard.writeText(txt).then(()=>dataStatus('✓ Copied','#4ade80')).catch(()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();dataStatus('✓ Copied (fallback)','#4ade80');});}
 
 function dbThreeCards(
   activeSub,hDone,vDone,hPct,vPct,dLeft,subCol,
@@ -3073,17 +2921,127 @@ function renderDashboard(){
   renderDiscCard();
 }
 /* ══ TAB NAV ══ */
+/* ══ STUDY TAB VIEW TOGGLE ══ */
+let studyView='progress';
+function studySetView(v){
+  studyView=v;
+  const pv=$('study-progress-view'), mv=$('study-milestones-view');
+  const bp=$('study-view-progress'), bm=$('study-view-milestones');
+  if(pv) pv.style.display=v==='progress'?'':'none';
+  if(mv) mv.style.display=v==='milestones'?'':'none';
+  function activate(btn,on){if(!btn)return;btn.style.borderColor=on?'var(--acc)':'var(--border)';btn.style.background=on?'#001e2e':'var(--navy)';btn.style.color=on?'var(--acc)':'var(--muted)';}
+  activate(bp,v==='progress'); activate(bm,v==='milestones');
+  if(v==='milestones') renderMilestones();
+}
+
+/* ══ REV2 VIEW TOGGLE ══ */
+let rev2View='tracker';
+function rev2SetView(v){
+  rev2View=v;
+  const tv=$('rev2-tracker-view'), sv=$('rev2-sample-view');
+  const bt=$('rev2-view-tracker'), bs=$('rev2-view-sample');
+  if(tv) tv.style.display=v==='tracker'?'':'none';
+  if(sv) sv.style.display=v==='sample'?'':'none';
+  function activate(btn,on){if(!btn)return;btn.style.borderColor=on?'var(--acc)':'var(--border)';btn.style.background=on?'#001e2e':'var(--navy)';btn.style.color=on?'var(--acc)':'var(--muted)';}
+  activate(bt,v==='tracker'); activate(bs,v==='sample');
+  if(v==='sample') renderSampleMocks();
+}
+
+/* ══ SAMPLE MOCK TRACKER ══
+   Storage key: gate-sample-mocks
+   Structure: [ { id, date, correct, wrong, notes } ]
+══════════════════════════════════════════ */
+let sampleMocks=[];
+function loadSampleMocks(){ sampleMocks=lsGet('gate-sample-mocks')||[]; }
+function saveSampleMocks(){ lsSet('gate-sample-mocks',sampleMocks); showSaveToast(); }
+function addSampleMock(){
+  const dateEl=$('sm-date'), cEl=$('sm-correct'), wEl=$('sm-wrong'), nEl=$('sm-notes');
+  const date=dateEl.value||TODAY;
+  const correct=Math.max(0,parseInt(cEl.value)||0);
+  const wrong=Math.max(0,parseInt(wEl.value)||0);
+  const notes=(nEl.value||'').trim();
+  if(correct===0&&wrong===0){cEl.focus();return;}
+  const id='sm_'+Date.now();
+  sampleMocks.push({id,date,correct,wrong,notes});
+  sampleMocks.sort((a,b)=>b.date.localeCompare(a.date));
+  saveSampleMocks();
+  dateEl.value=''; cEl.value=''; wEl.value=''; nEl.value='';
+  renderSampleMocks();
+}
+function deleteSampleMock(idx){
+  if(!confirm('Delete this mock entry?'))return;
+  sampleMocks.splice(idx,1);
+  saveSampleMocks(); renderSampleMocks();
+}
+function renderSampleMocks(){
+  loadSampleMocks();
+  const el=$('sec-sample'); if(!el) return;
+  const total=sampleMocks.length;
+  const scores=sampleMocks.map(m=>{const t=m.correct+m.wrong;return t>0?Math.round(m.correct/t*100):null;}).filter(s=>s!==null);
+  const avgAcc=scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length):null;
+  const bestAcc=scores.length?Math.max(...scores):null;
+  const totalC=sampleMocks.reduce((t,m)=>t+(m.correct||0),0);
+  const totalW=sampleMocks.reduce((t,m)=>t+(m.wrong||0),0);
+  const accCol=c=>c===null?'var(--muted)':c>=75?'#4ade80':c>=55?'#fbbf24':'#ef4444';
+
+  const rows=sampleMocks.length===0
+    ?'<div style="text-align:center;padding:32px;color:var(--faint);font-size:13px;">No sample mocks logged yet — add your first one above.</div>'
+    :sampleMocks.map((m,idx)=>{
+        const t=m.correct+m.wrong;
+        const acc=t>0?Math.round(m.correct/t*100):null;
+        const col=accCol(acc);
+        const isToday=m.date===TODAY;
+        return '<div style="display:grid;grid-template-columns:90px 48px 48px 60px 1fr 32px;gap:8px;align-items:center;padding:10px 12px;border-radius:8px;margin-bottom:6px;background:var(--navy);border:1px solid var(--border)'+( isToday?';border-color:#fbbf2444':'')+';">'
+          +'<div style="font-size:12px;font-weight:700;color:'+(isToday?'#fbbf24':'var(--text)')+'">'+fmtFull(m.date)+(isToday?' <span style="font-size:9px;color:#fbbf24">TODAY</span>':'')+'</div>'
+          +'<div style="text-align:center"><div style="font-size:10px;color:var(--faint);margin-bottom:2px;">✓</div><div style="font-size:15px;font-weight:800;color:#4ade80">'+m.correct+'</div></div>'
+          +'<div style="text-align:center"><div style="font-size:10px;color:var(--faint);margin-bottom:2px;">✗</div><div style="font-size:15px;font-weight:800;color:#ef4444">'+m.wrong+'</div></div>'
+          +'<div style="text-align:center"><div style="font-size:10px;color:var(--faint);margin-bottom:2px;">Acc</div><div style="font-size:15px;font-weight:800;color:'+col+'">'+(acc!==null?acc+'%':'—')+'</div></div>'
+          +'<div style="font-size:11px;color:var(--muted)">'+(m.notes?esc(m.notes):'<span style="color:var(--faint)">—</span>')+'</div>'
+          +'<button onclick="deleteSampleMock('+idx+')" style="background:none;border:1px solid var(--border);border-radius:5px;color:var(--faint);cursor:pointer;width:28px;height:28px;font-size:12px;transition:all .15s;" title="Delete">✕</button>'
+        +'</div>';
+      }).join('');
+
+  el.innerHTML='<div class="section">'
+    +'<div class="g4" style="margin-bottom:16px">'
+      +'<div class="hcard" style="border:1px solid #fbbf2422"><div class="hlbl">Sample Mocks</div><div class="hval" style="color:#fbbf24">'+total+'</div><div class="hsub">full-length tests</div></div>'
+      +'<div class="hcard" style="border:1px solid #4ade8022"><div class="hlbl">Avg Accuracy</div><div class="hval" style="color:'+accCol(avgAcc)+'">'+(avgAcc!==null?avgAcc+'%':'—')+'</div><div class="hsub">across all mocks</div></div>'
+      +'<div class="hcard" style="border:1px solid #00d4ff22"><div class="hlbl">Best Score</div><div class="hval" style="color:'+accCol(bestAcc)+'">'+(bestAcc!==null?bestAcc+'%':'—')+'</div><div class="hsub">highest accuracy</div></div>'
+      +'<div class="hcard" style="border:1px solid #c084fc22"><div class="hlbl">Total Qs</div><div class="hval" style="color:#c084fc">'+(totalC+totalW)+'</div><div class="hsub"><span style="color:#4ade80">'+totalC+' ✓</span> · <span style="color:#ef4444">'+totalW+' ✗</span></div></div>'
+    +'</div>'
+    /* Add form */
+    +'<div class="card" style="padding:16px 18px;margin-bottom:16px;border:1px solid #fbbf2433">'
+      +'<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">➕ Log a Sample Mock</div>'
+      +'<div style="display:grid;grid-template-columns:120px 80px 80px 1fr auto;gap:8px;align-items:flex-end;flex-wrap:wrap">'
+        +'<div><label class="lbl">Date</label><input type="date" id="sm-date" class="inp-sm" value="'+TODAY+'" style="width:100%"></div>'
+        +'<div><label class="lbl">Correct ✓</label><input type="number" id="sm-correct" class="inp-sm" min="0" placeholder="e.g. 42" style="width:100%;border-color:#4ade8044"></div>'
+        +'<div><label class="lbl">Wrong ✗</label><input type="number" id="sm-wrong" class="inp-sm" min="0" placeholder="e.g. 15" style="width:100%;border-color:#ef444444"></div>'
+        +'<div><label class="lbl">Notes (optional)</label><input type="text" id="sm-notes" class="inp-sm" placeholder="e.g. weak in Machines, CS" style="width:100%"></div>'
+        +'<div><button onclick="addSampleMock()" class="btn">Save Mock</button></div>'
+      +'</div>'
+    +'</div>'
+    /* Table header */
+    +(sampleMocks.length>0
+      ?'<div style="display:grid;grid-template-columns:90px 48px 48px 60px 1fr 32px;gap:8px;padding:6px 12px;margin-bottom:4px">'
+        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint)">Date</div>'
+        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);text-align:center">Correct</div>'
+        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);text-align:center">Wrong</div>'
+        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);text-align:center">Acc %</div>'
+        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint)">Notes</div>'
+        +'<div></div>'
+      +'</div>':''
+    )
+    +rows
+  +'</div>';
+}
+
 function switchMainTab(id){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach((t,i)=>t.classList.toggle('active',['dashboard','study','rev1','pyq','rev2'][i]===id));
   $('panel-'+id).classList.add('active');
   if(id==='dashboard')renderDashboard();
-  if(id==='rev1'){
-    renderRevision1();
-    // restore correct view pane
-    setTimeout(()=>rev1SetView(snView||'rev1'),50);
-  }
-  if(id==='rev2')renderRevision2();
+  if(id==='study'){setTimeout(()=>studySetView(studyView||'progress'),50);}
+  if(id==='rev1'){renderRevision1();setTimeout(()=>rev1SetView(snView||'rev1'),50);}
+  if(id==='rev2'){renderRevision2();setTimeout(()=>rev2SetView(rev2View||'tracker'),50);}
   if(id==='pyq')renderPyq();
   window.scrollTo(0,0);
 }
@@ -3569,12 +3527,12 @@ function renderDiscCard(){
 
 function scoreLabel(sc){ return sc>=80?'Disciplined':sc>=60?'Good':sc>=40?'Average':'Needs work'; }
 
-function renderAll(){renderProgress();renderMilestones();renderEntry();renderSubjects();renderLearningPath();}
+function renderAll(){renderProgress();renderMilestones();renderEntry();renderSubjects();renderLearningPath();setTimeout(()=>studySetView(studyView||'progress'),80);}
 
 document.addEventListener('DOMContentLoaded',async ()=>{
   // Boot: load from Firestore first, then init app
   await fbInit();
-  loadAll();loadRev1();loadMocks();loadPyq();loadDisc();renderAll();checkMilestones();renderDashboard();
+  loadAll();loadRev1();loadMocks();loadPyq();loadDisc();loadSampleMocks();renderAll();checkMilestones();renderDashboard();
   /* restore saved theme */
   const theme=lsGet('gate-theme');
   if(theme==='light'){applyLight();}
