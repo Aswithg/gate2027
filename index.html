@@ -393,13 +393,11 @@ select.inp-sm{cursor:pointer;}
     <button class="btn-g" onclick="copyData()">📋 Copy to clipboard</button>
     <span class="data-status" id="data-status">All changes auto-saved</span>
   </div>
-  <!-- Study sub-tab bar -->
-  <div style="display:flex;gap:6px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)">
-    <button id="study-view-progress" onclick="studySetView('progress')" style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--acc);background:#001e2e;color:var(--acc);transition:all .2s">📊 Progress</button>
-    <button id="study-view-milestones" onclick="studySetView('milestones')" style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--navy);color:var(--muted);transition:all .2s">🏆 Milestones</button>
+  <div style="display:flex;gap:6px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+    <button id="study-btn-progress" onclick="studySetView('progress')" style="padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--acc);background:#001e2e;color:var(--acc);transition:all .2s;">📊 Progress</button>
+    <button id="study-btn-milestones" onclick="studySetView('milestones')" style="padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--navy);color:var(--muted);transition:all .2s;">🏆 Milestones</button>
   </div>
-  <!-- Progress view -->
-  <div id="study-progress-view">
+  <div id="study-view-progress">
     <div class="section">
       <div class="sec-hdr"><h2>Journey Progress</h2><div class="sub" id="prog-sub"></div></div>
       <div class="g4" id="hero-cards"></div>
@@ -456,8 +454,7 @@ select.inp-sm{cursor:pointer;}
       <div class="lp-grid" id="lp-grid"></div>
     </div>
   </div>
-  <!-- Milestones view -->
-  <div id="study-milestones-view" style="display:none">
+  <div id="study-view-milestones" style="display:none;">
     <div class="section">
       <div class="sec-hdr"><h2>Milestones</h2><div class="sub" id="ms-sub"></div></div>
       <div class="ms-grid" id="ms-grid"></div>
@@ -468,28 +465,25 @@ select.inp-sm{cursor:pointer;}
 
 <!-- REVISION 1 TAB -->
 <div class="tab-panel" id="panel-rev1">
-<div class="tab-locked-wrap" id="rev1-wrap">
-<div class="wrap"><div id="sec-rev1"></div></div>
+<div class="wrap">
+  <div style="display:flex;gap:6px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+    <button id="rev1-btn-notes" onclick="rev1SetView('notes')" style="padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--acc);background:#001e2e;color:var(--acc);transition:all .2s;">📖 Rev1 Notes</button>
+    <button id="rev1-btn-sn" onclick="rev1SetView('sn')" style="padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--navy);color:var(--muted);transition:all .2s;">✏️ Short Notes</button>
+  </div>
+  <div id="rev1-view-notes"><div id="sec-rev1"></div></div>
+  <div id="rev1-view-sn" style="display:none;"><div id="sec-sn"></div></div>
 </div>
 </div>
 
 <!-- REVISION 2 TAB -->
 <div class="tab-panel" id="panel-rev2">
-<div class="tab-locked-wrap" id="rev2-wrap">
 <div class="wrap">
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border)">
-    <div>
-      <h2 style="font-size:18px;font-weight:700;color:var(--text)">🚀 Rev 2 &amp; Mocks</h2>
-      <div style="font-size:12px;color:var(--muted);margin-top:3px">Test tracker, mock schedule and sample mock scores</div>
-    </div>
-    <div style="display:flex;gap:6px">
-      <button id="rev2-view-tracker" onclick="rev2SetView('tracker')" style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--acc);background:#001e2e;color:var(--acc);transition:all .2s">📚 Test Tracker</button>
-      <button id="rev2-view-sample" onclick="rev2SetView('sample')" style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--navy);color:var(--muted);transition:all .2s">📝 Sample Mocks</button>
-    </div>
+  <div style="display:flex;gap:6px;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+    <button id="rev2-btn-tracker" onclick="rev2SetView('tracker')" style="padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--acc);background:#001e2e;color:var(--acc);transition:all .2s;">📚 Test Tracker</button>
+    <button id="rev2-btn-sample" onclick="rev2SetView('sample')" style="padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--navy);color:var(--muted);transition:all .2s;">📝 Sample Mocks</button>
   </div>
-  <div id="rev2-tracker-view"><div id="sec-rev2"></div></div>
-  <div id="rev2-sample-view" style="display:none"><div id="sec-sample"></div></div>
-</div>
+  <div id="rev2-view-tracker"><div id="sec-rev2"></div></div>
+  <div id="rev2-view-sample" style="display:none;"><div id="sec-sample"></div></div>
 </div>
 </div>
 
@@ -1489,6 +1483,9 @@ const MILESTONE_DEFS=[
 let subjects=[], daily={}, settings={}, earnedMilestones=new Set();
 let celebQueue=[], isCelebrating=false;
 let entryDate=TODAY, rev1Done={}, rev1Notes={}, rev1Pages={}, rev1LogDate=TODAY;
+let snPages={}, snNotes={};
+let studyTabView='progress', rev1TabView='notes', rev2TabView='tracker';
+let sampleMocks=[];
 let subTests={};
 let mockData={};
 let saveTimers={}, subjectOverrideEnabled=false;
@@ -2223,7 +2220,7 @@ const FB_KEYS = [
   'gate-subjects','gate-daily','gate-settings','gate-milestones',
   'gate-sub-tests','gate-rev1-done','gate-rev1-notes','gate-rev1-pages',
   'gate-mocks','gate-pyq-data','gate-pyq-quiz','gate-discipline',
-  'gate-theme','gate-pyq-plan', 'gate-v20-migrated', 'gate-sample-mocks'
+  'gate-theme','gate-pyq-plan', 'gate-v20-migrated', 'gate-sn-pages', 'gate-sn-notes', 'gate-sample-mocks'
 ];
 
 function lsGet(k){
@@ -2306,7 +2303,7 @@ function loadAll(){
   subTests=lsGet('gate-sub-tests')||{};
   // storage-warn not needed — using Firestore cloud storage
 }
-function loadRev1(){rev1Done=lsGet('gate-rev1-done')||{};rev1Notes=lsGet('gate-rev1-notes')||{};rev1Pages=lsGet('gate-rev1-pages')||{};}
+function loadRev1(){rev1Done=lsGet('gate-rev1-done')||{};rev1Notes=lsGet('gate-rev1-notes')||{};rev1Pages=lsGet('gate-rev1-pages')||{};snPages=lsGet('gate-sn-pages')||{};snNotes=lsGet('gate-sn-notes')||{};}
 function loadMocks(){mockData=lsGet('gate-mocks')||{};subTests=lsGet('gate-sub-tests')||{};}
 function saveDay(d,data){daily[d]=data;lsSet('gate-daily',daily);showSaveToast();}
 function saveSubjects(){lsSet('gate-subjects',subjects);showSaveToast();}
@@ -2556,7 +2553,7 @@ function rev1Status(sub,slot){if(rev1Done[sub.id])return'done';if(slot.overflow)
 const REV1_TAG={done:['#003d1f','#4ade80','Revised ✓'],active:['#001e2e','#00d4ff','In progress'],ready:['#1a0d2e','#c084fc','Ready'],overdue:['#2d1900','#fbbf24','Overdue'],locked:['#0d1b2a','#4a7a9b','Locked'],overflow:['#1a0800','#ef4444','→ Rev 2']};
 function renderRevision1(){
   loadRev1();
-  const locked=TODAY<REV1_START;
+  const locked=false;
   const sched={};subjects.forEach(s=>{const sl=REV1_SCHEDULE[s.id];sched[s.id]=sl?{...sl,overflow:sl.end>'2027-01-03'}:{start:'',end:'',days:0,perDay:0,overflow:false};});
   const rev1Subs=subjects.filter(s=>REV1_SCHEDULE[s.id]&&REV1_SCHEDULE[s.id].days>0);
   const doneCount=rev1Subs.filter(s=>rev1Done[s.id]).length;
@@ -2592,7 +2589,6 @@ function renderRevision1(){
       ${rev1LogDate!==TODAY?`<button class="btn-g" style="font-size:11px;padding:4px 10px" onclick="setRev1LogDate('${TODAY}')">&#8629; Today</button>`:''}
     </div>
     <div class="g2">${cards}</div></div>`;
-  applyTabLock('rev1-wrap',locked,'9 Sep 2026');
 }
 function buildMockSchedule(){const s=[];let d='2027-01-03',n=1;while(d<='2027-01-31'&&n<=5){if(new Date(d+'T00:00:00').getDay()===0){s.push({n,date:d,revStart:addDays(d,1),revEnd:addDays(d,5),buffer:addDays(d,6)});n++;}d=addDays(d,1);}return s;}
 function mockRec(date){return mockData[date]||{done:false,score:'',weak:''};}
@@ -2614,7 +2610,7 @@ function toggleSubTest(subId,key){
 const REV2_START='2027-01-01';
 function renderRevision2(){
   loadMocks();
-  const locked=TODAY<REV2_START;
+  const locked=false;
   const mockSched=buildMockSchedule();
   const mockScores=mockSched.map(m=>mockRec(m.date)).filter(m=>m.score!==''&&!isNaN(+m.score)).map(m=>+m.score);
   const avgScore=mockScores.length?Math.round(mockScores.reduce((a,b)=>a+b,0)/mockScores.length):null;
@@ -2668,7 +2664,6 @@ function renderRevision2(){
     <div class="g4" style="margin-bottom:16px"><div class="hcard" style="border:1px solid #00d4ff22"><div class="hlbl">Tests Done</div><div class="hval" style="color:#00d4ff">${testDone}<span style="font-size:13px;color:var(--faint);font-weight:400">/${testTotal}</span></div><div class="hsub">4 per subject (2 subject + 2 mixed)</div></div><div class="hcard" style="border:1px solid #4ade8022"><div class="hlbl">Subjects Full</div><div class="hval" style="color:#4ade80">${subjects.filter(s=>TEST_KEYS.every(k=>getSubTest(s.id,k).done)).length}<span style="font-size:13px;color:var(--faint);font-weight:400">/${subjects.length}</span></div><div class="hsub">all 4 tests cleared</div></div><div class="hcard" style="border:1px solid #fbbf2422"><div class="hlbl">Mock avg</div><div class="hval" style="color:${avgScore>=65?'#4ade80':avgScore>=45?'#fbbf24':'#ef4444'}">${avgScore!==null?avgScore+'%':'—'}</div><div class="hsub">Best: ${bestScore!==null?bestScore+'%':'—'}</div></div><div class="hcard" style="border:1px solid #c084fc22"><div class="hlbl">Mocks done</div><div class="hval" style="color:#c084fc">${mockSched.filter(m=>mockRec(m.date).done).length}<span style="font-size:13px;color:var(--faint);font-weight:400">/${mockSched.length}</span></div></div></div>
     <div class="section"><div class="sec-hdr"><h2>Mock Test Schedule</h2><div class="sub">5 Sundays · Jan 3 → Jan 31, 2027</div></div><div class="mock-grid">${mockCards}</div></div>
     <div class="section"><div class="sec-hdr"><h2>Test Tracker</h2><div class="sub">2 Subject tests + 2 Mixed-topic tests per subject &nbsp;&middot;&nbsp; <a href="https://learn.examdost.com/ots/ee?mode=topics#topics" target="_blank" style="color:var(--acc);text-decoration:none;font-weight:700;font-size:12px;">🔗 ExamDost Topic Tests ↗</a></div></div>${testHtml}</div></div>`;
-  applyTabLock('rev2-wrap',locked,'1 Jan 2027');
 }
 
 /* ══ EXPORT / IMPORT ══ */
@@ -2920,52 +2915,177 @@ function renderDashboard(){
     <div id="disc-card-root"></div>`;
   renderDiscCard();
 }
-/* ══ TAB NAV ══ */
+
 /* ══ STUDY TAB VIEW TOGGLE ══ */
-let studyView='progress';
 function studySetView(v){
-  studyView=v;
-  const pv=$('study-progress-view'), mv=$('study-milestones-view');
-  const bp=$('study-view-progress'), bm=$('study-view-milestones');
+  studyTabView=v;
+  var pv=$('study-view-progress'), mv=$('study-view-milestones');
+  var bp=$('study-btn-progress'), bm=$('study-btn-milestones');
   if(pv) pv.style.display=v==='progress'?'':'none';
   if(mv) mv.style.display=v==='milestones'?'':'none';
-  function activate(btn,on){if(!btn)return;btn.style.borderColor=on?'var(--acc)':'var(--border)';btn.style.background=on?'#001e2e':'var(--navy)';btn.style.color=on?'var(--acc)':'var(--muted)';}
-  activate(bp,v==='progress'); activate(bm,v==='milestones');
+  function hi(b,on){if(!b)return;b.style.borderColor=on?'var(--acc)':'var(--border)';b.style.background=on?'#001e2e':'var(--navy)';b.style.color=on?'var(--acc)':'var(--muted)';}
+  hi(bp,v==='progress'); hi(bm,v==='milestones');
   if(v==='milestones') renderMilestones();
 }
 
-/* ══ REV2 VIEW TOGGLE ══ */
-let rev2View='tracker';
+/* ══ REV1 TAB VIEW TOGGLE ══ */
+function rev1SetView(v){
+  rev1TabView=v;
+  var nv=$('rev1-view-notes'), sv=$('rev1-view-sn');
+  var bn=$('rev1-btn-notes'), bs=$('rev1-btn-sn');
+  if(nv) nv.style.display=v==='notes'?'':'none';
+  if(sv) sv.style.display=v==='sn'?'':'none';
+  function hi(b,on){if(!b)return;b.style.borderColor=on?'var(--acc)':'var(--border)';b.style.background=on?'#001e2e':'var(--navy)';b.style.color=on?'var(--acc)':'var(--muted)';}
+  hi(bn,v==='notes'); hi(bs,v==='sn');
+  if(v==='sn') renderShortNotes();
+}
+
+/* ══ REV2 TAB VIEW TOGGLE ══ */
 function rev2SetView(v){
-  rev2View=v;
-  const tv=$('rev2-tracker-view'), sv=$('rev2-sample-view');
-  const bt=$('rev2-view-tracker'), bs=$('rev2-view-sample');
+  rev2TabView=v;
+  var tv=$('rev2-view-tracker'), sv=$('rev2-view-sample');
+  var bt=$('rev2-btn-tracker'), bs=$('rev2-btn-sample');
   if(tv) tv.style.display=v==='tracker'?'':'none';
   if(sv) sv.style.display=v==='sample'?'':'none';
-  function activate(btn,on){if(!btn)return;btn.style.borderColor=on?'var(--acc)':'var(--border)';btn.style.background=on?'#001e2e':'var(--navy)';btn.style.color=on?'var(--acc)':'var(--muted)';}
-  activate(bt,v==='tracker'); activate(bs,v==='sample');
+  function hi(b,on){if(!b)return;b.style.borderColor=on?'var(--acc)':'var(--border)';b.style.background=on?'#001e2e':'var(--navy)';b.style.color=on?'var(--acc)':'var(--muted)';}
+  hi(bt,v==='tracker'); hi(bs,v==='sample');
   if(v==='sample') renderSampleMocks();
 }
 
-/* ══ SAMPLE MOCK TRACKER ══
-   Storage key: gate-sample-mocks
-   Structure: [ { id, date, correct, wrong, notes } ]
-══════════════════════════════════════════ */
-let sampleMocks=[];
+/* ══ SHORT NOTES HELPERS ══ */
+function snPagesDone(id){ return Object.values(snPages[id]||{}).reduce(function(t,v){return t+(+v||0);},0); }
+function snPagesOn(id,date){ return +((snPages[id]||{})[date]||0); }
+function setSnPages(id,date,val){
+  var v=Math.max(0,Math.round(+val||0));
+  if(!snPages[id]) snPages[id]={};
+  if(v===0) delete snPages[id][date]; else snPages[id][date]=v;
+  lsSet('gate-sn-pages',snPages); showSaveToast(); renderShortNotes();
+}
+function stepSnPages(id,delta){ setSnPages(id,rev1LogDate,snPagesOn(id,rev1LogDate)+delta); }
+function setSnNote(id,val){ snNotes[id]=val; clearTimeout(saveTimers['sn']); saveTimers['sn']=setTimeout(function(){lsSet('gate-sn-notes',snNotes);showSaveToast();},600); }
+function snPageTarget(id){
+  var tot=subPages(id); if(!tot) return 0;
+  var dn=snPagesDone(id), left=Math.max(0,tot-dn);
+  var slot=REV1_SCHEDULE[id]; if(!slot) return 0;
+  var dl;
+  if(TODAY<slot.start) dl=slot.days;
+  else if(TODAY>slot.end) dl=1;
+  else dl=Math.max(1,diffDays(TODAY,slot.end)+1);
+  return Math.ceil(left/dl);
+}
+
+/* ══ RENDER SHORT NOTES ══ */
+function renderShortNotes(){
+  loadRev1();
+  var el=$('sec-sn'); if(!el) return;
+  var totalPages=allPages();
+  var donePages=subjects.reduce(function(t,s){return t+Math.min(snPagesDone(s.id),subPages(s.id));},0);
+  var pagePct=totalPages?Math.round(donePages/totalPages*100):0;
+  var pagesToday=subjects.reduce(function(t,s){return t+snPagesOn(s.id,rev1LogDate);},0);
+  var startedCount=subjects.filter(function(s){return snPagesDone(s.id)>0;}).length;
+
+  var cards='';
+  subjects.forEach(function(sub){
+    var slot=REV1_SCHEDULE[sub.id]; if(!slot) return;
+    var tot=subPages(sub.id);
+    var dn=Math.min(snPagesDone(sub.id),tot);
+    var pct=tot?Math.round(dn/tot*100):0;
+    var pcol=pct>=100?'#4ade80':pct>=50?'#a78bfa':'#c084fc';
+    var tgt=snPageTarget(sub.id);
+    var today=snPagesOn(sub.id,rev1LogDate);
+    var stCol,stBg,stLabel;
+    if(!tot){stLabel='No PDF';stBg='#0d1e2e';stCol='#4a6a80';}
+    else if(pct>=100){stLabel='Done \u2713';stBg='#003d1f';stCol='#4ade80';}
+    else if(sub.status!=='Completed'){stLabel='Locked';stBg='#0d1b2a';stCol='#4a7a9b';}
+    else if(TODAY>=slot.start&&TODAY<=slot.end){stLabel='Writing';stBg='#0a1020';stCol='#a78bfa';}
+    else if(TODAY>slot.end&&pct<100){stLabel='Overdue';stBg='#2d1900';stCol='#fbbf24';}
+    else{stLabel='Ready';stBg='#1a0d2e';stCol='#c084fc';}
+    var pace=null;
+    if(tgt>0){if(today>=tgt)pace=['#003d1f','#4ade80','\u2713 ON TRACK'];else if(today>=tgt*0.6)pace=['#2d1900','#fbbf24','\u26a1 CLOSE'];else pace=['#2d0000','#ef4444','\u26a0 BEHIND'];}
+    var dim=(sub.status!=='Completed'&&pct===0)?'opacity:.65;':'';
+    var tracker=!tot
+      ?'<div style="font-size:12px;color:var(--faint);padding:8px 0;">No PDF mapped.</div>'
+      :'<div style="background:var(--navy);border-radius:8px;padding:12px 14px;margin-bottom:12px;">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;">'
+          +'<span style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;">\u270f\ufe0f Short Notes Pages Written</span>'
+          +(pace?'<span style="font-size:10px;background:'+pace[0]+';color:'+pace[1]+';padding:2px 8px;border-radius:4px;font-weight:700;">'+pace[2]+'</span>':'')
+        +'</div>'
+        +'<div style="display:flex;align-items:baseline;gap:7px;margin-bottom:6px;">'
+          +'<span style="font-size:24px;font-weight:800;color:'+pcol+';">'+dn+'</span>'
+          +'<span style="font-size:13px;color:var(--faint);">/ '+tot+' pages</span>'
+          +'<span style="margin-left:auto;font-size:11px;color:var(--faint);">'+(tot-dn)+' left</span>'
+        +'</div>'
+        +'<div style="height:7px;background:var(--card);border-radius:4px;overflow:hidden;">'
+          +'<div style="height:100%;width:'+pct+'%;background:'+pcol+';border-radius:4px;transition:width .35s;"></div>'
+        +'</div>'
+        +'<div style="font-size:10px;color:var(--faint);margin-top:4px;margin-bottom:10px;">'
+          +pct+'% complete'+(tgt>0?' \u00b7 need <strong style="color:'+stCol+';">'+tgt+' pg/day</strong> by '+fmt(slot.end):'')
+          +' \u00b7 source: '+tot+' pages'
+        +'</div>'
+        +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:9px;border-top:1px solid var(--border);">'
+          +'<span style="font-size:11px;color:var(--muted);">Pages on '+fmt(rev1LogDate)+':</span>'
+          +'<button onclick="stepSnPages('+sub.id+',-5)" style="background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:5px;width:30px;height:28px;font-size:12px;cursor:pointer;">\u22125</button>'
+          +'<input class="inp-sm" type="number" min="0" value="'+today+'" onchange="setSnPages('+sub.id+',\''+rev1LogDate+'\',this.value)" style="width:62px;text-align:center;font-weight:700;color:'+(today>0?'#a78bfa':'var(--text)')+';">'
+          +'<button onclick="stepSnPages('+sub.id+',5)" style="background:#6d28d9;border:none;color:#fff;border-radius:5px;width:30px;height:28px;font-size:12px;font-weight:700;cursor:pointer;">+5</button>'
+          +(tgt>0?'<span style="font-size:11px;color:var(--faint);">target '+tgt+'</span>':'')
+        +'</div>'
+      +'</div>';
+    cards+='<div class="card" style="'+dim+'padding:16px 18px;border-left:3px solid '+stCol+';">'
+      +'<div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:12px;">'
+        +'<div style="flex:1;min-width:170px;">'
+          +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">'
+            +'<span style="font-size:11px;font-weight:700;color:var(--faint);">#'+sub.id+'</span>'
+            +'<span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:12px;background:'+stBg+';color:'+stCol+';border:1px solid '+stCol+'44;">'+stLabel+'</span>'
+          +'</div>'
+          +'<div style="font-size:14px;font-weight:700;">'+esc(sub.name)+'</div>'
+          +'<div style="font-size:11px;color:var(--faint);margin-top:2px;">'+esc(sub.faculty)+' \u00b7 '+tot+' source pages \u00b7 '+fmt(slot.start)+' \u2013 '+fmt(slot.end)+'</div>'
+        +'</div>'
+      +'</div>'
+      +tracker
+      +'<label class="lbl">Short Notes Remarks</label>'
+      +'<textarea class="inp" rows="2" style="font-size:12px;margin-top:4px;" placeholder="Coverage notes, chapters done..." oninput="setSnNote('+sub.id+',this.value)">'+esc(snNotes[sub.id]||'')+'</textarea>'
+    +'</div>';
+  });
+
+  var activeSubs=subjects.filter(function(s){return s.status==='Completed'||snPagesDone(s.id)>0;});
+  var snTodayTgt=activeSubs.reduce(function(t,s){return t+snPageTarget(s.id);},0);
+
+  el.innerHTML='<div class="section">'
+    +'<div class="g4" style="margin-bottom:16px;">'
+      +'<div class="hcard" style="border:1px solid #a78bfa22;"><div class="hlbl">SN Pages Written</div><div class="hval" style="color:#a78bfa;">'+donePages+'<span style="font-size:13px;color:var(--faint);font-weight:400;">\/'+totalPages+'</span></div><div class="pbar-bg"><div class="pbar-fill" style="width:'+pagePct+'%;background:#a78bfa;"></div></div></div>'
+      +'<div class="hcard" style="border:1px solid #4ade8022;"><div class="hlbl">Subjects Started</div><div class="hval" style="color:#4ade80;">'+startedCount+'<span style="font-size:13px;color:var(--faint);font-weight:400;">\/'+subjects.length+'</span></div><div class="hsub">'+pagePct+'% overall</div></div>'
+      +'<div class="hcard" style="border:1px solid #c084fc22;"><div class="hlbl">SN Pages Today</div><div class="hval" style="color:'+(pagesToday>=snTodayTgt&&snTodayTgt>0?'#4ade80':'#c084fc')+';">'+pagesToday+'</div><div class="hsub">'+(snTodayTgt>0?'target '+snTodayTgt:'write away!')+'</div></div>'
+      +'<div class="hcard" style="border:1px solid #fbbf2422;"><div class="hlbl">Overall %</div><div class="hval" style="color:#fbbf24;font-size:20px;">'+pagePct+'%</div><div class="pbar-bg"><div class="pbar-fill" style="width:'+pagePct+'%;background:#fbbf24;"></div></div></div>'
+    +'</div>'
+    +'<div class="card" style="padding:11px 15px;margin-bottom:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'
+      +'<span class="lbl" style="margin:0;">Logging for</span>'
+      +'<button onclick="navRev1Date(-1)" style="background:var(--navy);border:1px solid var(--border);border-radius:7px;width:30px;height:30px;cursor:pointer;color:var(--text);font-size:13px;display:inline-flex;align-items:center;justify-content:center;">&#9664;</button>'
+      +'<input type="date" value="'+rev1LogDate+'" onchange="setRev1LogDate(this.value);renderShortNotes();" style="background:var(--navy);border:1px solid #a78bfa;border-radius:6px;padding:5px 9px;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;outline:none;">'
+      +'<button onclick="navRev1Date(1)" style="background:var(--navy);border:1px solid var(--border);border-radius:7px;width:30px;height:30px;cursor:pointer;color:var(--text);font-size:13px;display:inline-flex;align-items:center;justify-content:center;">&#9654;</button>'
+      +(rev1LogDate!==TODAY?'<button class="btn-g" style="font-size:11px;padding:4px 10px;" onclick="setRev1LogDate(\''+TODAY+'\');renderShortNotes();">&#8629; Today</button>':'')
+      +'<span style="margin-left:auto;font-size:11px;color:var(--faint);">Shared date with Rev1 tracker</span>'
+    +'</div>'
+    +'<div class="card" style="padding:10px 14px;margin-bottom:16px;background:#0d0a1a;border:1px solid #a78bfa44;">'
+      +'<div style="font-size:12px;color:var(--muted);">\u270f\ufe0f <strong style="color:#a78bfa;">Short Notes</strong> \u2014 Write condensed notes from your original PDFs. Track pages covered per subject. Total source: <strong>'+totalPages+'</strong> pages.</div>'
+    +'</div>'
+    +'<div class="g2">'+cards+'</div>'
+  +'</div>';
+}
+
+/* ══ SAMPLE MOCK TRACKER ══ */
 function loadSampleMocks(){ sampleMocks=lsGet('gate-sample-mocks')||[]; }
 function saveSampleMocks(){ lsSet('gate-sample-mocks',sampleMocks); showSaveToast(); }
 function addSampleMock(){
-  const dateEl=$('sm-date'), cEl=$('sm-correct'), wEl=$('sm-wrong'), nEl=$('sm-notes');
-  const date=dateEl.value||TODAY;
-  const correct=Math.max(0,parseInt(cEl.value)||0);
-  const wrong=Math.max(0,parseInt(wEl.value)||0);
-  const notes=(nEl.value||'').trim();
-  if(correct===0&&wrong===0){cEl.focus();return;}
-  const id='sm_'+Date.now();
-  sampleMocks.push({id,date,correct,wrong,notes});
-  sampleMocks.sort((a,b)=>b.date.localeCompare(a.date));
+  var dEl=$('sm-date'), cEl=$('sm-correct'), wEl=$('sm-wrong'), nEl=$('sm-notes');
+  var date=dEl&&dEl.value?dEl.value:TODAY;
+  var correct=Math.max(0,parseInt((cEl&&cEl.value)||0)||0);
+  var wrong=Math.max(0,parseInt((wEl&&wEl.value)||0)||0);
+  var notes=nEl?nEl.value.trim():'';
+  if(correct===0&&wrong===0){if(cEl)cEl.focus();return;}
+  sampleMocks.push({id:'sm_'+Date.now(),date:date,correct:correct,wrong:wrong,notes:notes});
+  sampleMocks.sort(function(a,b){return b.date.localeCompare(a.date);});
   saveSampleMocks();
-  dateEl.value=''; cEl.value=''; wEl.value=''; nEl.value='';
+  if(dEl)dEl.value=''; if(cEl)cEl.value=''; if(wEl)wEl.value=''; if(nEl)nEl.value='';
   renderSampleMocks();
 }
 function deleteSampleMock(idx){
@@ -2975,73 +3095,71 @@ function deleteSampleMock(idx){
 }
 function renderSampleMocks(){
   loadSampleMocks();
-  const el=$('sec-sample'); if(!el) return;
-  const total=sampleMocks.length;
-  const scores=sampleMocks.map(m=>{const t=m.correct+m.wrong;return t>0?Math.round(m.correct/t*100):null;}).filter(s=>s!==null);
-  const avgAcc=scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length):null;
-  const bestAcc=scores.length?Math.max(...scores):null;
-  const totalC=sampleMocks.reduce((t,m)=>t+(m.correct||0),0);
-  const totalW=sampleMocks.reduce((t,m)=>t+(m.wrong||0),0);
-  const accCol=c=>c===null?'var(--muted)':c>=75?'#4ade80':c>=55?'#fbbf24':'#ef4444';
-
-  const rows=sampleMocks.length===0
-    ?'<div style="text-align:center;padding:32px;color:var(--faint);font-size:13px;">No sample mocks logged yet — add your first one above.</div>'
-    :sampleMocks.map((m,idx)=>{
-        const t=m.correct+m.wrong;
-        const acc=t>0?Math.round(m.correct/t*100):null;
-        const col=accCol(acc);
-        const isToday=m.date===TODAY;
-        return '<div style="display:grid;grid-template-columns:90px 48px 48px 60px 1fr 32px;gap:8px;align-items:center;padding:10px 12px;border-radius:8px;margin-bottom:6px;background:var(--navy);border:1px solid var(--border)'+( isToday?';border-color:#fbbf2444':'')+';">'
-          +'<div style="font-size:12px;font-weight:700;color:'+(isToday?'#fbbf24':'var(--text)')+'">'+fmtFull(m.date)+(isToday?' <span style="font-size:9px;color:#fbbf24">TODAY</span>':'')+'</div>'
-          +'<div style="text-align:center"><div style="font-size:10px;color:var(--faint);margin-bottom:2px;">✓</div><div style="font-size:15px;font-weight:800;color:#4ade80">'+m.correct+'</div></div>'
-          +'<div style="text-align:center"><div style="font-size:10px;color:var(--faint);margin-bottom:2px;">✗</div><div style="font-size:15px;font-weight:800;color:#ef4444">'+m.wrong+'</div></div>'
-          +'<div style="text-align:center"><div style="font-size:10px;color:var(--faint);margin-bottom:2px;">Acc</div><div style="font-size:15px;font-weight:800;color:'+col+'">'+(acc!==null?acc+'%':'—')+'</div></div>'
-          +'<div style="font-size:11px;color:var(--muted)">'+(m.notes?esc(m.notes):'<span style="color:var(--faint)">—</span>')+'</div>'
-          +'<button onclick="deleteSampleMock('+idx+')" style="background:none;border:1px solid var(--border);border-radius:5px;color:var(--faint);cursor:pointer;width:28px;height:28px;font-size:12px;transition:all .15s;" title="Delete">✕</button>'
+  var el=$('sec-sample'); if(!el) return;
+  var total=sampleMocks.length;
+  var scores=sampleMocks.map(function(m){var t=m.correct+m.wrong;return t>0?Math.round(m.correct/t*100):null;}).filter(function(s){return s!==null;});
+  var avgAcc=scores.length?Math.round(scores.reduce(function(a,b){return a+b;},0)/scores.length):null;
+  var bestAcc=scores.length?Math.max.apply(null,scores):null;
+  var totalC=sampleMocks.reduce(function(t,m){return t+(m.correct||0);},0);
+  var totalW=sampleMocks.reduce(function(t,m){return t+(m.wrong||0);},0);
+  function accCol(c){return c===null?'var(--muted)':c>=75?'#4ade80':c>=55?'#fbbf24':'#ef4444';}
+  var rows=sampleMocks.length===0
+    ?'<div style="text-align:center;padding:32px;color:var(--faint);font-size:13px;">No sample mocks logged yet. Add your first one above.</div>'
+    :sampleMocks.map(function(m,idx){
+        var t=m.correct+m.wrong;
+        var acc=t>0?Math.round(m.correct/t*100):null;
+        var col=accCol(acc);
+        var isToday=m.date===TODAY;
+        return '<div style="display:grid;grid-template-columns:100px 52px 52px 64px 1fr 30px;gap:8px;align-items:center;padding:10px 12px;border-radius:8px;margin-bottom:6px;background:var(--navy);border:1px solid '+(isToday?'#fbbf2444':'var(--border)')+';">'
+          +'<div style="font-size:12px;font-weight:700;color:'+(isToday?'#fbbf24':'var(--text)')+';">'+fmtFull(m.date)+'</div>'
+          +'<div style="text-align:center;"><div style="font-size:9px;color:#4ade80;font-weight:700;margin-bottom:1px;">\u2713 Correct</div><div style="font-size:17px;font-weight:800;color:#4ade80;">'+m.correct+'</div></div>'
+          +'<div style="text-align:center;"><div style="font-size:9px;color:#ef4444;font-weight:700;margin-bottom:1px;">\u2717 Wrong</div><div style="font-size:17px;font-weight:800;color:#ef4444;">'+m.wrong+'</div></div>'
+          +'<div style="text-align:center;"><div style="font-size:9px;color:var(--faint);font-weight:700;margin-bottom:1px;">Acc %</div><div style="font-size:17px;font-weight:800;color:'+col+';">'+(acc!==null?acc+'%':'\u2014')+'</div></div>'
+          +'<div style="font-size:11px;color:var(--muted);">'+(m.notes?esc(m.notes):'<span style="color:var(--faint);">\u2014</span>')+'</div>'
+          +'<button onclick="deleteSampleMock('+idx+')" title="Delete" style="background:none;border:1px solid var(--border);border-radius:5px;color:var(--faint);cursor:pointer;width:28px;height:28px;font-size:12px;">\u2715</button>'
         +'</div>';
       }).join('');
 
+  var hdr=sampleMocks.length>0
+    ?'<div style="display:grid;grid-template-columns:100px 52px 52px 64px 1fr 30px;gap:8px;padding:4px 12px;margin-bottom:2px;">'
+      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);">Date</div>'
+      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);text-align:center;">Correct</div>'
+      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);text-align:center;">Wrong</div>'
+      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);text-align:center;">Accuracy</div>'
+      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);">Notes</div>'
+      +'<div></div>'
+    +'</div>':'' ;
+
   el.innerHTML='<div class="section">'
-    +'<div class="g4" style="margin-bottom:16px">'
-      +'<div class="hcard" style="border:1px solid #fbbf2422"><div class="hlbl">Sample Mocks</div><div class="hval" style="color:#fbbf24">'+total+'</div><div class="hsub">full-length tests</div></div>'
-      +'<div class="hcard" style="border:1px solid #4ade8022"><div class="hlbl">Avg Accuracy</div><div class="hval" style="color:'+accCol(avgAcc)+'">'+(avgAcc!==null?avgAcc+'%':'—')+'</div><div class="hsub">across all mocks</div></div>'
-      +'<div class="hcard" style="border:1px solid #00d4ff22"><div class="hlbl">Best Score</div><div class="hval" style="color:'+accCol(bestAcc)+'">'+(bestAcc!==null?bestAcc+'%':'—')+'</div><div class="hsub">highest accuracy</div></div>'
-      +'<div class="hcard" style="border:1px solid #c084fc22"><div class="hlbl">Total Qs</div><div class="hval" style="color:#c084fc">'+(totalC+totalW)+'</div><div class="hsub"><span style="color:#4ade80">'+totalC+' ✓</span> · <span style="color:#ef4444">'+totalW+' ✗</span></div></div>'
+    +'<div class="g4" style="margin-bottom:16px;">'
+      +'<div class="hcard" style="border:1px solid #fbbf2422;"><div class="hlbl">Sample Mocks</div><div class="hval" style="color:#fbbf24;">'+total+'</div><div class="hsub">full-length tests</div></div>'
+      +'<div class="hcard" style="border:1px solid #4ade8022;"><div class="hlbl">Avg Accuracy</div><div class="hval" style="color:'+accCol(avgAcc)+'">'+(avgAcc!==null?avgAcc+'%':'\u2014')+'</div><div class="hsub">across all mocks</div></div>'
+      +'<div class="hcard" style="border:1px solid #00d4ff22;"><div class="hlbl">Best Score</div><div class="hval" style="color:'+accCol(bestAcc)+'">'+(bestAcc!==null?bestAcc+'%':'\u2014')+'</div><div class="hsub">highest accuracy</div></div>'
+      +'<div class="hcard" style="border:1px solid #c084fc22;"><div class="hlbl">Total Qs</div><div class="hval" style="color:#c084fc;">'+(totalC+totalW)+'</div><div class="hsub"><span style="color:#4ade80;">'+totalC+' \u2713</span> &nbsp; <span style="color:#ef4444;">'+totalW+' \u2717</span></div></div>'
     +'</div>'
-    /* Add form */
-    +'<div class="card" style="padding:16px 18px;margin-bottom:16px;border:1px solid #fbbf2433">'
-      +'<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">➕ Log a Sample Mock</div>'
-      +'<div style="display:grid;grid-template-columns:120px 80px 80px 1fr auto;gap:8px;align-items:flex-end;flex-wrap:wrap">'
-        +'<div><label class="lbl">Date</label><input type="date" id="sm-date" class="inp-sm" value="'+TODAY+'" style="width:100%"></div>'
-        +'<div><label class="lbl">Correct ✓</label><input type="number" id="sm-correct" class="inp-sm" min="0" placeholder="e.g. 42" style="width:100%;border-color:#4ade8044"></div>'
-        +'<div><label class="lbl">Wrong ✗</label><input type="number" id="sm-wrong" class="inp-sm" min="0" placeholder="e.g. 15" style="width:100%;border-color:#ef444444"></div>'
-        +'<div><label class="lbl">Notes (optional)</label><input type="text" id="sm-notes" class="inp-sm" placeholder="e.g. weak in Machines, CS" style="width:100%"></div>'
-        +'<div><button onclick="addSampleMock()" class="btn">Save Mock</button></div>'
+    +'<div class="card" style="padding:16px 18px;margin-bottom:16px;border:1px solid #fbbf2433;">'
+      +'<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">\u2795 Log a Sample Mock</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">'
+        +'<div><label class="lbl">Date</label><input type="date" id="sm-date" class="inp-sm" value="'+TODAY+'" style="width:130px;"></div>'
+        +'<div><label class="lbl">Correct \u2713</label><input type="number" id="sm-correct" class="inp-sm" min="0" placeholder="e.g. 42" style="width:80px;border-color:#4ade8044;"></div>'
+        +'<div><label class="lbl">Wrong \u2717</label><input type="number" id="sm-wrong" class="inp-sm" min="0" placeholder="e.g. 15" style="width:80px;border-color:#ef444444;"></div>'
+        +'<div style="flex:1;min-width:160px;"><label class="lbl">Notes (optional)</label><input type="text" id="sm-notes" class="inp-sm" placeholder="Weak areas, remarks..." style="width:100%;"></div>'
+        +'<div><button class="btn" onclick="addSampleMock()">Save Mock</button></div>'
       +'</div>'
     +'</div>'
-    /* Table header */
-    +(sampleMocks.length>0
-      ?'<div style="display:grid;grid-template-columns:90px 48px 48px 60px 1fr 32px;gap:8px;padding:6px 12px;margin-bottom:4px">'
-        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint)">Date</div>'
-        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);text-align:center">Correct</div>'
-        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);text-align:center">Wrong</div>'
-        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);text-align:center">Acc %</div>'
-        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint)">Notes</div>'
-        +'<div></div>'
-      +'</div>':''
-    )
-    +rows
+    +hdr+rows
   +'</div>';
 }
 
+/* ══ TAB NAV ══ */
 function switchMainTab(id){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach((t,i)=>t.classList.toggle('active',['dashboard','study','rev1','pyq','rev2'][i]===id));
   $('panel-'+id).classList.add('active');
   if(id==='dashboard')renderDashboard();
-  if(id==='study'){setTimeout(()=>studySetView(studyView||'progress'),50);}
-  if(id==='rev1'){renderRevision1();setTimeout(()=>rev1SetView(snView||'rev1'),50);}
-  if(id==='rev2'){renderRevision2();setTimeout(()=>rev2SetView(rev2View||'tracker'),50);}
+  if(id==='study'){setTimeout(function(){studySetView(studyTabView||'progress');},50);}
+  if(id==='rev1'){renderRevision1();setTimeout(function(){rev1SetView(rev1TabView||'notes');},50);}
+  if(id==='rev2'){renderRevision2();setTimeout(function(){rev2SetView(rev2TabView||'tracker');},50);}
   if(id==='pyq')renderPyq();
   window.scrollTo(0,0);
 }
@@ -3527,7 +3645,7 @@ function renderDiscCard(){
 
 function scoreLabel(sc){ return sc>=80?'Disciplined':sc>=60?'Good':sc>=40?'Average':'Needs work'; }
 
-function renderAll(){renderProgress();renderMilestones();renderEntry();renderSubjects();renderLearningPath();setTimeout(()=>studySetView(studyView||'progress'),80);}
+function renderAll(){renderProgress();renderMilestones();renderEntry();renderSubjects();renderLearningPath();setTimeout(function(){studySetView(studyTabView||'progress');},80);}
 
 document.addEventListener('DOMContentLoaded',async ()=>{
   // Boot: load from Firestore first, then init app
