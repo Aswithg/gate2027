@@ -2868,7 +2868,7 @@ function renderDashboard(){
       <div class="db-today-item"><div class="db-today-lbl">Milestones</div><div class="db-today-val" style="color:var(--purple)">${earnedMilestones.size}<span style="font-size:12px;color:var(--faint);font-weight:400">/${MILESTONE_DEFS.length}</span></div></div>
       <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
         <button class="db-go-btn" onclick="switchMainTab('study')">📚 Study log →</button>
-        ${TODAY>=REV1_START?`<button class="db-go-btn" style="background:transparent;border-color:#c084fc;color:#c084fc;" onclick="switchMainTab('rev1')">📖 Rev 1 log →</button>`:''}
+        <button class="db-go-btn" style="background:transparent;border-color:#c084fc;color:#c084fc;" onclick="switchMainTab('rev1')">📖 Rev 1 log →</button>
         ${TODAY>='2026-09-01'?`<button class="db-go-btn" style="background:transparent;border-color:#fbbf24;color:#fbbf24;" onclick="switchMainTab('pyq')">🎯 PYQ log →</button>`:''}
         <button class="db-go-btn" style="background:transparent;border-color:#4ade80;color:#4ade80;" onclick="switchMainTab('rev2')">🚀 Rev 2 & Mocks →</button>
       </div>
