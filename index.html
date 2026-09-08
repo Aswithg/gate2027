@@ -1903,7 +1903,7 @@ function renderPyqQuizCard(sub){
    PYQ_PLAN: static array of scheduled slots (computed)
    ══════════════════════════════════════════════════ */
 
-// Static auto-generated plan (post-Rev1, 1 topic/day, >40q = 2 days)
+// Auto-plan: 1hr/day · max 20q/session · closes 17 Dec 2026 (14 days before deadline)
 const PYQ_PLAN = (function(){
   const slots = [];
   const subTopics = [
@@ -1993,15 +1993,18 @@ const PYQ_PLAN = (function(){
       {ti:4,name:'Miscellaneous Topics',qs:1},
     ], rev1End:'2026-12-06'},
   ];
-  const SPLIT=40;
+  const DAILY_MAX=20;
   function addDaysLocal(d,n){const dt=new Date(d+'T00:00:00');dt.setDate(dt.getDate()+n);return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;}
   subTopics.forEach(function(sub){
     let cursor=addDaysLocal(sub.rev1End,1);
     sub.topics.forEach(function(t){
-      const days=t.qs>SPLIT?2:1;
-      const qPerDay=days===2?Math.ceil(t.qs/2):t.qs;
-      for(let d=0;d<days;d++){
-        slots.push({date:cursor,subId:sub.subId,ti:t.ti,name:t.name,qs:t.qs,totalDays:days,part:d+1,target:qPerDay});
+      const sessions=Math.max(1,Math.ceil(t.qs/DAILY_MAX));
+      const perSession=Math.ceil(t.qs/sessions);
+      let remaining=t.qs;
+      for(let d=0;d<sessions;d++){
+        const target=Math.min(perSession,remaining);
+        slots.push({date:cursor,subId:sub.subId,ti:t.ti,name:t.name,qs:t.qs,totalDays:sessions,part:d+1,target:target});
+        remaining-=target;
         cursor=addDaysLocal(cursor,1);
       }
     });
@@ -2128,7 +2131,7 @@ function renderPyqPlan(){
       <div class="hcard" style="border:1px solid #fbbf2422"><div class="hlbl">Upcoming</div><div class="hval" style="color:#fbbf24">${pending}</div></div>
     </div>
     <div style="font-size:11px;color:var(--muted);margin-bottom:14px;padding:8px 12px;background:var(--navy);border-radius:7px;border:1px solid var(--border)">
-      📋 Auto-plan: 1 topic/day · topics &gt;40q split into 2 days · starts day after Rev 1 ends per subject · closes 31 Dec 2026
+      📋 Auto-plan: 1hr/day · max 20q/session · topics &gt;20q split across multiple days · starts after Rev 1 ends · completes 17 Dec 2026
     </div>
     ${rows}
   `;
