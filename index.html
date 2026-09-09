@@ -3203,27 +3203,33 @@ function calcDiscScore(date){
     result.total += earned;
   });
 
-  /* Exercise (10 pts) — from Study tab habit */
+  /* Exercise (5 pts) — from Study tab habit */
   var exDone = !!(dd.habits&&dd.habits.exercise);
-  var exEarned = exDone ? 10 : 0;
-  result.signals.push({ icon:'🏃', name:'Exercise', note: exDone?'Habit toggled ✓':'Toggle in Study tab', pts:10, earned:exEarned, auto:true });
+  var exEarned = exDone ? 5 : 0;
+  result.signals.push({ icon:'🏃', name:'Exercise', note: exDone?'Habit toggled ✓':'Toggle in Study tab', pts:5, earned:exEarned, auto:true });
   result.total += exEarned;
 
-  /* Woke up at 6:00 AM (10 pts) */
+  /* Chess (5 pts) — from Study tab habit */
+  var chessDone = !!(dd.habits&&dd.habits.chess);
+  var chessEarned = chessDone ? 5 : 0;
+  result.signals.push({ icon:'♟', name:'Chess', note: chessDone?'Habit toggled ✓':'Toggle in Study tab', pts:5, earned:chessEarned, auto:true });
+  result.total += chessEarned;
+
+  /* Woke up at 6:00 AM (5 pts) */
   var wakeEarned = 0;
   var wakeNote = 'Mark below';
-  if(log.wokeOnTime===true){ wakeEarned=10; wakeNote='On time ✓ (6:00 AM)'; }
+  if(log.wokeOnTime===true){ wakeEarned=5; wakeNote='On time ✓ (6:00 AM)'; }
   else if(log.wokeOnTime===false){ wakeNote='Missed (6:00 AM target)'; }
-  result.signals.push({ icon:'⏰', name:'Woke Up at 6:00 AM', note:wakeNote, pts:10, earned:wakeEarned, auto:false, key:'wokeOnTime', isPlan:true });
+  result.signals.push({ icon:'⏰', name:'Woke Up at 6:00 AM', note:wakeNote, pts:5, earned:wakeEarned, auto:false, key:'wokeOnTime', isPlan:true });
   result.total += wakeEarned;
 
-  /* Self Control — bonus signal, tracked separately (no pts added to total) */
+  /* Self Control (5 pts) */
   var scEarned = 0;
   var scNote = 'Mark below';
-  if(log.selfControl===true){ scEarned=1; scNote='Maintained ✓'; }
+  if(log.selfControl===true){ scEarned=5; scNote='Maintained ✓'; }
   else if(log.selfControl===false){ scNote='Broken today'; }
-  result.signals.push({ icon:'🧠', name:'Self Control', note:scNote, pts:1, earned:scEarned, auto:false, key:'selfControl', isSelfCtrl:true });
-  /* NOT added to result.total — tracked only as streak */
+  result.signals.push({ icon:'🧠', name:'Self Control', note:scNote, pts:5, earned:scEarned, auto:false, key:'selfControl', isSelfCtrl:true });
+  result.total += scEarned;
 
   result.total = Math.min(100, result.total);
   return result;
@@ -3236,7 +3242,7 @@ function calcDiscStreak(){
   for(var i=0;i<193;i++){
     if(d < DISC_START) break;
     var sc = calcDiscScore(d);
-    if(sc.total >= 80) streak++;
+    if(sc.total >= 95) streak++;
     else break;
     d = addDays(d, -1);
   }
@@ -3279,6 +3285,17 @@ function calcSelfCtrlStreak(){
     if(d < DISC_START) break;
     var log = discData.logs[d]||{};
     if(log.selfControl === true) streak++;
+    else break;
+    d = addDays(d, -1);
+  }
+  return streak;
+}
+function calcChessStreak(){
+  var streak = 0;
+  var d = addDays(TODAY, 0);
+  for(var i=0;i<193;i++){
+    if(d < DISC_START) break;
+    if(!!(daily[d]&&daily[d].habits&&daily[d].habits.chess)) streak++;
     else break;
     d = addDays(d, -1);
   }
@@ -3436,8 +3453,8 @@ function discHeatmapHtml(){
     var sc=calcDiscScore(d).total;
     var bg;
     if(d>TODAY){ bg='var(--border)'; }
-    else if(sc>=80){ bg='#4ade80'; }
-    else if(sc>=50){ bg='#fbbf24'; }
+    else if(sc>=95){ bg='#4ade80'; }
+    else if(sc>=80){ bg='#fbbf24'; }
     else if(sc>=1){ bg='#ef4444'; }
     else { bg='#1a3248'; }
     var opacity = d<=TODAY ? '1' : '0.3';
@@ -3580,6 +3597,7 @@ function renderDiscCard(){
   var notesS = calcNotesStreak();
   var wakeS  = calcWakeStreak();
   var scS    = calcSelfCtrlStreak();
+  var chessS = calcChessStreak();
   var plan = discGetPlan(TODAY);
   var log = discData.logs[TODAY]||{};
   var tmrw = addDays(TODAY,1);
@@ -3683,6 +3701,7 @@ function renderDiscCard(){
           +'<div class="disc-streak-chip" title="Short Notes streak"><span class="dsc-fire">📝</span><span class="dsc-num" style="color:'+(notesS>=7?'#4ade80':notesS>=3?'#fbbf24':'var(--acc)')+'">'+notesS+'</span><span class="dsc-lbl">Notes</span></div>'
           +'<div class="disc-streak-chip" title="Woke at 6 AM streak"><span class="dsc-fire">⏰</span><span class="dsc-num" style="color:'+(wakeS>=7?'#4ade80':wakeS>=3?'#fbbf24':'var(--acc)')+'">'+wakeS+'</span><span class="dsc-lbl">Wake</span></div>'
           +'<div class="disc-streak-chip" title="Self Control streak"><span class="dsc-fire">🧠</span><span class="dsc-num" style="color:'+(scS>=7?'#4ade80':scS>=3?'#fbbf24':'var(--acc)')+'">'+scS+'</span><span class="dsc-lbl">Control</span></div>'
+          +'<div class="disc-streak-chip" title="Chess streak"><span class="dsc-fire">♟</span><span class="dsc-num" style="color:'+(chessS>=7?'#4ade80':chessS>=3?'#fbbf24':'var(--acc)')+'">'+chessS+'</span><span class="dsc-lbl">Chess</span></div>'
           +'<div class="disc-streak-divider"></div>'
           +'<div class="disc-streak-chip disc-streak-disc" title="Overall discipline streak (score ≥ 80)"><span class="dsc-fire">🔥</span><span class="dsc-num" style="color:'+(streak>=7?'#4ade80':streak>=3?'#fbbf24':'var(--acc)')+'">'+streak+'</span><span class="dsc-lbl">Discipline</span></div>'
         +'</div>'
@@ -3713,9 +3732,9 @@ function renderDiscCard(){
       +'<div class="disc-heatmap">'
         +'<div class="disc-hm-title">Discipline Heatmap · Sep 10 – Dec 31</div>'
         +'<div style="display:flex;gap:8px;font-size:9px;color:var(--faint);margin-bottom:6px;">'
-          +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#4ade80;border-radius:2px;"></span>≥80</span>'
-          +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#fbbf24;border-radius:2px;"></span>50–79</span>'
-          +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#ef4444;border-radius:2px;"></span>&lt;50</span>'
+          +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#4ade80;border-radius:2px;"></span>≥95</span>'
+          +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#fbbf24;border-radius:2px;"></span>80–94</span>'
+          +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#ef4444;border-radius:2px;"></span>&lt;80</span>'
           +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#1a3248;border-radius:2px;"></span>future</span>'
         +'</div>'
         +'<div class="disc-hm-grid">'+discHeatmapHtml()+'</div>'
@@ -3724,7 +3743,7 @@ function renderDiscCard(){
   +'</div>';
 }
 
-function scoreLabel(sc){ return sc>=80?'Disciplined':sc>=60?'Good':sc>=40?'Average':'Needs work'; }
+function scoreLabel(sc){ return sc>=95?'Disciplined':sc>=80?'Good':sc>=60?'Average':sc>=40?'Below Avg':'Needs work'; }
 
 function renderAll(){renderProgress();renderMilestones();renderEntry();renderSubjects();renderLearningPath();setTimeout(function(){studySetView(studyTabView||'progress');},80);}
 
