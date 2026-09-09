@@ -3175,7 +3175,7 @@ function switchMainTab(id){
    Structure: { plans: { "YYYY-MM-DD": { wakeTime, blocks:[{time,desc,status}] } },
                 logs:  { "YYYY-MM-DD": { noSocial, scores:{...} } } }
 ════════════════════════════════════════════ */
-var DISC_START='2026-09-07';
+var DISC_START='2026-09-10';
 var discData = { plans:{}, logs:{} };
 function loadDisc(){ var d=lsGet('gate-discipline'); if(d){ discData.plans=d.plans||{}; discData.logs=d.logs||{}; } }
 function saveDisc(){ lsSet('gate-discipline', discData); }
@@ -3216,6 +3216,14 @@ function calcDiscScore(date){
   else if(log.wokeOnTime===false){ wakeNote='Missed (6:00 AM target)'; }
   result.signals.push({ icon:'⏰', name:'Woke Up at 6:00 AM', note:wakeNote, pts:10, earned:wakeEarned, auto:false, key:'wokeOnTime', isPlan:true });
   result.total += wakeEarned;
+
+  /* Self Control — bonus signal, tracked separately (no pts added to total) */
+  var scEarned = 0;
+  var scNote = 'Mark below';
+  if(log.selfControl===true){ scEarned=1; scNote='Maintained ✓'; }
+  else if(log.selfControl===false){ scNote='Broken today'; }
+  result.signals.push({ icon:'🧠', name:'Self Control', note:scNote, pts:1, earned:scEarned, auto:false, key:'selfControl', isSelfCtrl:true });
+  /* NOT added to result.total — tracked only as streak */
 
   result.total = Math.min(100, result.total);
   return result;
@@ -3259,6 +3267,18 @@ function calcWakeStreak(){
     if(d < DISC_START) break;
     var log = discData.logs[d]||{};
     if(log.wokeOnTime === true) streak++;
+    else break;
+    d = addDays(d, -1);
+  }
+  return streak;
+}
+function calcSelfCtrlStreak(){
+  var streak = 0;
+  var d = addDays(TODAY, 0);
+  for(var i=0;i<193;i++){
+    if(d < DISC_START) break;
+    var log = discData.logs[d]||{};
+    if(log.selfControl === true) streak++;
     else break;
     d = addDays(d, -1);
   }
@@ -3537,7 +3557,7 @@ function renderDiscCard(){
     var daysTo = diffDays(TODAY, DISC_START);
     el.innerHTML = '<div class="disc-card" style="text-align:center;padding:32px 20px;">'
       +'<div style="font-size:36px;margin-bottom:10px;">🎯</div>'
-      +'<div style="font-size:16px;font-weight:800;color:var(--acc);margin-bottom:8px;">Discipline Tracking Starts Sep 7, 2026</div>'
+      +'<div style="font-size:16px;font-weight:800;color:var(--acc);margin-bottom:8px;">Discipline Tracking Starts Sep 10, 2026</div>'
       +'<div style="font-size:13px;color:var(--muted);margin-bottom:16px;">'+daysTo+' day'+(daysTo===1?'':'s')+' to go</div>'
       +'<div style="background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:14px 18px;text-align:left;max-width:420px;margin:0 auto;">'
         +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">Your Daily Fixed Schedule</div>'
@@ -3559,6 +3579,7 @@ function renderDiscCard(){
   var rev1S  = calcRev1Streak();
   var notesS = calcNotesStreak();
   var wakeS  = calcWakeStreak();
+  var scS    = calcSelfCtrlStreak();
   var plan = discGetPlan(TODAY);
   var log = discData.logs[TODAY]||{};
   var tmrw = addDays(TODAY,1);
@@ -3579,6 +3600,16 @@ function renderDiscCard(){
       toggleHtml = '<div style="display:flex;gap:5px;">'
         +'<button class="disc-manual-toggle '+wYesCls+'" onclick="discToggleLog(\''+TODAY+'\',\'wokeOnTime\',true)">✓ Yes</button>'
         +'<button class="disc-manual-toggle '+wNoCls+'" style="'+wNoStyle+'" onclick="discToggleLog(\''+TODAY+'\',\'wokeOnTime\',false)">✗ No</button>'
+        +'</div>';
+    }
+    if(sig.isSelfCtrl){
+      var sCT = log.selfControl;
+      var sYesCls = sCT===true?'on':'';
+      var sNoCls  = sCT===false?'on':'';
+      var sNoStyle = sCT===false?'background:#2a0000;border-color:#ef4444;color:#ef4444;':'';
+      toggleHtml = '<div style="display:flex;gap:5px;">'
+        +'<button class="disc-manual-toggle '+sYesCls+'" onclick="discToggleLog(\''+TODAY+'\',\'selfControl\',true)">✓ Yes</button>'
+        +'<button class="disc-manual-toggle '+sNoCls+'" style="'+sNoStyle+'" onclick="discToggleLog(\''+TODAY+'\',\'selfControl\',false)">✗ No</button>'
         +'</div>';
     }
     return '<div class="disc-signal '+cls+'">'
@@ -3651,6 +3682,7 @@ function renderDiscCard(){
           +'<div class="disc-streak-chip" title="Revision 1 streak"><span class="dsc-fire">📖</span><span class="dsc-num" style="color:'+(rev1S>=7?'#4ade80':rev1S>=3?'#fbbf24':'var(--acc)')+'">'+rev1S+'</span><span class="dsc-lbl">Rev1</span></div>'
           +'<div class="disc-streak-chip" title="Short Notes streak"><span class="dsc-fire">📝</span><span class="dsc-num" style="color:'+(notesS>=7?'#4ade80':notesS>=3?'#fbbf24':'var(--acc)')+'">'+notesS+'</span><span class="dsc-lbl">Notes</span></div>'
           +'<div class="disc-streak-chip" title="Woke at 6 AM streak"><span class="dsc-fire">⏰</span><span class="dsc-num" style="color:'+(wakeS>=7?'#4ade80':wakeS>=3?'#fbbf24':'var(--acc)')+'">'+wakeS+'</span><span class="dsc-lbl">Wake</span></div>'
+          +'<div class="disc-streak-chip" title="Self Control streak"><span class="dsc-fire">🧠</span><span class="dsc-num" style="color:'+(scS>=7?'#4ade80':scS>=3?'#fbbf24':'var(--acc)')+'">'+scS+'</span><span class="dsc-lbl">Control</span></div>'
           +'<div class="disc-streak-divider"></div>'
           +'<div class="disc-streak-chip disc-streak-disc" title="Overall discipline streak (score ≥ 80)"><span class="dsc-fire">🔥</span><span class="dsc-num" style="color:'+(streak>=7?'#4ade80':streak>=3?'#fbbf24':'var(--acc)')+'">'+streak+'</span><span class="dsc-lbl">Discipline</span></div>'
         +'</div>'
@@ -3679,7 +3711,7 @@ function renderDiscCard(){
       +'</div>'
       /* heatmap */
       +'<div class="disc-heatmap">'
-        +'<div class="disc-hm-title">Discipline Heatmap · Sep 7 – Dec 31</div>'
+        +'<div class="disc-hm-title">Discipline Heatmap · Sep 10 – Dec 31</div>'
         +'<div style="display:flex;gap:8px;font-size:9px;color:var(--faint);margin-bottom:6px;">'
           +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#4ade80;border-radius:2px;"></span>≥80</span>'
           +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#fbbf24;border-radius:2px;"></span>50–79</span>'
