@@ -269,10 +269,20 @@ select.inp-sm{cursor:pointer;}
 .disc-ring-lbl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;}
 .disc-ring-score{font-size:18px;font-weight:800;line-height:1;}
 .disc-ring-txt{font-size:9px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
-.disc-stats{display:flex;gap:16px;flex-wrap:wrap;flex:1;}
+.disc-stats{display:flex;align-items:center;gap:14px;flex-wrap:wrap;flex:1;}
 .disc-stat{display:flex;flex-direction:column;gap:1px;}
 .disc-stat-val{font-size:20px;font-weight:800;line-height:1.1;}
 .disc-stat-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--faint);}
+/* streak chips */
+.disc-streaks-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+.disc-streak-chip{display:flex;flex-direction:column;align-items:center;gap:0;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:5px 9px;min-width:46px;transition:border-color .2s;}
+.disc-streak-chip:hover{border-color:var(--acc);}
+.disc-streak-disc{border-color:#fbbf2433;background:#1a120044;}
+.disc-streak-disc:hover{border-color:#fbbf24;}
+.dsc-fire{font-size:13px;line-height:1;}
+.dsc-num{font-size:16px;font-weight:800;line-height:1.15;}
+.dsc-lbl{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);margin-top:1px;}
+.disc-streak-divider{width:1px;height:36px;background:var(--border);margin:0 2px;flex-shrink:0;}
 .disc-expand-btn{margin-left:auto;background:var(--navy);border:1px solid var(--border);border-radius:7px;padding:6px 13px;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .2s;}
 .disc-expand-btn:hover{border-color:var(--acc);color:var(--acc);}
 .disc-detail{margin-top:16px;border-top:1px solid var(--border);padding-top:14px;display:none;}
@@ -3225,6 +3235,36 @@ function calcDiscStreak(){
   return streak;
 }
 
+/* ── per-signal streaks ── */
+function calcBlockStreak(fbKey){
+  /* counts consecutive days (backward from today) where fb_<key> was logged */
+  var streak = 0;
+  var d = addDays(TODAY, 0);
+  for(var i=0;i<193;i++){
+    if(d < DISC_START) break;
+    var log = discData.logs[d]||{};
+    if(log['fb_'+fbKey]) streak++;
+    else break;
+    d = addDays(d, -1);
+  }
+  return streak;
+}
+function calcPyqStreak(){   return calcBlockStreak('pyq');   }
+function calcRev1Streak(){  return calcBlockStreak('rev1');  }
+function calcNotesStreak(){ return calcBlockStreak('notes'); }
+function calcWakeStreak(){
+  var streak = 0;
+  var d = addDays(TODAY, 0);
+  for(var i=0;i<193;i++){
+    if(d < DISC_START) break;
+    var log = discData.logs[d]||{};
+    if(log.wokeOnTime === true) streak++;
+    else break;
+    d = addDays(d, -1);
+  }
+  return streak;
+}
+
 /* ── 7-day rolling average ── */
 function calcDiscAvg7(){
   var sum=0, cnt=0;
@@ -3515,6 +3555,10 @@ function renderDiscCard(){
   var streak = calcDiscStreak();
   var avg7 = calcDiscAvg7();
   var col = discColor(sc.total);
+  var pyqS   = calcPyqStreak();
+  var rev1S  = calcRev1Streak();
+  var notesS = calcNotesStreak();
+  var wakeS  = calcWakeStreak();
   var plan = discGetPlan(TODAY);
   var log = discData.logs[TODAY]||{};
   var tmrw = addDays(TODAY,1);
@@ -3601,8 +3645,17 @@ function renderDiscCard(){
         +'<div class="disc-ring-lbl"><div class="disc-ring-score" style="color:'+col+'">'+sc.total+'</div><div class="disc-ring-txt">score</div></div>'
       +'</div>'
       +'<div class="disc-stats">'
-        +'<div class="disc-stat"><div class="disc-stat-val" style="color:'+(streak>=7?'#4ade80':streak>=3?'#fbbf24':'var(--acc)')+'">🔥'+streak+'</div><div class="disc-stat-lbl">Disc. Streak</div></div>'
-        +'<div class="disc-stat"><div class="disc-stat-val" style="color:'+discColor(avg7)+'">'+avg7+'</div><div class="disc-stat-lbl">7-Day Avg</div></div>'
+        /* ── individual streaks row ── */
+        +'<div class="disc-streaks-row">'
+          +'<div class="disc-streak-chip" title="PYQ Practice streak"><span class="dsc-fire">🎯</span><span class="dsc-num" style="color:'+(pyqS>=7?'#4ade80':pyqS>=3?'#fbbf24':'var(--acc)')+'">'+pyqS+'</span><span class="dsc-lbl">PYQ</span></div>'
+          +'<div class="disc-streak-chip" title="Revision 1 streak"><span class="dsc-fire">📖</span><span class="dsc-num" style="color:'+(rev1S>=7?'#4ade80':rev1S>=3?'#fbbf24':'var(--acc)')+'">'+rev1S+'</span><span class="dsc-lbl">Rev1</span></div>'
+          +'<div class="disc-streak-chip" title="Short Notes streak"><span class="dsc-fire">📝</span><span class="dsc-num" style="color:'+(notesS>=7?'#4ade80':notesS>=3?'#fbbf24':'var(--acc)')+'">'+notesS+'</span><span class="dsc-lbl">Notes</span></div>'
+          +'<div class="disc-streak-chip" title="Woke at 6 AM streak"><span class="dsc-fire">⏰</span><span class="dsc-num" style="color:'+(wakeS>=7?'#4ade80':wakeS>=3?'#fbbf24':'var(--acc)')+'">'+wakeS+'</span><span class="dsc-lbl">Wake</span></div>'
+          +'<div class="disc-streak-divider"></div>'
+          +'<div class="disc-streak-chip disc-streak-disc" title="Overall discipline streak (score ≥ 80)"><span class="dsc-fire">🔥</span><span class="dsc-num" style="color:'+(streak>=7?'#4ade80':streak>=3?'#fbbf24':'var(--acc)')+'">'+streak+'</span><span class="dsc-lbl">Discipline</span></div>'
+        +'</div>'
+        /* ── summary stats ── */
+        +'<div class="disc-stat" style="margin-left:auto;"><div class="disc-stat-val" style="color:'+discColor(avg7)+'">'+avg7+'</div><div class="disc-stat-lbl">7-Day Avg</div></div>'
         +'<div class="disc-stat"><div class="disc-stat-val" style="color:'+col+'">'+scoreLabel(sc.total)+'</div><div class="disc-stat-lbl">Today</div></div>'
       +'</div>'
       +'<button class="disc-expand-btn" onclick="event.stopPropagation();toggleDiscDetail();">'+(discOpen?'▲ Close':'▼ Details')+'</button>'
