@@ -3183,7 +3183,7 @@ function switchMainTab(id){
    Structure: { plans: { "YYYY-MM-DD": { wakeTime, blocks:[{time,desc,status}] } },
                 logs:  { "YYYY-MM-DD": { noSocial, scores:{...} } } }
 ════════════════════════════════════════════ */
-var DISC_START='2026-09-10';
+var DISC_START='2026-09-14';
 var discData = { plans:{}, logs:{} };
 function loadDisc(){ var d=lsGet('gate-discipline'); if(d){ discData.plans=d.plans||{}; discData.logs=d.logs||{}; } }
 function saveDisc(){ lsSet('gate-discipline', discData); }
@@ -3582,7 +3582,7 @@ function renderDiscCard(){
     var daysTo = diffDays(TODAY, DISC_START);
     el.innerHTML = '<div class="disc-card" style="text-align:center;padding:32px 20px;">'
       +'<div style="font-size:36px;margin-bottom:10px;">🎯</div>'
-      +'<div style="font-size:16px;font-weight:800;color:var(--acc);margin-bottom:8px;">Discipline Tracking Starts Sep 10, 2026</div>'
+      +'<div style="font-size:16px;font-weight:800;color:var(--acc);margin-bottom:8px;">Discipline Tracking Starts Sep 14, 2026</div>'
       +'<div style="font-size:13px;color:var(--muted);margin-bottom:16px;">'+daysTo+' day'+(daysTo===1?'':'s')+' to go</div>'
       +'<div style="background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:14px 18px;text-align:left;max-width:420px;margin:0 auto;">'
         +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">Your Daily Fixed Schedule</div>'
@@ -3738,7 +3738,7 @@ function renderDiscCard(){
       +'</div>'
       /* heatmap */
       +'<div class="disc-heatmap">'
-        +'<div class="disc-hm-title">Discipline Heatmap · Sep 10 – Dec 31</div>'
+        +'<div class="disc-hm-title">Discipline Heatmap · Sep 14 – Dec 31</div>'
         +'<div style="display:flex;gap:8px;font-size:9px;color:var(--faint);margin-bottom:6px;">'
           +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#4ade80;border-radius:2px;"></span>≥95</span>'
           +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#fbbf24;border-radius:2px;"></span>80–94</span>'
