@@ -2305,6 +2305,268 @@ function loadAll(){
 }
 function loadRev1(){rev1Done=lsGet('gate-rev1-done')||{};rev1Notes=lsGet('gate-rev1-notes')||{};rev1Pages=lsGet('gate-rev1-pages')||{};snPages=lsGet('gate-sn-pages')||{};snNotes=lsGet('gate-sn-notes')||{};}
 function loadMocks(){mockData=lsGet('gate-mocks')||{};subTests=lsGet('gate-sub-tests')||{};}
+
+/* ── SHORT NOTES HELPERS ── */
+function snPagesDone(id){return Object.values(snPages[id]||{}).reduce((t,v)=>t+(+v||0),0);}
+function snPagesOn(id,date){return+((snPages[id]||{})[date]||0);}
+function snPageTarget(id){
+  var slot=REV1_SCHEDULE[id];var tot=subPages(id);if(!slot||!tot)return 0;
+  var done=snPagesDone(id);var left=Math.max(0,tot-done);
+  var dl;if(TODAY<slot.start)dl=slot.days;else if(TODAY>slot.end)dl=1;else dl=Math.max(1,diffDays(TODAY,slot.end)+1);
+  return Math.ceil(left/dl);
+}
+function setSnPages(id,date,val){
+  var v=Math.max(0,Math.round(+val||0));
+  if(!snPages[id])snPages[id]={};
+  if(v===0)delete snPages[id][date];else snPages[id][date]=v;
+  lsSet('gate-sn-pages',snPages);showSaveToast();renderRevision1();
+}
+function stepSnPages(id,delta){setSnPages(id,rev1LogDate,snPagesOn(id,rev1LogDate)+delta);}
+
+/* ── SUB-TEST CRUD (4 tests per subject: s1,s2,m1,m2) ── */
+function getSubTest(subId,key){return((subTests[subId]||{})[key])||{done:false,date:'',score:'',notes:''};}
+function updSubTest(subId,key,field,val){
+  if(!subTests[subId])subTests[subId]={};
+  if(!subTests[subId][key])subTests[subId][key]={done:false,date:'',score:'',notes:''};
+  subTests[subId][key][field]=val;
+  lsSet('gate-sub-tests',subTests);showSaveToast();
+}
+function toggleSubTest(subId,key){
+  if(!subTests[subId])subTests[subId]={};
+  if(!subTests[subId][key])subTests[subId][key]={done:false,date:'',score:'',notes:''};
+  subTests[subId][key].done=!subTests[subId][key].done;
+  lsSet('gate-sub-tests',subTests);showSaveToast();renderRevision2();checkMilestones();
+}
+
+/* ── MOCK SCHEDULE (5 full mocks Jan 3–31 2027) ── */
+function buildMockSchedule(){
+  return[
+    {date:'2027-01-03',label:'Mock 1'},
+    {date:'2027-01-10',label:'Mock 2'},
+    {date:'2027-01-17',label:'Mock 3'},
+    {date:'2027-01-24',label:'Mock 4'},
+    {date:'2027-01-31',label:'Mock 5'},
+  ];
+}
+function mockRec(date){return(mockData[date])||{done:false,score:'',notes:''};}
+function updMock(date,field,val){
+  if(!mockData[date])mockData[date]={done:false,score:'',notes:''};
+  mockData[date][field]=val;lsSet('gate-mocks',mockData);showSaveToast();
+}
+function toggleMock(date){
+  if(!mockData[date])mockData[date]={done:false,score:'',notes:''};
+  mockData[date].done=!mockData[date].done;
+  lsSet('gate-mocks',mockData);showSaveToast();renderRevision2();checkMilestones();
+}
+
+/* ── REVISION 2 & MOCKS RENDERER ── */
+const REV2_START='2027-01-01';
+function renderRevision2(){
+  loadMocks();
+  var el=$('sec-rev2');if(!el)return;
+  var locked=TODAY<REV2_START;
+  var mockSched=buildMockSchedule();
+  var mockScores=mockSched.map(function(m){var r=mockRec(m.date);return r.score!==''&&!isNaN(+r.score)?+r.score:null;}).filter(function(s){return s!==null;});
+  var avgScore=mockScores.length?Math.round(mockScores.reduce(function(a,b){return a+b;},0)/mockScores.length):null;
+  var bestScore=mockScores.length?Math.max.apply(null,mockScores):null;
+  var TEST_KEYS=['s1','s2','m1','m2'];
+  var testDone=0,testTotal=subjects.length*4;
+  subjects.forEach(function(s){TEST_KEYS.forEach(function(k){if(getSubTest(s.id,k).done)testDone++;});});
+  var mocksDone=mockSched.filter(function(m){return mockRec(m.date).done;}).length;
+  function scCol(sc){return sc===null?'var(--muted)':sc>=75?'#4ade80':sc>=50?'#fbbf24':'#ef4444';}
+
+  /* ── test row builder ── */
+  function testRow(subId,key,label,color){
+    var t=getSubTest(subId,key);
+    var sc=t.score!==''?+t.score:null;
+    return '<div style="display:grid;grid-template-columns:130px 1fr 110px 80px 86px;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--border)">'
+      +'<div style="font-size:12px;font-weight:700;color:'+color+'">'+label+'</div>'
+      +'<input class="inp-sm" type="text" value="'+esc(t.notes||'')+'" placeholder="Notes / weak areas" oninput="updSubTest('+subId+',\''+key+'\',\'notes\',this.value)" style="width:100%;">'
+      +'<input class="inp-sm" type="date" value="'+(t.date||'')+'" onchange="updSubTest('+subId+',\''+key+'\',\'date\',this.value)" style="width:100%;">'
+      +'<input class="inp-sm" type="number" min="0" max="100" value="'+(t.score||'')+'" placeholder="Score %" oninput="updSubTest('+subId+',\''+key+'\',\'score\',+this.value)" style="width:100%;'+(sc!==null?'color:'+scCol(sc):'')+'">'
+      +'<button class="btn-sm" onclick="toggleSubTest('+subId+',\''+key+'\')" style="'+(t.done?'color:#4ade80;border-color:#4ade8044':'')+'">'+(t.done?'✓ Done':'Mark done')+'</button>'
+    +'</div>';
+  }
+
+  /* ── per-subject test cards ── */
+  var testHtml=subjects.map(function(s){
+    var doneCount=TEST_KEYS.filter(function(k){return getSubTest(s.id,k).done;}).length;
+    var allDone=doneCount===4;
+    var scores=TEST_KEYS.map(function(k){return getSubTest(s.id,k);}).filter(function(t){return t.score!=='';}).map(function(t){return+t.score;});
+    var avg=scores.length?Math.round(scores.reduce(function(a,b){return a+b;},0)/scores.length):null;
+    var dots=TEST_KEYS.map(function(k){return '<div style="width:9px;height:9px;border-radius:50%;background:'+(getSubTest(s.id,k).done?'#4ade80':'var(--border)')+'" title="'+(({s1:'Subject T1',s2:'Subject T2',m1:'Mixed T1',m2:'Mixed T2'})[k])+'"></div>';}).join('');
+    return '<div class="card" style="margin-bottom:10px;padding:14px 16px;'+(allDone?'border-color:#4ade8044;':'')+'">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px;">'
+        +'<div>'
+          +'<div style="font-size:13px;font-weight:700;">'+esc(s.name)+'</div>'
+          +'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+doneCount+'/4 tests done'+(avg!==null?' &middot; avg <b style="color:'+scCol(avg)+'">'+avg+'%</b>':'')+'</div>'
+        +'</div>'
+        +'<div style="display:flex;gap:4px;align-items:center;">'+dots+'</div>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:130px 1fr 110px 80px 86px;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);">'
+        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);">Test</div>'
+        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);">Notes / Weak Areas</div>'
+        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);">Date</div>'
+        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);">Score %</div>'
+        +'<div></div>'
+      +'</div>'
+      +testRow(s.id,'s1','📘 Subject T1','#00d4ff')
+      +testRow(s.id,'s2','📘 Subject T2','#00d4ff')
+      +testRow(s.id,'m1','🔀 Mixed T1','#c084fc')
+      +testRow(s.id,'m2','🔀 Mixed T2','#c084fc')
+    +'</div>';
+  }).join('');
+
+  /* ── full mock cards ── */
+  var mockCardsHtml=mockSched.map(function(m){
+    var r=mockRec(m.date);var isToday=TODAY===m.date;
+    var sc=r.score!==''&&!isNaN(+r.score)?+r.score:null;
+    var col=scCol(sc);
+    return '<div class="mock-card '+(r.done?'done-mock':isToday?'active-mock':'')+'">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px;">'
+        +'<div>'
+          +'<div style="font-size:13px;font-weight:700;">'+esc(m.label)+'</div>'
+          +'<div style="font-size:11px;color:var(--muted);">'+fmtFull(m.date)+(isToday?' &middot; <span style="color:#fbbf24;font-weight:700;">TODAY</span>':'')+'</div>'
+        +'</div>'
+        +(sc!==null?'<div style="font-size:22px;font-weight:800;color:'+col+'">'+sc+'%</div>':'')
+      +'</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
+        +'<input class="inp-sm" type="number" min="0" max="100" value="'+(r.score||'')+'" placeholder="Score %" oninput="updMock(\''+m.date+'\',\'score\',this.value)" style="width:80px;'+(sc!==null?'color:'+col:'')+'">'
+        +'<input class="inp-sm" type="text" value="'+esc(r.notes||'')+'" placeholder="Notes..." oninput="updMock(\''+m.date+'\',\'notes\',this.value)" style="flex:1;min-width:120px;">'
+        +'<button class="btn-sm" onclick="toggleMock(\''+m.date+'\')" style="'+(r.done?'color:#4ade80;border-color:#4ade8044':'')+'">'+(r.done?'✓ Done':'Mark done')+'</button>'
+      +'</div>'
+    +'</div>';
+  }).join('');
+
+  var lockedBanner=locked
+    ?'<div style="background:#1a1200;border:1px solid #fbbf2444;border-radius:8px;padding:10px 16px;margin-bottom:16px;font-size:12px;font-weight:700;color:#fbbf24;">🔒 Mock Tests unlock Jan 1, 2027. Use this time to complete all subject tests.</div>'
+    :'';
+
+  el.innerHTML='<div class="section">'
+    +'<div class="sec-hdr"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;width:100%"><div><h2>Rev 2 &amp; Mocks</h2><div class="sub">4 tests per subject (2 subject + 2 mixed) &middot; 5 full mocks Jan 2027</div></div></div></div>'
+    +'<div class="g4" style="margin-bottom:16px;">'
+      +'<div class="hcard" style="border:1px solid #00d4ff22;"><div class="hlbl">Tests Done</div><div class="hval" style="color:#00d4ff;">'+testDone+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+testTotal+'</span></div><div class="hsub">4 per subject (2S + 2M)</div></div>'
+      +'<div class="hcard" style="border:1px solid #4ade8022;"><div class="hlbl">Subjects Full</div><div class="hval" style="color:#4ade80;">'+subjects.filter(function(s){return TEST_KEYS.every(function(k){return getSubTest(s.id,k).done;});}).length+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+ subjects.length+'</span></div><div class="hsub">all 4 tests cleared</div></div>'
+      +'<div class="hcard" style="border:1px solid #fbbf2422;"><div class="hlbl">Mocks Done</div><div class="hval" style="color:#fbbf24;">'+mocksDone+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/5</span></div></div>'
+      +'<div class="hcard" style="border:1px solid '+(avgScore!==null?'#4ade8022':'var(--border)')+'"><div class="hlbl">Mock Avg</div><div class="hval" style="color:'+(avgScore!==null?scCol(avgScore):'var(--muted)')+';">'+(avgScore!==null?avgScore+'%':'—')+'</div><div class="hsub">'+(bestScore!==null?'Best: '+bestScore+'%':'No mocks yet')+'</div></div>'
+    +'</div>'
+    /* Test Tracker sub-section */
+    +'<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);">📚 Subject Test Tracker</div>'
+    +testHtml
+    /* Full Mocks sub-section */
+    +'<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin:24px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border);">🚀 Full Mock Tests · Jan 2027</div>'
+    +lockedBanner
+    +'<div class="mock-grid">'+mockCardsHtml+'</div>'
+  +'</div>';
+}
+
+/* ── DASHBOARD THREE-CARD ROW ── */
+function dbThreeCards(activeSub,hDone,vDone,hPct,vPct,dLeft,subCol,
+  r1ActiveSub,r1Slot,r1TodayPg,r1Target,r1PgsDone,r1TotPg,r1PgPct,r1Col2,
+  pyqMonthSubs,pyqMonthSubNames,pyqMonthAcc,pyqMonthCol,pyqMonthC,pyqMonthW,pyqPendingNames){
+
+  var asLk=SUBJECT_LINKS[activeSub.id]||{};
+  var asYtUrl=asLk.yt||asLk.yt_a||asLk.yt_d||asLk.yt_m||'';
+
+  /* study card */
+  var studyCard='<div class="db-card" onclick="switchMainTab(\'study\')">'
+    +'<div class="db-card-header"><div class="db-card-icon">📚</div>'
+      +'<div><div class="db-card-title">'+esc(activeSub.name)+'</div>'
+        +'<div class="db-card-sub">'+esc(activeSub.faculty)+' &middot; '+dLeft+'d left</div>'
+      +'</div>'
+    +'</div>'
+    +'<div class="db-stat-row">'
+      +'<div class="db-stat"><div class="db-stat-lbl">Hours</div><div class="db-stat-val" style="color:'+subCol+';">'+hDone.toFixed(1)+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+ activeSub.targetHrs+'h</span></div></div>'
+      +'<div class="db-stat"><div class="db-stat-lbl">Videos</div><div class="db-stat-val" style="color:var(--acc);">'+vDone+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+activeSub.videos+'</span></div></div>'
+    +'</div>'
+    +'<div class="db-pbar"><div class="db-pbar-fill" style="width:'+hPct+'%;background:'+subCol+';"></div></div>'
+  +'</div>';
+
+  /* rev1 card */
+  var rev1Card='<div class="db-card" onclick="switchMainTab(\'rev1\')">'
+    +'<div class="db-card-header"><div class="db-card-icon">📖</div>'
+      +'<div><div class="db-card-title">'+(r1ActiveSub?esc(r1ActiveSub.name):'Revision 1')+'</div>'
+        +'<div class="db-card-sub">'+(r1ActiveSub?(fmtFull(r1Slot.start)+' – '+fmtFull(r1Slot.end)):'All done or not started')+'</div>'
+      +'</div>'
+    +'</div>'
+    +'<div class="db-stat-row">'
+      +'<div class="db-stat"><div class="db-stat-lbl">Pages Done</div><div class="db-stat-val" style="color:'+r1Col2+';">'+r1PgsDone+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+(r1TotPg||'—')+'</span></div></div>'
+      +'<div class="db-stat"><div class="db-stat-lbl">Today</div><div class="db-stat-val" style="color:'+(r1TodayPg>0?'#4ade80':'var(--muted)')+';">'+r1TodayPg+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+r1Target+'</span></div></div>'
+    +'</div>'
+    +(r1TotPg?'<div class="db-pbar"><div class="db-pbar-fill" style="width:'+r1PgPct+'%;background:'+r1Col2+';"></div></div>':'')
+  +'</div>';
+
+  /* pyq card */
+  var pyqCard='<div class="db-card" onclick="switchMainTab(\'pyq\')">'
+    +'<div class="db-card-header"><div class="db-card-icon">🎯</div>'
+      +'<div><div class="db-card-title">PYQ Practice</div>'
+        +'<div class="db-card-sub">'+(pyqMonthSubs.length>0?pyqMonthSubNames.join(', '):'No sessions this month')+'</div>'
+      +'</div>'
+    +'</div>'
+    +'<div class="db-stat-row">'
+      +'<div class="db-stat"><div class="db-stat-lbl">This Month Acc</div><div class="db-stat-val" style="color:'+pyqMonthCol+';">'+(pyqMonthAcc!==null?pyqMonthAcc+'%':'—')+'</div></div>'
+      +'<div class="db-stat"><div class="db-stat-lbl">Correct / Wrong</div><div class="db-stat-val" style="font-size:14px;"><span style="color:#4ade80;">'+pyqMonthC+'</span> / <span style="color:#ef4444;">'+pyqMonthW+'</span></div></div>'
+    +'</div>'
+    +(pyqPendingNames.length>0?'<div class="db-tag-row">'+'<div class="db-tag amber">⚠ Pending: '+pyqPendingNames.join(', ')+'</div>'+'</div>':'')
+  +'</div>';
+
+  return '<div class="db-section-hdr" style="margin-bottom:10px;">📊 Active Progress</div>'
+    +'<div class="db-grid">'+studyCard+rev1Card+pyqCard+'</div>';
+}
+
+/* ── EXPORT / IMPORT ── */
+function exportData(){
+  var data={subjects:subjects,daily:daily,settings:settings,milestones:[...earnedMilestones],
+    subTests:subTests,rev1Done:rev1Done,rev1Notes:rev1Notes,rev1Pages:rev1Pages,
+    snPages:snPages,snNotes:snNotes,mockData:mockData,
+    pyqData:pyqData,pyqQuizData:pyqQuizData,pyqPlanData:pyqPlanData,
+    sampleMocks:sampleMocks,discData:discData};
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='gate2027-backup-'+TODAY+'.json';a.click();
+}
+function importData(){
+  var inp=document.createElement('input');inp.type='file';inp.accept='.json';
+  inp.onchange=function(e){
+    var f=e.target.files[0];if(!f)return;
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      try{
+        var d=JSON.parse(ev.target.result);
+        if(d.subjects)subjects=d.subjects;
+        if(d.daily)daily=d.daily;
+        if(d.settings)settings=d.settings;
+        if(d.milestones)earnedMilestones=new Set(d.milestones);
+        if(d.subTests)subTests=d.subTests;
+        if(d.rev1Done)rev1Done=d.rev1Done;
+        if(d.rev1Notes)rev1Notes=d.rev1Notes;
+        if(d.rev1Pages)rev1Pages=d.rev1Pages;
+        if(d.snPages)snPages=d.snPages;
+        if(d.snNotes)snNotes=d.snNotes;
+        if(d.mockData)mockData=d.mockData;
+        if(d.pyqData)pyqData=d.pyqData;
+        if(d.pyqQuizData)pyqQuizData=d.pyqQuizData;
+        if(d.pyqPlanData)pyqPlanData=d.pyqPlanData;
+        if(d.sampleMocks)sampleMocks=d.sampleMocks;
+        if(d.discData)discData=d.discData;
+        lsSet('gate-subjects',subjects);lsSet('gate-daily',daily);
+        lsSet('gate-settings',settings);lsSet('gate-milestones',[...earnedMilestones]);
+        lsSet('gate-sub-tests',subTests);lsSet('gate-rev1-done',rev1Done);
+        lsSet('gate-rev1-notes',rev1Notes);lsSet('gate-rev1-pages',rev1Pages);
+        lsSet('gate-sn-pages',snPages);lsSet('gate-sn-notes',snNotes);
+        lsSet('gate-mocks',mockData);lsSet('gate-pyq-data',pyqData);
+        lsSet('gate-pyq-quiz',pyqQuizData);lsSet('gate-pyq-plan',pyqPlanData);
+        lsSet('gate-sample-mocks',sampleMocks);lsSet('gate-discipline',discData);
+        renderAll();renderDashboard();renderRevision1();renderRevision2();renderPyq();
+        loadDisc();renderDiscCard();loadSampleMocks();renderSampleMocks();
+        showSaveToast();alert('Import successful!');
+      }catch(err){alert('Import failed: '+err.message);}
+    };
+    reader.readAsText(f);
+  };
+  inp.click();
+}
+
 function saveDay(d,data){daily[d]=data;lsSet('gate-daily',daily);showSaveToast();}
 function saveSubjects(){lsSet('gate-subjects',subjects);showSaveToast();}
 
