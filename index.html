@@ -483,25 +483,14 @@ select.inp-sm{cursor:pointer;}
   <div class="section">
     <div class="sec-hdr">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;width:100%">
-        <div><h2>PYQ Practice</h2><div class="sub">Log PrepFusion sessions · track accuracy · follow the topic-wise plan</div></div>
-        <div style="display:flex;gap:6px">
-          <button id="pyq-view-tracker" onclick="pyqSetView('tracker')" style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--acc);background:#001e2e;color:var(--acc);transition:all .2s">🎯 Tracker</button>
-          <button id="pyq-view-plan" onclick="pyqSetView('plan')" style="padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--navy);color:var(--muted);transition:all .2s">📅 Plan</button>
-        </div>
+        <div><h2>PYQ Practice</h2><div class="sub">Click any topic to expand · log sessions &amp; questions done in one place</div></div>
       </div>
     </div>
-    <!-- Tracker view -->
-    <div id="pyq-tracker-view">
-      <div id="pyq-summary-bar"></div>
-      <div class="pyq-sub-tabs" id="pyq-sub-tabs"></div>
-      <div id="pyq-weak-section"></div>
-      <div id="pyq-chart-section"></div>
-      <div id="pyq-topic-area"></div>
-    </div>
-    <!-- Plan view -->
-    <div id="pyq-plan-view" style="display:none">
-      <div id="pyq-plan-content"></div>
-    </div>
+    <div id="pyq-summary-bar"></div>
+    <div class="pyq-sub-tabs" id="pyq-sub-tabs"></div>
+    <div id="pyq-weak-section"></div>
+    <div id="pyq-chart-section"></div>
+    <div id="pyq-topic-area"></div>
   </div>
 </div>
 </div>
@@ -1625,23 +1614,35 @@ function renderPyqSummaryBar(){
     sub.topics.forEach((topic,ti)=>{
       const t=getPyqTotals(sub.id,ti);
       totalC+=t.correct;totalW+=t.wrong;
-      if(t.total>=topic.qs)topicsAttempted++;
+      if(t.total>0)topicsAttempted++;
       if(confClass(t.pct)==='strong')topicsStrong++;
     });
   });
   const totalTopics=PYQ_SUBJECTS.reduce((t,s)=>t+s.topics.length,0);
+  /* plan progress */
+  loadPyqPlan();
+  let planDoneQs=0,planTotalQs=0,planDoneTopics=0;
+  PYQ_PLAN_TOPICS.forEach(function(sub){sub.topics.forEach(function(t){
+    planTotalQs+=t.qs;
+    var d=getPyqPlanTopicDone(sub.subId,t.ti);
+    planDoneQs+=Math.min(d,t.qs);if(d>=t.qs)planDoneTopics++;
+  });});
+  const planPct=planTotalQs?Math.round(planDoneQs/planTotalQs*100):0;
   const overallPct=totalC+totalW>0?Math.round(totalC/(totalC+totalW)*100):null;
   const pctCol=overallPct===null?'var(--muted)':overallPct>=75?'#4ade80':overallPct>=50?'#fbbf24':'#ef4444';
+  const activeSub=PYQ_SUBJECTS.find(s=>s.id===pyqActiveSubId);
   el.innerHTML=`<div class="pyq-summary-bar">
     <div class="pyq-summary-item"><div class="pyq-summary-label">Overall Accuracy</div><div class="pyq-summary-val" style="color:${pctCol}">${overallPct!==null?overallPct+'%':'—'}</div></div>
     <div style="width:1px;background:var(--border);align-self:stretch;margin:0 4px;"></div>
     <div class="pyq-summary-item"><div class="pyq-summary-label">Correct</div><div class="pyq-summary-val" style="color:#4ade80">${totalC}</div></div>
     <div class="pyq-summary-item"><div class="pyq-summary-label">Wrong</div><div class="pyq-summary-val" style="color:#ef4444">${totalW}</div></div>
-    <div class="pyq-summary-item"><div class="pyq-summary-label">Total Attempted</div><div class="pyq-summary-val" style="color:var(--text)">${totalC+totalW}</div></div>
     <div style="width:1px;background:var(--border);align-self:stretch;margin:0 4px;"></div>
-    <div class="pyq-summary-item"><div class="pyq-summary-label">Topics Done</div><div class="pyq-summary-val" style="color:var(--acc)">${topicsAttempted}<span style="font-size:13px;color:var(--faint);font-weight:400">/${totalTopics}</span></div></div>
-    <div class="pyq-summary-item"><div class="pyq-summary-label">Topics Strong</div><div class="pyq-summary-val" style="color:#4ade80">${topicsStrong}</div></div>
-    <a href="${PYQ_SUBJECTS.find(s=>s.id===pyqActiveSubId)?.url||'https://hub.prepfusion.in'}" target="_blank" class="pyq-open-link" style="margin-left:auto;">🔗 Open PrepFusion</a>
+    <div class="pyq-summary-item"><div class="pyq-summary-label">Sessions</div><div class="pyq-summary-val" style="color:var(--acc)">${topicsAttempted}<span style="font-size:13px;color:var(--faint);font-weight:400">/${totalTopics}</span></div></div>
+    <div class="pyq-summary-item"><div class="pyq-summary-label">Strong</div><div class="pyq-summary-val" style="color:#4ade80">${topicsStrong}</div></div>
+    <div style="width:1px;background:var(--border);align-self:stretch;margin:0 4px;"></div>
+    <div class="pyq-summary-item"><div class="pyq-summary-label">Qs Done</div><div class="pyq-summary-val" style="color:#fbbf24">${planDoneQs}<span style="font-size:13px;color:var(--faint);font-weight:400">/${planTotalQs}</span></div></div>
+    <div class="pyq-summary-item"><div class="pyq-summary-label">Plan %</div><div class="pyq-summary-val" style="color:#fbbf24">${planPct}%</div></div>
+    ${activeSub?`<a href="${activeSub.url}" target="_blank" class="pyq-open-link" style="margin-left:auto;">🔗 Open PrepFusion</a>`:''}
   </div>`;
 }
 
@@ -1659,70 +1660,158 @@ function pyqSelectSub(id){
   if(pyqChartTopic){pyqChartTopic.destroy();pyqChartTopic=null;}
   if(pyqChart){pyqChart.destroy();pyqChart=null;}
   renderPyqSubTabs();
-  renderPyqTopics();
   renderPyqWeakSection();
   renderPyqChart();
+  renderPyqTopics();
   renderPyqSummaryBar();
 }
 
 function renderPyqTopics(){
   const el=$('pyq-topic-area');if(!el)return;
-  const sub=PYQ_SUBJECTS.find(s=>s.id===pyqActiveSubId);if(!sub)return;
+  loadPyqPlan();
+  const sub=PYQ_SUBJECTS.find(s=>s.id===pyqActiveSubId);if(!sub){el.innerHTML='';return;}
   const subTot=getPyqSubTotals(sub.id);
-  const subPctCol=subTot.pct===null?'var(--muted)':subTot.pct>=75?'#4ade80':subTot.pct>=50?'#fbbf24':'#ef4444';
+  const subPctCol=subTot.pct===null?'var(--acc)':subTot.pct>=75?'#4ade80':subTot.pct>=50?'#fbbf24':'#ef4444';
 
   let html=`<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
-    <div>
-      <div style="display:flex;align-items:center;gap:8px;"><div style="font-size:15px;font-weight:700;">${esc(sub.name)}</div>${sub.pyqMonth?`<span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:10px;background:#001e2e;color:#00d4ff;border:1px solid #00d4ff44;">🎯 ${sub.pyqMonth}</span>`:''}</div>
-      <div style="font-size:11px;color:var(--muted);margin-top:2px;">${sub.topics.length} topics · ${sub.total} total GATE questions</div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="font-size:15px;font-weight:700;">${esc(sub.name)}</div>
+      ${sub.pyqMonth?`<span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:10px;background:#001e2e;color:#00d4ff;border:1px solid #00d4ff44;">🎯 ${sub.pyqMonth}</span>`:''}
     </div>
-    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-      <div style="text-align:center;"><div style="font-size:10px;color:var(--faint);font-weight:700;text-transform:uppercase;letter-spacing:.5px;">Subject Accuracy</div><div style="font-size:22px;font-weight:800;color:${subPctCol}">${subTot.pct!==null?subTot.pct+'%':'—'}</div><div style="font-size:10px;color:var(--faint);">${subTot.correct}✓ &nbsp; ${subTot.wrong}✗</div></div>
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <div style="text-align:right;">
+        <div style="font-size:10px;color:var(--faint);font-weight:700;text-transform:uppercase;letter-spacing:.5px;">Subject Accuracy</div>
+        <div style="font-size:20px;font-weight:800;color:${subPctCol}">${subTot.pct!==null?subTot.pct+'%':'—'}</div>
+        <div style="font-size:10px;color:var(--faint);">${subTot.correct}✓ &nbsp; ${subTot.wrong}✗</div>
+      </div>
       <a href="${sub.url}" target="_blank" class="pyq-open-link">🔗 Open Topic List</a>
     </div>
   </div>`;
 
   html+=renderPyqQuizCard(sub);
-  html+=`<div class="pyq-topic-grid">`;
+
+  /* ── unified topic list ── */
+  html+='<div style="display:flex;flex-direction:column;gap:6px;">';
   sub.topics.forEach((topic,ti)=>{
     const totals=getPyqTotals(sub.id,ti);
     const sessions=getPyqTopic(sub.id,ti);
     const cc=confClass(totals.pct);
     const lbl=confLabel(totals.pct);
-    const pctBar=totals.pct!==null?totals.pct:0;
     const barCol=cc==='strong'?'#4ade80':cc==='moderate'?'#fbbf24':cc==='weak'?'#ef4444':'var(--border)';
+    const pctBar=totals.pct!==null?totals.pct:0;
 
+    /* plan data for this topic */
+    const planDone=getPyqPlanTopicDone(sub.id,ti);
+    const planSlots=PYQ_PLAN.filter(function(s){return s.subId===sub.id&&s.ti===ti;});
+    const schedDate=planSlots.length>0?planSlots[0].date:'';
+    const planPct=topic.qs?Math.round(Math.min(planDone,topic.qs)/topic.qs*100):0;
+    const planCol=planDone>=topic.qs?'#4ade80':planDone>0?'#fbbf24':'var(--muted)';
+    const planStatus=planDone>=topic.qs?'✓ Done':planDone>0?planDone+'q done':'0q done';
+
+    const cardId=`pyq-card-${sub.id}-${ti}`;
     const histId=`pyq-hist-${sub.id}-${ti}`;
     const inputCId=`pyq-c-${sub.id}-${ti}`;
     const inputWId=`pyq-w-${sub.id}-${ti}`;
 
-    const histRows=sessions.length===0?`<div style="font-size:11px;color:var(--faint);padding:4px 0;">No sessions yet</div>`
-      :sessions.map((s,si)=>{const p=s.correct+s.wrong>0?Math.round(s.correct/(s.correct+s.wrong)*100):0;const pc=p>=75?'#4ade80':p>=50?'#fbbf24':'#ef4444';return`<div class="pyq-hist-row"><span class="pyq-hist-date">${fmt(s.date)}</span><span class="pyq-hist-c">${s.correct}✓</span><span class="pyq-hist-w">${s.wrong}✗</span><span class="pyq-hist-pct" style="color:${pc}">${p}%</span><span style="font-size:10px;color:var(--faint);cursor:pointer;" onclick="pyqDeleteSession(${sub.id},${ti},${si})" title="Delete this session">✕</span></div>`;}).join('');
+    const histRows=sessions.length===0
+      ?`<div style="font-size:11px;color:var(--faint);padding:4px 0;">No sessions yet</div>`
+      :sessions.map((s,si)=>{
+          const p=s.correct+s.wrong>0?Math.round(s.correct/(s.correct+s.wrong)*100):0;
+          const pc=p>=75?'#4ade80':p>=50?'#fbbf24':'#ef4444';
+          return`<div class="pyq-hist-row"><span class="pyq-hist-date">${fmt(s.date)}</span><span class="pyq-hist-c">${s.correct}✓</span><span class="pyq-hist-w">${s.wrong}✗</span><span class="pyq-hist-pct" style="color:${pc}">${p}%</span><span style="font-size:10px;color:var(--faint);cursor:pointer;margin-left:4px;" onclick="pyqDeleteSession(${sub.id},${ti},${si})" title="Delete">✕</span></div>`;
+        }).join('');
 
-    html+=`<div class="pyq-topic-card conf-${cc}">
-      <div class="pyq-topic-name">${esc(topic.name)}</div>
-      <div class="pyq-topic-meta">${topic.qs} GATE questions · ${sessions.length} session${sessions.length!==1?'s':''}</div>
-      <span class="pyq-conf-badge ${lbl.cls}">${lbl.txt}${totals.pct!==null?' · '+totals.pct+'%':''}</span>
-      ${totals.total>0?`<div class="pyq-pbar-wrap"><div class="pyq-pbar-bg"><div class="pyq-pbar-fill" style="width:${pctBar}%;background:${barCol}"></div></div></div>
-      <div class="pyq-totals"><div class="pyq-tot-item">Correct: <b style="color:#4ade80">${totals.correct}</b></div><div class="pyq-tot-item">Wrong: <b style="color:#ef4444">${totals.wrong}</b></div><div class="pyq-tot-item">Total: <b>${totals.total}</b></div></div>`:''}
-      <div class="pyq-log-row">
-        <span class="pyq-log-lbl">Log new:</span>
-        <input type="number" class="pyq-num-inp" id="${inputCId}" min="0" placeholder="✓" title="Correct answers" style="border-color:#4ade8044;">
-        <input type="number" class="pyq-num-inp" id="${inputWId}" min="0" placeholder="✗" title="Wrong answers" style="border-color:#ef444444;">
-        <button class="pyq-log-btn" onclick="pyqSubmit(${sub.id},${ti},'${inputCId}','${inputWId}')">Log Session</button>
+    /* accent bar color: left border based on accuracy, none if no sessions */
+    const borderLeft=totals.pct===null?'var(--border)':barCol;
+
+    html+=`<div style="background:var(--card);border:1px solid var(--border);border-left:3px solid ${borderLeft};border-radius:9px;overflow:hidden;">
+      <!-- collapsed header — click to expand -->
+      <div style="padding:11px 14px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;" onclick="pyqToggleTopic('${cardId}')">
+        <div style="flex:1;min-width:160px;">
+          <div style="font-size:13px;font-weight:700;color:var(--text);">${esc(topic.name)}</div>
+          <div style="font-size:10px;color:var(--faint);margin-top:2px;">${topic.qs}q total${schedDate?' · 📅 '+fmt(schedDate):''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap;">
+          <!-- accuracy badge -->
+          <span class="pyq-conf-badge ${lbl.cls}" style="margin:0;">${lbl.txt}${totals.pct!==null?' · '+totals.pct+'%':''}</span>
+          <!-- questions done mini -->
+          <div style="text-align:right;min-width:56px;">
+            <div style="font-size:10px;color:var(--faint);font-weight:700;text-transform:uppercase;letter-spacing:.4px;">Qs done</div>
+            <div style="font-size:13px;font-weight:800;color:${planCol};">${planDone}<span style="font-size:10px;color:var(--faint);font-weight:400;">/${topic.qs}</span></div>
+          </div>
+          <!-- mini progress bar -->
+          <div style="width:44px;height:36px;display:flex;flex-direction:column;justify-content:center;gap:3px;">
+            <div style="height:3px;background:var(--navy);border-radius:2px;overflow:hidden;"><div style="height:100%;width:${pctBar}%;background:${barCol};border-radius:2px;"></div></div>
+            <div style="height:3px;background:var(--navy);border-radius:2px;overflow:hidden;"><div style="height:100%;width:${planPct}%;background:${planCol};border-radius:2px;"></div></div>
+          </div>
+          <span id="pyq-arr-${sub.id}-${ti}" style="font-size:11px;color:var(--muted);width:14px;flex-shrink:0;">▸</span>
+        </div>
       </div>
-      ${sessions.length>0?`<button class="pyq-history-btn" onclick="pyqToggleHist('${histId}')">▾ history (${sessions.length})</button>
-      <div class="pyq-history" id="${histId}">${histRows}</div>`:''}
+      <!-- expanded body -->
+      <div id="${cardId}" style="display:none;border-top:1px solid var(--border);padding:14px 16px;background:var(--navy);">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+          <!-- Session logger -->
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px;">🎯 Log New Session</div>
+            ${totals.total>0?`<div style="display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap;">
+              <div><div style="font-size:9px;color:var(--faint);">Correct</div><div style="font-size:18px;font-weight:800;color:#4ade80;">${totals.correct}</div></div>
+              <div><div style="font-size:9px;color:var(--faint);">Wrong</div><div style="font-size:18px;font-weight:800;color:#ef4444;">${totals.wrong}</div></div>
+              <div><div style="font-size:9px;color:var(--faint);">Accuracy</div><div style="font-size:18px;font-weight:800;color:${barCol};">${totals.pct}%</div></div>
+            </div>`:''}
+            <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;">
+              <input type="number" class="pyq-num-inp" id="${inputCId}" min="0" placeholder="✓ correct" style="border-color:#4ade8044;width:88px;">
+              <input type="number" class="pyq-num-inp" id="${inputWId}" min="0" placeholder="✗ wrong" style="border-color:#ef444444;width:88px;">
+              <button class="pyq-log-btn" onclick="pyqSubmit(${sub.id},${ti},'${inputCId}','${inputWId}')">Log Session</button>
+            </div>
+            ${sessions.length>0?`<button class="pyq-history-btn" style="margin-top:8px;" onclick="pyqToggleHist('${histId}')">▾ history (${sessions.length})</button>
+            <div class="pyq-history" id="${histId}">${histRows}</div>`:''}
+          </div>
+          <!-- Questions done logger -->
+          <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:10px;">📋 Questions Done (Plan)</div>
+            <div style="font-size:22px;font-weight:800;color:${planCol};margin-bottom:4px;">${planDone}<span style="font-size:13px;color:var(--faint);font-weight:400;"> / ${topic.qs}q</span></div>
+            <div style="height:5px;background:var(--navy);border-radius:3px;overflow:hidden;margin-bottom:10px;"><div style="height:100%;width:${planPct}%;background:${planCol};border-radius:3px;"></div></div>
+            ${schedDate?`<div style="font-size:10px;color:var(--faint);margin-bottom:8px;">📅 Scheduled: ${fmt(schedDate)}${planSlots.length>1?' – '+fmt(planSlots[planSlots.length-1].date)+' ('+planSlots.length+' sessions)':''}</div>`:''}
+            <div style="display:flex;align-items:center;gap:6px;">
+              <button onclick="setPyqPlanTopicDone(${sub.id},${ti},getPyqPlanTopicDone(${sub.id},${ti})-5)" style="background:var(--navy);border:1px solid var(--border);color:var(--muted);border-radius:5px;width:28px;height:28px;font-size:12px;cursor:pointer;font-weight:700;">−</button>
+              <input type="number" min="0" max="${topic.qs}" value="${planDone||''}" placeholder="0" onchange="setPyqPlanTopicDone(${sub.id},${ti},this.value)" style="width:60px;text-align:center;font-weight:700;font-size:14px;color:${planCol};background:var(--navy);border:1px solid var(--border);border-radius:6px;padding:4px 6px;">
+              <button onclick="setPyqPlanTopicDone(${sub.id},${ti},getPyqPlanTopicDone(${sub.id},${ti})+5)" style="background:var(--acc);border:none;color:var(--navy);border-radius:5px;width:28px;height:28px;font-size:12px;font-weight:700;cursor:pointer;">+</button>
+              <span style="font-size:10px;color:var(--faint);">/ ${topic.qs}q</span>
+              ${planDone>=topic.qs?'<span style="font-size:11px;color:#4ade80;font-weight:700;">✓ Complete!</span>':''}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>`;
   });
-  html+=`</div>`;
+  html+='</div>';
   el.innerHTML=html;
+}
+
+function pyqToggleTopic(id){
+  var el=document.getElementById(id);if(!el)return;
+  var open=el.style.display!=='none';
+  el.style.display=open?'none':'block';
+  /* find arrow by id pattern: pyq-card-X-Y → pyq-arr-X-Y */
+  var arrId='pyq-arr-'+id.replace('pyq-card-','');
+  var arr=document.getElementById(arrId);
+  if(arr)arr.textContent=open?'▸':'▾';
 }
 
 function pyqSubmit(subId,ti,cId,wId){
   const c=parseInt($(cId)?.value)||0;
   const w=parseInt($(wId)?.value)||0;
   if(c===0&&w===0){$(cId).focus();return;}
+  /* auto-update plan questions-done by adding c+w to existing count */
+  const sub=PYQ_SUBJECTS.find(s=>s.id===subId);
+  const maxQs=sub?sub.topics[ti]?.qs||999:999;
+  const curDone=getPyqPlanTopicDone(subId,ti);
+  const newDone=Math.min(curDone+(c+w),maxQs);
+  if(newDone>curDone){
+    const k=pyqPlanTopicKey(subId,ti);
+    pyqPlanData[k]=newDone;
+    savePyqPlan();
+  }
   pyqLogSession(subId,ti,c,w);
   if($(cId))$(cId).value='';
   if($(wId))$(wId).value='';
@@ -2054,20 +2143,9 @@ function setPyqPlanActual(date,subId,ti,part,val){
 }
 
 function pyqSetView(v){
+  /* Both sections are always visible — no toggle needed */
   pyqPlanView=v;
-  const tracker=$('pyq-tracker-view'), plan=$('pyq-plan-view');
-  const btnT=$('pyq-view-tracker'), btnP=$('pyq-view-plan');
-  if(tracker)tracker.style.display=v==='tracker'?'':'none';
-  if(plan)plan.style.display=v==='plan'?'':'none';
-  if(btnT){
-    if(v==='tracker'){btnT.style.borderColor='var(--acc)';btnT.style.background='#001e2e';btnT.style.color='var(--acc)';}
-    else{btnT.style.borderColor='var(--border)';btnT.style.background='var(--navy)';btnT.style.color='var(--muted)';}
-  }
-  if(btnP){
-    if(v==='plan'){btnP.style.borderColor='var(--acc)';btnP.style.background='#001e2e';btnP.style.color='var(--acc)';}
-    else{btnP.style.borderColor='var(--border)';btnP.style.background='var(--navy)';btnP.style.color='var(--muted)';}
-  }
-  if(v==='plan')renderPyqPlan();
+  renderPyqPlan();
 }
 
 const SUB_COLORS={1:'#00d4ff',2:'#a78bfa',3:'#34d399',4:'#fbbf24',5:'#f472b6',6:'#fb923c',7:'#60a5fa',8:'#4ade80',9:'#e879f9',10:'#f87171'};
@@ -2079,7 +2157,9 @@ function setPyqPlanTopicDone(subId,ti,val){
   const k=pyqPlanTopicKey(subId,ti);
   const v=Math.max(0,+val||0);
   if(v===0)delete pyqPlanData[k]; else pyqPlanData[k]=v;
-  savePyqPlan(); renderPyqPlan();
+  savePyqPlan();
+  renderPyqTopics();
+  renderPyqSummaryBar();
 }
 function pyqPlanToggle(id){
   var el=document.getElementById(id); if(!el)return;
@@ -2158,14 +2238,12 @@ function renderPyqPlan(){
 }
 
 function renderPyq(){
-  loadPyq();
+  loadPyq();loadPyqPlan();
   renderPyqSummaryBar();
   renderPyqSubTabs();
   renderPyqWeakSection();
   renderPyqChart();
   renderPyqTopics();
-  // Restore correct view pane visibility
-  pyqSetView(pyqPlanView||'tracker');
 }
 const REV1_START='2026-09-09';
 function applyTabLock(wrapId,isLocked,startLabel){
@@ -2305,268 +2383,6 @@ function loadAll(){
 }
 function loadRev1(){rev1Done=lsGet('gate-rev1-done')||{};rev1Notes=lsGet('gate-rev1-notes')||{};rev1Pages=lsGet('gate-rev1-pages')||{};snPages=lsGet('gate-sn-pages')||{};snNotes=lsGet('gate-sn-notes')||{};}
 function loadMocks(){mockData=lsGet('gate-mocks')||{};subTests=lsGet('gate-sub-tests')||{};}
-
-/* ── SHORT NOTES HELPERS ── */
-function snPagesDone(id){return Object.values(snPages[id]||{}).reduce((t,v)=>t+(+v||0),0);}
-function snPagesOn(id,date){return+((snPages[id]||{})[date]||0);}
-function snPageTarget(id){
-  var slot=REV1_SCHEDULE[id];var tot=subPages(id);if(!slot||!tot)return 0;
-  var done=snPagesDone(id);var left=Math.max(0,tot-done);
-  var dl;if(TODAY<slot.start)dl=slot.days;else if(TODAY>slot.end)dl=1;else dl=Math.max(1,diffDays(TODAY,slot.end)+1);
-  return Math.ceil(left/dl);
-}
-function setSnPages(id,date,val){
-  var v=Math.max(0,Math.round(+val||0));
-  if(!snPages[id])snPages[id]={};
-  if(v===0)delete snPages[id][date];else snPages[id][date]=v;
-  lsSet('gate-sn-pages',snPages);showSaveToast();renderRevision1();
-}
-function stepSnPages(id,delta){setSnPages(id,rev1LogDate,snPagesOn(id,rev1LogDate)+delta);}
-
-/* ── SUB-TEST CRUD (4 tests per subject: s1,s2,m1,m2) ── */
-function getSubTest(subId,key){return((subTests[subId]||{})[key])||{done:false,date:'',score:'',notes:''};}
-function updSubTest(subId,key,field,val){
-  if(!subTests[subId])subTests[subId]={};
-  if(!subTests[subId][key])subTests[subId][key]={done:false,date:'',score:'',notes:''};
-  subTests[subId][key][field]=val;
-  lsSet('gate-sub-tests',subTests);showSaveToast();
-}
-function toggleSubTest(subId,key){
-  if(!subTests[subId])subTests[subId]={};
-  if(!subTests[subId][key])subTests[subId][key]={done:false,date:'',score:'',notes:''};
-  subTests[subId][key].done=!subTests[subId][key].done;
-  lsSet('gate-sub-tests',subTests);showSaveToast();renderRevision2();checkMilestones();
-}
-
-/* ── MOCK SCHEDULE (5 full mocks Jan 3–31 2027) ── */
-function buildMockSchedule(){
-  return[
-    {date:'2027-01-03',label:'Mock 1'},
-    {date:'2027-01-10',label:'Mock 2'},
-    {date:'2027-01-17',label:'Mock 3'},
-    {date:'2027-01-24',label:'Mock 4'},
-    {date:'2027-01-31',label:'Mock 5'},
-  ];
-}
-function mockRec(date){return(mockData[date])||{done:false,score:'',notes:''};}
-function updMock(date,field,val){
-  if(!mockData[date])mockData[date]={done:false,score:'',notes:''};
-  mockData[date][field]=val;lsSet('gate-mocks',mockData);showSaveToast();
-}
-function toggleMock(date){
-  if(!mockData[date])mockData[date]={done:false,score:'',notes:''};
-  mockData[date].done=!mockData[date].done;
-  lsSet('gate-mocks',mockData);showSaveToast();renderRevision2();checkMilestones();
-}
-
-/* ── REVISION 2 & MOCKS RENDERER ── */
-const REV2_START='2027-01-01';
-function renderRevision2(){
-  loadMocks();
-  var el=$('sec-rev2');if(!el)return;
-  var locked=TODAY<REV2_START;
-  var mockSched=buildMockSchedule();
-  var mockScores=mockSched.map(function(m){var r=mockRec(m.date);return r.score!==''&&!isNaN(+r.score)?+r.score:null;}).filter(function(s){return s!==null;});
-  var avgScore=mockScores.length?Math.round(mockScores.reduce(function(a,b){return a+b;},0)/mockScores.length):null;
-  var bestScore=mockScores.length?Math.max.apply(null,mockScores):null;
-  var TEST_KEYS=['s1','s2','m1','m2'];
-  var testDone=0,testTotal=subjects.length*4;
-  subjects.forEach(function(s){TEST_KEYS.forEach(function(k){if(getSubTest(s.id,k).done)testDone++;});});
-  var mocksDone=mockSched.filter(function(m){return mockRec(m.date).done;}).length;
-  function scCol(sc){return sc===null?'var(--muted)':sc>=75?'#4ade80':sc>=50?'#fbbf24':'#ef4444';}
-
-  /* ── test row builder ── */
-  function testRow(subId,key,label,color){
-    var t=getSubTest(subId,key);
-    var sc=t.score!==''?+t.score:null;
-    return '<div style="display:grid;grid-template-columns:130px 1fr 110px 80px 86px;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--border)">'
-      +'<div style="font-size:12px;font-weight:700;color:'+color+'">'+label+'</div>'
-      +'<input class="inp-sm" type="text" value="'+esc(t.notes||'')+'" placeholder="Notes / weak areas" oninput="updSubTest('+subId+',\''+key+'\',\'notes\',this.value)" style="width:100%;">'
-      +'<input class="inp-sm" type="date" value="'+(t.date||'')+'" onchange="updSubTest('+subId+',\''+key+'\',\'date\',this.value)" style="width:100%;">'
-      +'<input class="inp-sm" type="number" min="0" max="100" value="'+(t.score||'')+'" placeholder="Score %" oninput="updSubTest('+subId+',\''+key+'\',\'score\',+this.value)" style="width:100%;'+(sc!==null?'color:'+scCol(sc):'')+'">'
-      +'<button class="btn-sm" onclick="toggleSubTest('+subId+',\''+key+'\')" style="'+(t.done?'color:#4ade80;border-color:#4ade8044':'')+'">'+(t.done?'✓ Done':'Mark done')+'</button>'
-    +'</div>';
-  }
-
-  /* ── per-subject test cards ── */
-  var testHtml=subjects.map(function(s){
-    var doneCount=TEST_KEYS.filter(function(k){return getSubTest(s.id,k).done;}).length;
-    var allDone=doneCount===4;
-    var scores=TEST_KEYS.map(function(k){return getSubTest(s.id,k);}).filter(function(t){return t.score!=='';}).map(function(t){return+t.score;});
-    var avg=scores.length?Math.round(scores.reduce(function(a,b){return a+b;},0)/scores.length):null;
-    var dots=TEST_KEYS.map(function(k){return '<div style="width:9px;height:9px;border-radius:50%;background:'+(getSubTest(s.id,k).done?'#4ade80':'var(--border)')+'" title="'+(({s1:'Subject T1',s2:'Subject T2',m1:'Mixed T1',m2:'Mixed T2'})[k])+'"></div>';}).join('');
-    return '<div class="card" style="margin-bottom:10px;padding:14px 16px;'+(allDone?'border-color:#4ade8044;':'')+'">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px;">'
-        +'<div>'
-          +'<div style="font-size:13px;font-weight:700;">'+esc(s.name)+'</div>'
-          +'<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+doneCount+'/4 tests done'+(avg!==null?' &middot; avg <b style="color:'+scCol(avg)+'">'+avg+'%</b>':'')+'</div>'
-        +'</div>'
-        +'<div style="display:flex;gap:4px;align-items:center;">'+dots+'</div>'
-      +'</div>'
-      +'<div style="display:grid;grid-template-columns:130px 1fr 110px 80px 86px;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);">'
-        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);">Test</div>'
-        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);">Notes / Weak Areas</div>'
-        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);">Date</div>'
-        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);">Score %</div>'
-        +'<div></div>'
-      +'</div>'
-      +testRow(s.id,'s1','📘 Subject T1','#00d4ff')
-      +testRow(s.id,'s2','📘 Subject T2','#00d4ff')
-      +testRow(s.id,'m1','🔀 Mixed T1','#c084fc')
-      +testRow(s.id,'m2','🔀 Mixed T2','#c084fc')
-    +'</div>';
-  }).join('');
-
-  /* ── full mock cards ── */
-  var mockCardsHtml=mockSched.map(function(m){
-    var r=mockRec(m.date);var isToday=TODAY===m.date;
-    var sc=r.score!==''&&!isNaN(+r.score)?+r.score:null;
-    var col=scCol(sc);
-    return '<div class="mock-card '+(r.done?'done-mock':isToday?'active-mock':'')+'">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px;">'
-        +'<div>'
-          +'<div style="font-size:13px;font-weight:700;">'+esc(m.label)+'</div>'
-          +'<div style="font-size:11px;color:var(--muted);">'+fmtFull(m.date)+(isToday?' &middot; <span style="color:#fbbf24;font-weight:700;">TODAY</span>':'')+'</div>'
-        +'</div>'
-        +(sc!==null?'<div style="font-size:22px;font-weight:800;color:'+col+'">'+sc+'%</div>':'')
-      +'</div>'
-      +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
-        +'<input class="inp-sm" type="number" min="0" max="100" value="'+(r.score||'')+'" placeholder="Score %" oninput="updMock(\''+m.date+'\',\'score\',this.value)" style="width:80px;'+(sc!==null?'color:'+col:'')+'">'
-        +'<input class="inp-sm" type="text" value="'+esc(r.notes||'')+'" placeholder="Notes..." oninput="updMock(\''+m.date+'\',\'notes\',this.value)" style="flex:1;min-width:120px;">'
-        +'<button class="btn-sm" onclick="toggleMock(\''+m.date+'\')" style="'+(r.done?'color:#4ade80;border-color:#4ade8044':'')+'">'+(r.done?'✓ Done':'Mark done')+'</button>'
-      +'</div>'
-    +'</div>';
-  }).join('');
-
-  var lockedBanner=locked
-    ?'<div style="background:#1a1200;border:1px solid #fbbf2444;border-radius:8px;padding:10px 16px;margin-bottom:16px;font-size:12px;font-weight:700;color:#fbbf24;">🔒 Mock Tests unlock Jan 1, 2027. Use this time to complete all subject tests.</div>'
-    :'';
-
-  el.innerHTML='<div class="section">'
-    +'<div class="sec-hdr"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;width:100%"><div><h2>Rev 2 &amp; Mocks</h2><div class="sub">4 tests per subject (2 subject + 2 mixed) &middot; 5 full mocks Jan 2027</div></div></div></div>'
-    +'<div class="g4" style="margin-bottom:16px;">'
-      +'<div class="hcard" style="border:1px solid #00d4ff22;"><div class="hlbl">Tests Done</div><div class="hval" style="color:#00d4ff;">'+testDone+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+testTotal+'</span></div><div class="hsub">4 per subject (2S + 2M)</div></div>'
-      +'<div class="hcard" style="border:1px solid #4ade8022;"><div class="hlbl">Subjects Full</div><div class="hval" style="color:#4ade80;">'+subjects.filter(function(s){return TEST_KEYS.every(function(k){return getSubTest(s.id,k).done;});}).length+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+ subjects.length+'</span></div><div class="hsub">all 4 tests cleared</div></div>'
-      +'<div class="hcard" style="border:1px solid #fbbf2422;"><div class="hlbl">Mocks Done</div><div class="hval" style="color:#fbbf24;">'+mocksDone+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/5</span></div></div>'
-      +'<div class="hcard" style="border:1px solid '+(avgScore!==null?'#4ade8022':'var(--border)')+'"><div class="hlbl">Mock Avg</div><div class="hval" style="color:'+(avgScore!==null?scCol(avgScore):'var(--muted)')+';">'+(avgScore!==null?avgScore+'%':'—')+'</div><div class="hsub">'+(bestScore!==null?'Best: '+bestScore+'%':'No mocks yet')+'</div></div>'
-    +'</div>'
-    /* Test Tracker sub-section */
-    +'<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border);">📚 Subject Test Tracker</div>'
-    +testHtml
-    /* Full Mocks sub-section */
-    +'<div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin:24px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--border);">🚀 Full Mock Tests · Jan 2027</div>'
-    +lockedBanner
-    +'<div class="mock-grid">'+mockCardsHtml+'</div>'
-  +'</div>';
-}
-
-/* ── DASHBOARD THREE-CARD ROW ── */
-function dbThreeCards(activeSub,hDone,vDone,hPct,vPct,dLeft,subCol,
-  r1ActiveSub,r1Slot,r1TodayPg,r1Target,r1PgsDone,r1TotPg,r1PgPct,r1Col2,
-  pyqMonthSubs,pyqMonthSubNames,pyqMonthAcc,pyqMonthCol,pyqMonthC,pyqMonthW,pyqPendingNames){
-
-  var asLk=SUBJECT_LINKS[activeSub.id]||{};
-  var asYtUrl=asLk.yt||asLk.yt_a||asLk.yt_d||asLk.yt_m||'';
-
-  /* study card */
-  var studyCard='<div class="db-card" onclick="switchMainTab(\'study\')">'
-    +'<div class="db-card-header"><div class="db-card-icon">📚</div>'
-      +'<div><div class="db-card-title">'+esc(activeSub.name)+'</div>'
-        +'<div class="db-card-sub">'+esc(activeSub.faculty)+' &middot; '+dLeft+'d left</div>'
-      +'</div>'
-    +'</div>'
-    +'<div class="db-stat-row">'
-      +'<div class="db-stat"><div class="db-stat-lbl">Hours</div><div class="db-stat-val" style="color:'+subCol+';">'+hDone.toFixed(1)+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+ activeSub.targetHrs+'h</span></div></div>'
-      +'<div class="db-stat"><div class="db-stat-lbl">Videos</div><div class="db-stat-val" style="color:var(--acc);">'+vDone+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+activeSub.videos+'</span></div></div>'
-    +'</div>'
-    +'<div class="db-pbar"><div class="db-pbar-fill" style="width:'+hPct+'%;background:'+subCol+';"></div></div>'
-  +'</div>';
-
-  /* rev1 card */
-  var rev1Card='<div class="db-card" onclick="switchMainTab(\'rev1\')">'
-    +'<div class="db-card-header"><div class="db-card-icon">📖</div>'
-      +'<div><div class="db-card-title">'+(r1ActiveSub?esc(r1ActiveSub.name):'Revision 1')+'</div>'
-        +'<div class="db-card-sub">'+(r1ActiveSub?(fmtFull(r1Slot.start)+' – '+fmtFull(r1Slot.end)):'All done or not started')+'</div>'
-      +'</div>'
-    +'</div>'
-    +'<div class="db-stat-row">'
-      +'<div class="db-stat"><div class="db-stat-lbl">Pages Done</div><div class="db-stat-val" style="color:'+r1Col2+';">'+r1PgsDone+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+(r1TotPg||'—')+'</span></div></div>'
-      +'<div class="db-stat"><div class="db-stat-lbl">Today</div><div class="db-stat-val" style="color:'+(r1TodayPg>0?'#4ade80':'var(--muted)')+';">'+r1TodayPg+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+r1Target+'</span></div></div>'
-    +'</div>'
-    +(r1TotPg?'<div class="db-pbar"><div class="db-pbar-fill" style="width:'+r1PgPct+'%;background:'+r1Col2+';"></div></div>':'')
-  +'</div>';
-
-  /* pyq card */
-  var pyqCard='<div class="db-card" onclick="switchMainTab(\'pyq\')">'
-    +'<div class="db-card-header"><div class="db-card-icon">🎯</div>'
-      +'<div><div class="db-card-title">PYQ Practice</div>'
-        +'<div class="db-card-sub">'+(pyqMonthSubs.length>0?pyqMonthSubNames.join(', '):'No sessions this month')+'</div>'
-      +'</div>'
-    +'</div>'
-    +'<div class="db-stat-row">'
-      +'<div class="db-stat"><div class="db-stat-lbl">This Month Acc</div><div class="db-stat-val" style="color:'+pyqMonthCol+';">'+(pyqMonthAcc!==null?pyqMonthAcc+'%':'—')+'</div></div>'
-      +'<div class="db-stat"><div class="db-stat-lbl">Correct / Wrong</div><div class="db-stat-val" style="font-size:14px;"><span style="color:#4ade80;">'+pyqMonthC+'</span> / <span style="color:#ef4444;">'+pyqMonthW+'</span></div></div>'
-    +'</div>'
-    +(pyqPendingNames.length>0?'<div class="db-tag-row">'+'<div class="db-tag amber">⚠ Pending: '+pyqPendingNames.join(', ')+'</div>'+'</div>':'')
-  +'</div>';
-
-  return '<div class="db-section-hdr" style="margin-bottom:10px;">📊 Active Progress</div>'
-    +'<div class="db-grid">'+studyCard+rev1Card+pyqCard+'</div>';
-}
-
-/* ── EXPORT / IMPORT ── */
-function exportData(){
-  var data={subjects:subjects,daily:daily,settings:settings,milestones:[...earnedMilestones],
-    subTests:subTests,rev1Done:rev1Done,rev1Notes:rev1Notes,rev1Pages:rev1Pages,
-    snPages:snPages,snNotes:snNotes,mockData:mockData,
-    pyqData:pyqData,pyqQuizData:pyqQuizData,pyqPlanData:pyqPlanData,
-    sampleMocks:sampleMocks,discData:discData};
-  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download='gate2027-backup-'+TODAY+'.json';a.click();
-}
-function importData(){
-  var inp=document.createElement('input');inp.type='file';inp.accept='.json';
-  inp.onchange=function(e){
-    var f=e.target.files[0];if(!f)return;
-    var reader=new FileReader();
-    reader.onload=function(ev){
-      try{
-        var d=JSON.parse(ev.target.result);
-        if(d.subjects)subjects=d.subjects;
-        if(d.daily)daily=d.daily;
-        if(d.settings)settings=d.settings;
-        if(d.milestones)earnedMilestones=new Set(d.milestones);
-        if(d.subTests)subTests=d.subTests;
-        if(d.rev1Done)rev1Done=d.rev1Done;
-        if(d.rev1Notes)rev1Notes=d.rev1Notes;
-        if(d.rev1Pages)rev1Pages=d.rev1Pages;
-        if(d.snPages)snPages=d.snPages;
-        if(d.snNotes)snNotes=d.snNotes;
-        if(d.mockData)mockData=d.mockData;
-        if(d.pyqData)pyqData=d.pyqData;
-        if(d.pyqQuizData)pyqQuizData=d.pyqQuizData;
-        if(d.pyqPlanData)pyqPlanData=d.pyqPlanData;
-        if(d.sampleMocks)sampleMocks=d.sampleMocks;
-        if(d.discData)discData=d.discData;
-        lsSet('gate-subjects',subjects);lsSet('gate-daily',daily);
-        lsSet('gate-settings',settings);lsSet('gate-milestones',[...earnedMilestones]);
-        lsSet('gate-sub-tests',subTests);lsSet('gate-rev1-done',rev1Done);
-        lsSet('gate-rev1-notes',rev1Notes);lsSet('gate-rev1-pages',rev1Pages);
-        lsSet('gate-sn-pages',snPages);lsSet('gate-sn-notes',snNotes);
-        lsSet('gate-mocks',mockData);lsSet('gate-pyq-data',pyqData);
-        lsSet('gate-pyq-quiz',pyqQuizData);lsSet('gate-pyq-plan',pyqPlanData);
-        lsSet('gate-sample-mocks',sampleMocks);lsSet('gate-discipline',discData);
-        renderAll();renderDashboard();renderRevision1();renderRevision2();renderPyq();
-        loadDisc();renderDiscCard();loadSampleMocks();renderSampleMocks();
-        showSaveToast();alert('Import successful!');
-      }catch(err){alert('Import failed: '+err.message);}
-    };
-    reader.readAsText(f);
-  };
-  inp.click();
-}
-
 function saveDay(d,data){daily[d]=data;lsSet('gate-daily',daily);showSaveToast();}
 function saveSubjects(){lsSet('gate-subjects',subjects);showSaveToast();}
 
