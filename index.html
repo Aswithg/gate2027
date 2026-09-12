@@ -3190,10 +3190,10 @@ function saveDisc(){ lsSet('gate-discipline', discData); }
 
 /* ── FIXED DAILY BLOCKS — always present, not stored in plans ── */
 var FIXED_BLOCKS = [
-  { id:'pyq',    start:'06:00', end:'07:00', icon:'🎯', label:'PYQ Practice',           desc:'PYQ practice as per target',            key:'pyq'    },
-  { id:'study',  start:'08:00', end:'12:00', icon:'📚', label:'Study Videos',           desc:'Watch videos as per study schedule',    key:'study'  },
-  { id:'rev1',   start:'15:00', end:'18:00', icon:'📖', label:'Revision 1',             desc:'Revise notes as per Rev1 target',       key:'rev1'   },
-  { id:'notes',  start:'23:00', end:'00:00', icon:'📝', label:'Short Notes Writing',    desc:'Write short notes from todays study',  key:'notes'  },
+  { id:'pyq',   icon:'🎯', label:'PYQ Practice',        desc:'PYQ practice as per target',           key:'pyq'   },
+  { id:'study', icon:'📚', label:'Study Videos',        desc:'Watch videos as per study schedule',   key:'study' },
+  { id:'rev1',  icon:'📖', label:'Revision 1',          desc:'Revise notes as per Rev1 target',      key:'rev1'  },
+  { id:'notes', icon:'📝', label:'Short Notes Writing', desc:'Write short notes from todays study',  key:'notes' },
 ];
 
 /* ── score computation for a given date ── */
@@ -3207,7 +3207,7 @@ function calcDiscScore(date){
   FIXED_BLOCKS.forEach(function(fb){
     var done = !!(log['fb_'+fb.key]);
     var earned = done ? 20 : 0;
-    result.signals.push({ icon:fb.icon, name:fb.label, note:fb.start+' – '+fb.end+' · '+fb.desc, pts:20, earned:earned, auto:false, fixedKey:'fb_'+fb.key });
+    result.signals.push({ icon:fb.icon, name:fb.label, note:fb.desc, pts:20, earned:earned, auto:false, fixedKey:'fb_'+fb.key });
     result.total += earned;
   });
 
@@ -3587,10 +3587,10 @@ function renderDiscCard(){
       +'<div style="background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:14px 18px;text-align:left;max-width:420px;margin:0 auto;">'
         +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">Your Daily Fixed Schedule</div>'
         +'<div style="display:flex;flex-direction:column;gap:7px;font-size:12px;">'
-          +'<div style="display:flex;gap:10px;"><span style="color:var(--acc);font-weight:700;min-width:110px;">06:00 – 07:00</span><span>🎯 PYQ Practice</span></div>'
-          +'<div style="display:flex;gap:10px;"><span style="color:var(--acc);font-weight:700;min-width:110px;">08:00 – 12:00</span><span>📚 Study Videos</span></div>'
-          +'<div style="display:flex;gap:10px;"><span style="color:var(--acc);font-weight:700;min-width:110px;">15:00 – 18:00</span><span>📖 Revision 1</span></div>'
-          +'<div style="display:flex;gap:10px;"><span style="color:var(--acc);font-weight:700;min-width:110px;">23:00 – 00:00</span><span>📝 Short Notes Writing</span></div>'
+          +'<div style="display:flex;gap:8px;align-items:center;"><span>🎯</span><span>PYQ Practice</span></div>'
+          +'<div style="display:flex;gap:8px;align-items:center;"><span>📚</span><span>Study Videos</span></div>'
+          +'<div style="display:flex;gap:8px;align-items:center;"><span>📖</span><span>Revision 1</span></div>'
+          +'<div style="display:flex;gap:8px;align-items:center;"><span>📝</span><span>Short Notes Writing</span></div>'
         +'</div>'
       +'</div>'
       +'</div>';
@@ -3673,7 +3673,7 @@ function renderDiscCard(){
     return '<div class="disc-block '+cls+'" style="border-left:3px solid '+(done?'#4ade80':'var(--border)')+';">'
       +'<div class="disc-block-info">'
         +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
-          +'<div class="disc-block-time">'+fb.start+' – '+fb.end+'</div>'
+
           +'<span class="disc-block-dur">'+(fb.id==='notes'?'1h':fb.id==='study'?'4h':fb.id==='rev1'?'3h':'1h')+'</span>'
           +'<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;background:rgba(0,212,255,.1);color:var(--acc);">'+fb.icon+' '+fb.label+'</span>'
           +linkHtml
