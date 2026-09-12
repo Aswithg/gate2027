@@ -396,17 +396,8 @@ select.inp-sm{cursor:pointer;}
 <!-- STUDY TAB -->
 <div class="tab-panel" id="panel-study">
 <div class="wrap">
-  <div class="storage-warn" id="storage-warn">⚠ localStorage not available.</div>
-  <div class="data-bar">
-    <button class="btn-g" onclick="exportData()">📤 Export backup</button>
-    <button class="btn-g" onclick="importData()">📥 Import backup</button>
-    <button class="btn-g" onclick="copyData()">📋 Copy to clipboard</button>
-    <span class="data-status" id="data-status">All changes auto-saved</span>
-  </div>
-  <div style="display:flex;gap:6px;margin-bottom:16px;">
-    <button id="study-btn-progress" onclick="studySetView('progress')" style="padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--acc);background:#001e2e;color:var(--acc);transition:all .2s;">📊 Progress</button>
-    <button id="study-btn-milestones" onclick="studySetView('milestones')" style="padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--navy);color:var(--muted);transition:all .2s;">🏆 Milestones</button>
-  </div>
+
+
   <div id="study-view-progress">
     <div class="section">
       <div class="sec-hdr">
@@ -468,36 +459,21 @@ select.inp-sm{cursor:pointer;}
       <div class="lp-grid" id="lp-grid"></div>
     </div>
   </div>
-  <div id="study-view-milestones" style="display:none;">
-    <div class="section">
-      <div class="sec-hdr"><h2>Milestones</h2><div class="sub" id="ms-sub"></div></div>
-      <div class="ms-grid" id="ms-grid"></div>
-    </div>
-  </div>
+
 </div>
 </div>
 
 <!-- REVISION 1 TAB -->
 <div class="tab-panel" id="panel-rev1">
 <div class="wrap">
-  <div style="display:flex;gap:6px;margin-bottom:16px;">
-    <button id="rev1-btn-notes" onclick="rev1SetView('notes')" style="padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--acc);background:#001e2e;color:var(--acc);transition:all .2s">📖 Rev1 Notes</button>
-    <button id="rev1-btn-sn" onclick="rev1SetView('sn')" style="padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--navy);color:var(--muted);transition:all .2s">✏️ Short Notes</button>
-  </div>
-  <div id="rev1-view-notes"><div id="sec-rev1"></div></div>
-  <div id="rev1-view-sn" style="display:none;"><div id="sec-sn"></div></div>
+  <div id="sec-rev1"></div>
 </div>
 </div>
 
 <!-- REVISION 2 TAB -->
 <div class="tab-panel" id="panel-rev2">
 <div class="wrap">
-  <div style="display:flex;gap:6px;margin-bottom:16px;">
-    <button id="rev2-btn-tracker" onclick="rev2SetView('tracker')" style="padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--acc);background:#001e2e;color:var(--acc);transition:all .2s">📚 Test Tracker</button>
-    <button id="rev2-btn-sample" onclick="rev2SetView('sample')" style="padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--navy);color:var(--muted);transition:all .2s">📝 Sample Mocks</button>
-  </div>
-  <div id="rev2-view-tracker"><div id="sec-rev2"></div></div>
-  <div id="rev2-view-sample" style="display:none;"><div id="sec-sample"></div></div>
+  <div id="sec-rev2"></div>
 </div>
 </div>
 
@@ -1942,89 +1918,89 @@ const PYQ_PLAN = (function(){
   const slots = [];
   const subTopics = [
     {subId:1, topics:[
-      {ti:0,name:'Basic Network Concepts & KVL/KCL',qs:24},
-      {ti:1,name:'Network Theorems',qs:41},
-      {ti:2,name:'Transient Analysis',qs:42},
-      {ti:3,name:'Steady State AC Analysis',qs:30},
-      {ti:4,name:'Two-Port Networks',qs:40},
-      {ti:5,name:'Graph Theory & Network Matrices',qs:23},
-      {ti:6,name:'Resonance & Coupled Circuits',qs:16},
-      {ti:7,name:'Miscellaneous Topics',qs:17},
+      {ti:0,name:'Basic Concepts of Networks',                 qs:42},
+      {ti:1,name:'Transient Analysis',                         qs:50},
+      {ti:2,name:'Network Theorems For DC & Misc Topics',      qs:36},
+      {ti:3,name:'2nd Order Dynamics and Complex Impedance',   qs:7},
+      {ti:4,name:'AC Circuit Analysis',                        qs:41},
+      {ti:5,name:'Resonance',                                  qs:18},
+      {ti:6,name:'Complex Power',                              qs:20},
+      {ti:7,name:'Two Port Parameters',                        qs:19},
     ], rev1End:'2026-09-13'},
     {subId:2, topics:[
-      {ti:0,name:'Signals and Systems Basics',qs:20},
-      {ti:1,name:'Fourier Series & Fourier Transform',qs:36},
-      {ti:2,name:'Laplace Transform',qs:43},
-      {ti:3,name:'Z-Transform',qs:30},
-      {ti:4,name:'Sampling & Discrete Systems',qs:22},
-      {ti:5,name:'Miscellaneous Topics',qs:19},
+      {ti:0,name:'Basics of Signals',                          qs:28},
+      {ti:1,name:'Basics of Systems',                          qs:44},
+      {ti:2,name:'Continuous Time Fourier Series',             qs:20},
+      {ti:3,name:'Continuous Time Fourier Transform',          qs:32},
+      {ti:4,name:'Laplace Transform',                          qs:22},
+      {ti:5,name:'Z Transform, DTFS and DTFT',                 qs:24},
     ], rev1End:'2026-09-20'},
     {subId:3, topics:[
-      {ti:0,name:'Introduction & Block Diagrams',qs:22},
-      {ti:1,name:'Time Domain Analysis',qs:40},
-      {ti:2,name:'Steady State Error & System Types',qs:22},
-      {ti:3,name:'Frequency Domain Analysis',qs:35},
-      {ti:4,name:'Stability Analysis',qs:31},
-      {ti:5,name:'Root Locus',qs:28},
-      {ti:6,name:'Bode Plot',qs:20},
-      {ti:7,name:'Compensators & Controllers',qs:19},
-      {ti:8,name:'State Space Analysis',qs:19},
-      {ti:9,name:'Miscellaneous Topics',qs:10},
+      {ti:0,name:'Basics of Control Systems',                  qs:12},
+      {ti:1,name:'Block Diagram and Signal Flow Graph',        qs:18},
+      {ti:2,name:'Time Response Analysis',                     qs:34},
+      {ti:3,name:"Routh's Stability Criterion",                qs:34},
+      {ti:4,name:'Root Locus',                                 qs:22},
+      {ti:5,name:'Polar Plot and Freq Response (2nd Order)',   qs:25},
+      {ti:6,name:'Nyquist Plot',                               qs:17},
+      {ti:7,name:'Bode Plot',                                  qs:19},
+      {ti:8,name:'State Space Analysis',                       qs:47},
+      {ti:9,name:'Controllers and Compensators',               qs:18},
     ], rev1End:'2026-09-27'},
     {subId:4, topics:[
-      {ti:0,name:'Basic Measuring Instruments',qs:32},
-      {ti:1,name:'Bridges & Potentiometers',qs:30},
-      {ti:2,name:'Transducers & Sensors',qs:29},
-      {ti:3,name:'Signal Conditioning & CRO',qs:22},
-      {ti:4,name:'Miscellaneous Topics',qs:15},
+      {ti:0,name:'Error Analysis',                             qs:13},
+      {ti:1,name:'Analog Measuring Instruments',               qs:65},
+      {ti:2,name:'DC And AC Bridges',                          qs:13},
+      {ti:3,name:'Measurement of Resistance',                  qs:5},
+      {ti:4,name:'Electronic Measurement and Instrument Transformer', qs:32},
     ], rev1End:'2026-09-30'},
     {subId:5, topics:[
-      {ti:0,name:'Electromagnetic Fields',qs:60},
-      {ti:1,name:'Electromagnetic Waves',qs:45},
+      {ti:0,name:'Electrostatics',                             qs:65},
+      {ti:1,name:'Magnetostatics',                             qs:40},
     ], rev1End:'2026-10-04'},
     {subId:6, topics:[
-      {ti:0,name:'DC Machines',qs:80},
-      {ti:1,name:'Transformers',qs:85},
-      {ti:2,name:'Induction Machines',qs:90},
-      {ti:3,name:'Synchronous Machines',qs:75},
-      {ti:4,name:'Special Machines',qs:30},
-      {ti:5,name:'Miscellaneous Topics',qs:28},
-    ], rev1End:'2026-10-18'},
+      {ti:0,name:'Magnetic Circuits',                          qs:17},
+      {ti:1,name:'Transformers',                               qs:102},
+      {ti:2,name:'DC Machines',                                qs:75},
+      {ti:3,name:'Three Phase Induction Machines',             qs:90},
+      {ti:4,name:'Synchronous Machines',                       qs:79},
+      {ti:5,name:'Miscellaneous Topics',                       qs:25},
+    ], rev1End:'2026-10-25'},
     {subId:7, topics:[
-      {ti:0,name:'Power System Basics & Per Unit',qs:28},
-      {ti:1,name:'Transmission Lines',qs:35},
-      {ti:2,name:'Underground Cables',qs:12},
-      {ti:3,name:'System Stability',qs:30},
-      {ti:4,name:'Load Flow Analysis',qs:20},
-      {ti:5,name:'Fault Analysis',qs:32},
-      {ti:6,name:'Protection & Relays',qs:35},
-      {ti:7,name:'Circuit Breakers & Switchgear',qs:20},
-      {ti:8,name:'Economic Operation',qs:18},
-      {ti:9,name:'HVDC & FACTS',qs:15},
-      {ti:10,name:'Miscellaneous Topics',qs:13},
-    ], rev1End:'2026-11-01'},
+      {ti:0,name:'Basics of Power System',                     qs:24},
+      {ti:1,name:'Distribution Systems, HVDC, Sag & Corona',  qs:9},
+      {ti:2,name:'Relays Circuit Breakers',                    qs:28},
+      {ti:3,name:'Power System Faults',                        qs:44},
+      {ti:4,name:'Power System Stability',                     qs:28},
+      {ti:5,name:'Power System Matrices and Load Flow',        qs:42},
+      {ti:6,name:'Performance & Models of Transmission Lines', qs:22},
+      {ti:7,name:'Parameters of Transmission Lines',           qs:15},
+      {ti:8,name:'Power Factor Improvement & Voltage Control', qs:21},
+      {ti:9,name:'Economic Load Dispatch',                     qs:12},
+      {ti:10,name:'Overhead Transmission Lines & UG Cable',    qs:13},
+    ], rev1End:'2026-11-08'},
     {subId:8, topics:[
-      {ti:0,name:'Power Semiconductor Devices',qs:50},
-      {ti:1,name:'AC to DC Converters / Phase Controlled Rectifiers',qs:82},
-      {ti:2,name:'DC to DC Converters - Choppers',qs:48},
-      {ti:3,name:'DC to AC Converter - Inverter',qs:37},
-      {ti:4,name:'Miscellaneous Topics',qs:5},
+      {ti:0,name:'Power Semiconductor Devices',                qs:27},
+      {ti:1,name:'AC to DC Converters (Rectifiers)',           qs:63},
+      {ti:2,name:'DC to DC Converters (Choppers)',             qs:48},
+      {ti:3,name:'DC to AC Inverters',                         qs:48},
+      {ti:4,name:'AC to AC Converters',                        qs:18},
+      {ti:5,name:'AC Voltage Controllers',                     qs:18},
     ], rev1End:'2026-11-15'},
     {subId:9, topics:[
-      {ti:0,name:'Logic Gates and Boolean Algebra',qs:14},
-      {ti:1,name:'Representation of Boolean Expressions & K-Maps',qs:17},
-      {ti:2,name:'Number Systems',qs:2},
-      {ti:3,name:'Combinational Circuits',qs:13},
-      {ti:4,name:'Sequential Circuits',qs:34},
-      {ti:5,name:'ADC & DAC',qs:11},
-      {ti:6,name:'Logic Families and Semiconductor Memories',qs:8},
+      {ti:0,name:'Number Systems & Boolean Algebra',           qs:13},
+      {ti:1,name:'Logic Gates & Combinational Circuits',       qs:49},
+      {ti:2,name:'Sequential Circuits',                        qs:38},
+      {ti:3,name:'A/D & D/A Converters',                       qs:22},
+      {ti:4,name:'Microprocessors',                            qs:20},
+      {ti:5,name:'Logic Families & Semiconductor Memories',    qs:8},
     ], rev1End:'2026-11-22'},
     {subId:10, topics:[
-      {ti:0,name:'Diode Circuits and Applications',qs:39},
-      {ti:1,name:'MOSFETs',qs:15},
-      {ti:2,name:'Operational Amplifier',qs:81},
-      {ti:3,name:'BJTs',qs:28},
-      {ti:4,name:'Miscellaneous Topics',qs:1},
+      {ti:0,name:'Diode Circuits and Applications',            qs:39},
+      {ti:1,name:'MOSFETs',                                    qs:15},
+      {ti:2,name:'Operational Amplifier',                      qs:81},
+      {ti:3,name:'BJTs',                                       qs:28},
+      {ti:4,name:'Miscellaneous Topics',                       qs:1},
     ], rev1End:'2026-12-06'},
   ];
   const DAILY_MAX=20;
@@ -2044,6 +2020,18 @@ const PYQ_PLAN = (function(){
     });
   });
   return slots;
+})();
+
+const PYQ_PLAN_TOPICS=(function(){
+  var out=[];
+  PYQ_PLAN.reduce(function(seen,s){
+    if(!seen[s.subId]){seen[s.subId]=true;out.push({subId:s.subId,topics:[]});}
+    var sub=out.find(function(x){return x.subId===s.subId;});
+    if(!sub.topics.find(function(t){return t.ti===s.ti;}))
+      sub.topics.push({ti:s.ti,name:s.name,qs:s.qs});
+    return seen;
+  },{});
+  return out;
 })();
 
 let pyqPlanData={};
@@ -2085,90 +2073,88 @@ function pyqSetView(v){
 const SUB_COLORS={1:'#00d4ff',2:'#a78bfa',3:'#34d399',4:'#fbbf24',5:'#f472b6',6:'#fb923c',7:'#60a5fa',8:'#4ade80',9:'#e879f9',10:'#f87171'};
 const SUB_NAMES={1:'Network Theory',2:'Signals & Systems',3:'Control Systems',4:'Measurements',5:'EMFT',6:'Machines',7:'Power Systems',8:'Power Electronics',9:'Digital Electronics',10:'Analog Electronics'};
 
+function pyqPlanTopicKey(subId,ti){return 'ptp|'+subId+'|'+ti;}
+function getPyqPlanTopicDone(subId,ti){return+(pyqPlanData[pyqPlanTopicKey(subId,ti)]||0);}
+function setPyqPlanTopicDone(subId,ti,val){
+  const k=pyqPlanTopicKey(subId,ti);
+  const v=Math.max(0,+val||0);
+  if(v===0)delete pyqPlanData[k]; else pyqPlanData[k]=v;
+  savePyqPlan(); renderPyqPlan();
+}
+function pyqPlanToggle(id){
+  var el=document.getElementById(id); if(!el)return;
+  var isOpen=el.style.display!=='none';
+  el.style.display=isOpen?'none':'block';
+  var btn=document.getElementById('ptbtn-'+id);
+  if(btn)btn.textContent=isOpen?'▸':'▾';
+}
 function renderPyqPlan(){
   loadPyqPlan();
-  const el=$('pyq-plan-content');if(!el)return;
-
-  // Stats
-  const total=PYQ_PLAN.length;
-  let done=0,ahead=0,behind=0,pending=0;
-  PYQ_PLAN.forEach(function(s){
-    const act=getPyqPlanActual(s.date,s.subId,s.ti,s.part);
-    if(s.date<TODAY){if(act>=s.target)done++;else behind++;}
-    else if(s.date===TODAY){if(act>=s.target)done++;else pending++;}
-    else pending++;
+  var el=$('pyq-plan-content');if(!el)return;
+  var totalTopics=0,doneTopics=0,totalQs=0,doneQs=0;
+  PYQ_PLAN_TOPICS.forEach(function(sub){sub.topics.forEach(function(t){
+    totalTopics++;totalQs+=t.qs;
+    var d=getPyqPlanTopicDone(sub.subId,t.ti);
+    doneQs+=Math.min(d,t.qs);if(d>=t.qs)doneTopics++;
+  });});
+  var donePct=totalQs?Math.round(doneQs/totalQs*100):0;
+  var rows='';
+  PYQ_PLAN_TOPICS.forEach(function(sub){
+    var col=SUB_COLORS[sub.subId]||'var(--acc)';
+    var subDone=0,subTotal=sub.topics.reduce(function(a,t){return a+t.qs;},0);
+    sub.topics.forEach(function(t){subDone+=Math.min(getPyqPlanTopicDone(sub.subId,t.ti),t.qs);});
+    var subPct=subTotal?Math.round(subDone/subTotal*100):0;
+    rows+='<div style="display:flex;align-items:center;gap:10px;padding:10px 0 6px;margin-top:14px">'
+      +'<div style="width:4px;height:28px;background:'+col+';border-radius:2px;flex-shrink:0"></div>'
+      +'<div style="font-size:13px;font-weight:700;color:'+col+'">'+SUB_NAMES[sub.subId]+'</div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-left:auto">'+subDone+'q / '+subTotal+'q · '+subPct+'%</div>'
+      +'</div>';
+    sub.topics.forEach(function(t){
+      var done=getPyqPlanTopicDone(sub.subId,t.ti);
+      var pct=t.qs?Math.round(Math.min(done,t.qs)/t.qs*100):0;
+      var isComplete=done>=t.qs;
+      var barColor=isComplete?'#4ade80':done>0?'#fbbf24':'var(--border)';
+      var statusColor=isComplete?'#4ade80':done>0?'#fbbf24':'var(--muted)';
+      var statusText=isComplete?'✓ Done':done>0?done+'q done':'Not started';
+      var slots=PYQ_PLAN.filter(function(s){return s.subId===sub.subId&&s.ti===t.ti;});
+      var schedInfo='';
+      if(slots.length>0){var fd=slots[0].date,ld=slots[slots.length-1].date;schedInfo=slots.length>1?fmt(fd)+' – '+fmt(ld)+' ('+slots.length+' sessions)':fmt(fd)+' (1 session)';}
+      var rowId='ptp-'+sub.subId+'-'+t.ti;
+      var rowBg=isComplete?'background:#0a1a0a;border:1px solid #4ade8033':done>0?'background:var(--navy);border:1px solid #fbbf2433':'background:var(--navy);border:1px solid var(--border)';
+      rows+='<div style="'+rowBg+';border-radius:8px;margin-bottom:6px;overflow:hidden">'
+        +'<div style="padding:10px 12px;display:flex;align-items:center;gap:10px;cursor:pointer" onclick="pyqPlanToggle(\''+rowId+'\')">'
+          +'<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;color:var(--text)">'+esc(t.name)+'</div>'
+            +(schedInfo?'<div style="font-size:10px;color:var(--faint);margin-top:2px">📅 '+schedInfo+'</div>':'')+'</div>'
+          +'<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'
+            +'<div style="text-align:right"><div style="font-size:10px;font-weight:700;color:'+statusColor+'">'+statusText+'</div><div style="font-size:10px;color:var(--faint)">'+t.qs+'q total</div></div>'
+            +'<div style="width:6px;height:36px;background:var(--border);border-radius:3px;overflow:hidden;flex-shrink:0"><div style="height:'+pct+'%;background:'+barColor+';border-radius:3px;"></div></div>'
+            +'<span id="ptbtn-'+rowId+'" style="font-size:11px;color:var(--muted);width:14px;flex-shrink:0">▸</span>'
+          +'</div>'
+        +'</div>'
+        +'<div id="'+rowId+'" style="display:none;padding:10px 14px 12px;border-top:1px solid var(--border);background:rgba(0,0,0,.2)">'
+          +'<div style="font-size:11px;color:var(--muted);margin-bottom:10px">How many questions done for <strong style="color:var(--text)">'+esc(t.name)+'</strong>?</div>'
+          +'<div style="display:flex;align-items:center;gap:8px">'
+            +'<button onclick="event.stopPropagation();setPyqPlanTopicDone('+sub.subId+','+t.ti+',getPyqPlanTopicDone('+sub.subId+','+t.ti+')-5)" style="background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:6px;width:30px;height:30px;font-size:13px;cursor:pointer">−</button>'
+            +'<input type="number" min="0" max="'+t.qs+'" value="'+(done||'')+'" placeholder="0" onchange="event.stopPropagation();setPyqPlanTopicDone('+sub.subId+','+t.ti+',this.value)" style="width:60px;text-align:center;font-weight:700;font-size:14px;color:'+(isComplete?'#4ade80':done>0?'#fbbf24':'var(--faint)')+';background:var(--card);border:1px solid var(--border);border-radius:6px;padding:5px 8px">'
+            +'<button onclick="event.stopPropagation();setPyqPlanTopicDone('+sub.subId+','+t.ti+',getPyqPlanTopicDone('+sub.subId+','+t.ti+')+5)" style="background:var(--acc);border:none;color:var(--navy);border-radius:6px;width:30px;height:30px;font-size:13px;font-weight:700;cursor:pointer">+</button>'
+            +'<span style="font-size:11px;color:var(--faint)">/ '+t.qs+'q</span>'
+            +(isComplete?'<span style="font-size:11px;color:#4ade80;font-weight:700">✓ Complete!</span>':'')
+          +'</div>'
+          +'<div style="margin-top:10px;height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+barColor+';border-radius:2px;"></div></div>'
+          +'<div style="font-size:10px;color:var(--faint);margin-top:4px">'+pct+'% · '+Math.max(0,t.qs-done)+'q remaining</div>'
+        +'</div>'
+      +'</div>';
+    });
   });
-  ahead=0;
-
-  // Group by subject for progress summary
-  const subProgress={};
-  PYQ_PLAN.forEach(function(s){
-    if(!subProgress[s.subId])subProgress[s.subId]={total:0,done:0};
-    subProgress[s.subId].total++;
-    const act=getPyqPlanActual(s.date,s.subId,s.ti,s.part);
-    if(act>=s.target)subProgress[s.subId].done++;
-  });
-
-  // Build grouped rows by subject
-  let lastSub=-1;
-  let rows='';
-  PYQ_PLAN.forEach(function(s,idx){
-    const act=getPyqPlanActual(s.date,s.subId,s.ti,s.part);
-    const col=SUB_COLORS[s.subId]||'var(--acc)';
-    const isPast=s.date<TODAY, isToday=s.date===TODAY;
-    let status='',statusCol='';
-    if(isPast){status=act>=s.target?'✓ Done':'⚠ Missed';statusCol=act>=s.target?'#4ade80':'#ef4444';}
-    else if(isToday){status=act>=s.target?'✓ Done':'Today';statusCol=act>=s.target?'#4ade80':'#fbbf24';}
-    else{status='Upcoming';statusCol='var(--muted)';}
-
-    const partLabel=s.totalDays>1?' <span style="font-size:10px;opacity:.6">pt '+s.part+'/'+s.totalDays+'</span>':'';
-
-    // Subject header row
-    if(s.subId!==lastSub){
-      lastSub=s.subId;
-      const sp=subProgress[s.subId]||{total:0,done:0};
-      const pct=sp.total?Math.round(sp.done/sp.total*100):0;
-      rows+=`<div style="display:flex;align-items:center;gap:10px;padding:10px 0 6px;margin-top:${idx>0?'14px':'0'}">
-        <div style="width:4px;height:28px;background:${col};border-radius:2px;flex-shrink:0"></div>
-        <div style="font-size:13px;font-weight:700;color:${col}">${SUB_NAMES[s.subId]}</div>
-        <div style="font-size:11px;color:var(--muted);margin-left:auto">${sp.done}/${sp.total} days · ${pct}%</div>
-      </div>`;
-    }
-
-    const rowBg=isToday?'background:#0a1e0e;border:1px solid #4ade8044':isPast&&act<s.target?'background:#1a0800;border:1px solid #ef444422':'background:var(--navy);border:1px solid var(--border)';
-    rows+=`<div style="${rowBg};border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <div style="min-width:72px;flex-shrink:0">
-        <div style="font-size:12px;font-weight:700;color:${isToday?'#fbbf24':isPast?'var(--muted)':'var(--text)'}">${fmt(s.date)}</div>
-        <div style="font-size:10px;color:var(--faint)">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dayOfWeek(s.date)]}</div>
-      </div>
-      <div style="flex:1;min-width:140px">
-        <div style="font-size:12px;font-weight:600;color:var(--text)">${esc(s.name)}${partLabel}</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:2px">Target: <strong style="color:${col}">${s.target}q</strong>${s.totalDays>1?' of '+s.qs+'q total':''}</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-        <span style="font-size:10px;color:${statusCol};font-weight:700;min-width:60px;text-align:right">${status}</span>
-        <button onclick="setPyqPlanActual('${s.date}',${s.subId},${s.ti},${s.part},Math.max(0,getPyqPlanActual('${s.date}',${s.subId},${s.ti},${s.part})-5))" style="background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:5px;width:26px;height:26px;font-size:11px;cursor:pointer;flex-shrink:0">−</button>
-        <input type="number" min="0" value="${act||''}" placeholder="0"
-          onchange="setPyqPlanActual('${s.date}',${s.subId},${s.ti},${s.part},this.value)"
-          style="width:48px;text-align:center;font-weight:700;font-size:13px;color:${act>=s.target&&act>0?'#4ade80':act>0?'#fbbf24':'var(--faint)'};background:var(--card);border:1px solid var(--border);border-radius:5px;padding:4px 6px">
-        <button onclick="setPyqPlanActual('${s.date}',${s.subId},${s.ti},${s.part},Math.min(${s.qs},getPyqPlanActual('${s.date}',${s.subId},${s.ti},${s.part})+5))" style="background:var(--acc);border:none;color:var(--navy);border-radius:5px;width:26px;height:26px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">+</button>
-      </div>
-    </div>`;
-  });
-
-  const donePct=total?Math.round(done/total*100):0;
-  el.innerHTML=`
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-bottom:20px">
-      <div class="hcard" style="border:1px solid #00d4ff22"><div class="hlbl">Total Days</div><div class="hval" style="color:#00d4ff">${total}</div></div>
-      <div class="hcard" style="border:1px solid #4ade8022"><div class="hlbl">Completed</div><div class="hval" style="color:#4ade80">${done}<span style="font-size:13px;color:var(--faint);font-weight:400">/${total}</span></div><div class="pbar-bg"><div class="pbar-fill" style="width:${donePct}%;background:#4ade80"></div></div></div>
-      <div class="hcard" style="border:1px solid #ef444422"><div class="hlbl">Missed</div><div class="hval" style="color:#ef4444">${behind}</div></div>
-      <div class="hcard" style="border:1px solid #fbbf2422"><div class="hlbl">Upcoming</div><div class="hval" style="color:#fbbf24">${pending}</div></div>
-    </div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;padding:8px 12px;background:var(--navy);border-radius:7px;border:1px solid var(--border)">
-      📋 Auto-plan: 1hr/day · max 20q/session · topics &gt;20q split across multiple days · starts after Rev 1 ends · completes 17 Dec 2026
-    </div>
-    ${rows}
-  `;
+  el.innerHTML=''
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-bottom:20px">'
+      +'<div class="hcard" style="border:1px solid #00d4ff22"><div class="hlbl">Topics</div><div class="hval" style="color:#00d4ff">'+totalTopics+'</div></div>'
+      +'<div class="hcard" style="border:1px solid #4ade8022"><div class="hlbl">Completed</div><div class="hval" style="color:#4ade80">'+doneTopics+'<span style="font-size:13px;color:var(--faint);font-weight:400">/'+totalTopics+'</span></div><div class="pbar-bg"><div class="pbar-fill" style="width:'+donePct+'%;background:#4ade80"></div></div></div>'
+      +'<div class="hcard" style="border:1px solid var(--border)"><div class="hlbl">Questions Done</div><div class="hval" style="color:var(--acc)">'+doneQs+'<span style="font-size:13px;color:var(--faint);font-weight:400">/'+totalQs+'</span></div></div>'
+      +'<div class="hcard" style="border:1px solid #fbbf2422"><div class="hlbl">Overall</div><div class="hval" style="color:#fbbf24">'+donePct+'%</div></div>'
+    +'</div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-bottom:14px;padding:8px 12px;background:var(--navy);border-radius:7px;border:1px solid var(--border)">📋 Click any topic to log questions done · Scheduled dates shown per topic</div>'
+    +rows;
 }
 
 function renderPyq(){
@@ -2565,250 +2551,196 @@ function navRev1Date(delta){setRev1LogDate(addDays(rev1LogDate,delta));}
 function pageTarget(id,slot){const total=subPages(id);if(!total)return 0;const left=Math.max(0,total-pagesDone(id));let dl;if(TODAY<slot.start)dl=slot.days;else if(TODAY>slot.end)dl=1;else dl=Math.max(1,diffDays(TODAY,slot.end)+1);return Math.ceil(left/dl);}
 function rev1Status(sub,slot){if(rev1Done[sub.id])return'done';if(slot.overflow)return'overflow';if(sub.status!=='Completed')return'locked';if(TODAY>=slot.start&&TODAY<=slot.end)return'active';if(TODAY>slot.end)return'overdue';return'ready';}
 const REV1_TAG={done:['#003d1f','#4ade80','Revised ✓'],active:['#001e2e','#00d4ff','In progress'],ready:['#1a0d2e','#c084fc','Ready'],overdue:['#2d1900','#fbbf24','Overdue'],locked:['#0d1b2a','#4a7a9b','Locked'],overflow:['#1a0800','#ef4444','→ Rev 2']};
+function rev1Toggle(id){
+  var el=document.getElementById('rev1-exp-'+id);
+  var btn=document.getElementById('rev1-arr-'+id);
+  if(!el)return;
+  var open=el.style.display!=='none';
+  el.style.display=open?'none':'block';
+  if(btn)btn.textContent=open?'▸':'▾';
+}
 function renderRevision1(){
   loadRev1();
-  const locked=false;
-  const sched={};subjects.forEach(s=>{const sl=REV1_SCHEDULE[s.id];sched[s.id]=sl?{...sl,overflow:sl.end>'2027-01-03'}:{start:'',end:'',days:0,perDay:0,overflow:false};});
-  const rev1Subs=subjects.filter(s=>REV1_SCHEDULE[s.id]&&REV1_SCHEDULE[s.id].days>0);
-  const doneCount=rev1Subs.filter(s=>rev1Done[s.id]).length;
-  const totalPages=allPages(),donePages=subjects.reduce((t,s)=>t+Math.min(pagesDone(s.id),subPages(s.id)),0);
-  const pagePct=totalPages?Math.round(donePages/totalPages*100):0;
-  const pagesToday=subjects.reduce((t,s)=>t+pagesOn(s.id,rev1LogDate),0);
-  const activeSubs=locked?[]:subjects.filter(s=>['active','ready','overdue'].includes(rev1Status(s,sched[s.id])));
-  const todayTarget=activeSubs.reduce((t,s)=>t+pageTarget(s.id,sched[s.id]),0);
-  let cards='';
-  subjects.forEach(sub=>{
-    const slot=sched[sub.id],st=rev1Status(sub,slot);
-    const[bg,col,label]=REV1_TAG[st];
-    const pdfs=REV1_NOTES[sub.id]||[],dim=(st==='locked'||st==='overflow')?'opacity:.6;':'';
-    const tot=subPages(sub.id),dn=Math.min(pagesDone(sub.id),tot),pct=tot?Math.round(dn/tot*100):0;
-    const tgt=pageTarget(sub.id,slot),today=pagesOn(sub.id,rev1LogDate);
-    const pace=tgt>0?(today>=tgt?['#003d1f','#4ade80','✓ ON TRACK']:today>=tgt*0.6?['#2d1900','#fbbf24','⚡ CLOSE']:['#2d0000','#ef4444','⚠ BEHIND']):null;
-    const pcol=pct>=100?'#4ade80':pct>=50?'#00d4ff':'#fb923c';
-    const OD_PATH='C:\\Users\\AswithGiduturi\\OneDrive - DESRI\\Documents\\G2027_2028\\Video Notes';
-    const pdfBtns=`<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#0d1b2a;border:1px solid #1e3a5a;border-radius:7px;padding:8px 12px"><span style="font-size:11px;color:var(--muted)">📂 Notes in OneDrive:</span><code style="font-size:10px;color:#7dd3fc;word-break:break-all">${OD_PATH}</code><button onclick="navigator.clipboard.writeText('${OD_PATH}').then(()=>{this.textContent='✓ Copied';setTimeout(()=>this.textContent='Copy',1500);})" style="background:#0f2d4a;border:1px solid #1e3a5a;color:#7dd3fc;border-radius:5px;padding:3px 9px;font-size:10px;cursor:pointer;white-space:nowrap;flex-shrink:0">Copy</button></div>`;
-    const tracker=!tot?'':`<div style="background:var(--navy);border-radius:8px;padding:12px 14px;margin-bottom:12px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px"><span style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px">📖 Pages revised</span>${pace?`<span style="font-size:10px;background:${pace[0]};color:${pace[1]};padding:2px 8px;border-radius:4px;font-weight:700">${pace[2]}</span>`:''}</div><div style="display:flex;align-items:baseline;gap:7px;margin-bottom:6px"><span style="font-size:24px;font-weight:800;color:${pcol}">${dn}</span><span style="font-size:13px;color:var(--faint)">/ ${tot} pages</span><span style="margin-left:auto;font-size:11px;color:var(--faint)">${tot-dn} left</span></div><div style="height:7px;background:var(--card);border-radius:4px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${pcol};border-radius:4px;transition:width .35s"></div></div><div style="font-size:10px;color:var(--faint);margin-top:4px;margin-bottom:10px">${pct}% complete${tgt>0?` · need <strong style="color:${col}">${tgt} pages/day</strong> to finish by ${fmt(slot.end)}`:''} · planned: ${slot.perDay}pg/day</div><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:9px;border-top:1px solid var(--border)"><span style="font-size:11px;color:var(--muted)">Pages on ${fmt(rev1LogDate)}:</span><button onclick="stepRevPages(${sub.id},-5)" style="background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:5px;width:30px;height:28px;font-size:12px;cursor:pointer">−5</button><input class="inp-sm" type="number" min="0" value="${today}" onchange="setRevPages(${sub.id},'${rev1LogDate}',this.value)" style="width:62px;text-align:center;font-weight:700;color:${today>0?'#4ade80':'var(--text)'}"><button onclick="stepRevPages(${sub.id},5)" style="background:var(--acc);border:none;color:var(--navy);border-radius:5px;width:30px;height:28px;font-size:12px;font-weight:700;cursor:pointer">+5</button>${tgt>0?`<span style="font-size:11px;color:var(--faint)">target ${tgt}</span>`:''}</div></div>`;
-    cards+=`<div class="card" style="${dim}padding:16px 18px;border-left:3px solid ${col}"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px"><div style="flex:1;min-width:170px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:3px"><span style="font-size:11px;font-weight:700;color:var(--faint)">#${sub.id}</span><span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:12px;background:${bg};color:${col};border:1px solid ${col}44">${label}</span></div><div style="font-size:14px;font-weight:700">${sub.name}</div><div style="font-size:11px;color:var(--faint);margin-top:2px">${sub.faculty} · ${tot||'—'} pages · ${fmt(slot.start)} – ${fmt(slot.end)} (${slot.days}d)</div></div><button class="btn-g" style="font-size:11px;padding:5px 12px;${rev1Done[sub.id]?'color:#4ade80;border-color:#4ade8066':''}" onclick="toggleRev1Done(${sub.id})">${rev1Done[sub.id]?'✓ Revised':'Mark revised'}</button></div><div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px">${pdfBtns}</div>${tracker}<label class="lbl">Revision remarks</label><textarea class="inp" rows="2" style="font-size:12px;margin-top:4px" placeholder="Weak topics, formulas to recheck…" oninput="setRev1Note(${sub.id},this.value)">${esc(rev1Notes[sub.id]||'')}</textarea></div>`;
-  });
-  $('sec-rev1').innerHTML=`<div class="section"><div class="sec-hdr"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;width:100%"><div><h2>Revision 1 — Notes Review</h2><div class="sub">Updated: 9 Sep 2026 – 31 Dec 2026</div></div></div></div>
-    <div class="g4" style="margin-bottom:16px"><div class="hcard" style="border:1px solid #00d4ff22"><div class="hlbl">Pages revised</div><div class="hval" style="color:#00d4ff">${donePages}<span style="font-size:13px;color:var(--faint);font-weight:400">/${totalPages}</span></div><div class="pbar-bg"><div class="pbar-fill" style="width:${pagePct}%;background:#00d4ff"></div></div></div>
-    <div class="hcard" style="border:1px solid #4ade8022"><div class="hlbl">Subjects revised</div><div class="hval" style="color:#4ade80">${doneCount}<span style="font-size:13px;color:var(--faint);font-weight:400">/${rev1Subs.length}</span></div><div class="hsub">${locked?'Starts 9 Sep':activeSubs.length+' active now'}</div></div>
-    <div class="hcard" style="border:1px solid #a855f722"><div class="hlbl">Pages today</div><div class="hval" style="color:${pagesToday>=todayTarget&&todayTarget>0?'#4ade80':'#a855f7'}">${pagesToday}</div><div class="hsub">${locked?'starts 9 Sep':todayTarget>0?'target '+todayTarget:'no active sub'}</div></div>
-    <div class="hcard" style="border:1px solid #fbbf2422"><div class="hlbl">Window</div><div class="hval" style="color:#fbbf24;font-size:15px">9 Sep → 31 Dec</div><div class="hsub">114 days</div></div></div>
-    <div class="card" style="padding:11px 15px;margin-bottom:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-      <span class="lbl" style="margin:0">Logging pages for</span>
-      <button onclick="navRev1Date(-1)" style="background:var(--navy);border:1px solid var(--border);border-radius:7px;width:30px;height:30px;cursor:pointer;color:var(--text);font-size:13px;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;" onmouseover="this.style.borderColor='var(--acc)';this.style.color='var(--acc)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">&#9664;</button>
-      <input type="date" value="${rev1LogDate}" onchange="setRev1LogDate(this.value)" style="background:var(--navy);border:1px solid var(--acc);border-radius:6px;padding:5px 9px;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;outline:none">
-      <button onclick="navRev1Date(1)" style="background:var(--navy);border:1px solid var(--border);border-radius:7px;width:30px;height:30px;cursor:pointer;color:var(--text);font-size:13px;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;" onmouseover="this.style.borderColor='var(--acc)';this.style.color='var(--acc)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">&#9654;</button>
-      ${rev1LogDate!==TODAY?`<button class="btn-g" style="font-size:11px;padding:4px 10px" onclick="setRev1LogDate('${TODAY}')">&#8629; Today</button>`:''}
-    </div>
-    <div class="g2">${cards}</div></div>`;
-}
-function buildMockSchedule(){const s=[];let d='2027-01-03',n=1;while(d<='2027-01-31'&&n<=5){if(new Date(d+'T00:00:00').getDay()===0){s.push({n,date:d,revStart:addDays(d,1),revEnd:addDays(d,5),buffer:addDays(d,6)});n++;}d=addDays(d,1);}return s;}
-function mockRec(date){return mockData[date]||{done:false,score:'',weak:''};}
-function toggleMock(date){loadMocks();const r={...mockRec(date),done:!mockRec(date).done};mockData[date]=r;lsSet('gate-mocks',mockData);showSaveToast();renderRevision2();checkMilestones();}
-function updMock(date,field,val){loadMocks();const r={...mockRec(date)};r[field]=val;mockData[date]=r;lsSet('gate-mocks',mockData);showSaveToast();}
-function getSubTest(subId,key){return((subTests[subId]||{})[key])||{done:false,date:'',score:'',notes:''};}
-function updSubTest(subId,key,field,val){
-  if(!subTests[subId])subTests[subId]={};
-  if(!subTests[subId][key])subTests[subId][key]={done:false,date:'',score:'',notes:''};
-  subTests[subId][key][field]=val;
-  lsSet('gate-sub-tests',subTests);showSaveToast();
-}
-function toggleSubTest(subId,key){
-  if(!subTests[subId])subTests[subId]={};
-  if(!subTests[subId][key])subTests[subId][key]={done:false,date:'',score:'',notes:''};
-  subTests[subId][key].done=!subTests[subId][key].done;
-  lsSet('gate-sub-tests',subTests);showSaveToast();renderRevision2();checkMilestones();
-}
-const REV2_START='2027-01-01';
-function renderRevision2(){
-  loadMocks();
-  const locked=false;
-  const mockSched=buildMockSchedule();
-  const mockScores=mockSched.map(m=>mockRec(m.date)).filter(m=>m.score!==''&&!isNaN(+m.score)).map(m=>+m.score);
-  const avgScore=mockScores.length?Math.round(mockScores.reduce((a,b)=>a+b,0)/mockScores.length):null;
-  const bestScore=mockScores.length?Math.max(...mockScores):null;
-  const TEST_KEYS=['s1','s2','m1','m2'];
-  let testDone=0,testTotal=subjects.length*4;
-  subjects.forEach(s=>TEST_KEYS.forEach(k=>{if(getSubTest(s.id,k).done)testDone++;}));
-  const mockCards=mockSched.map(m=>{const r=mockRec(m.date);const isToday=TODAY===m.date;const sc=r.score!==''?+r.score:null;const scCol=sc!==null?(sc>=65?'#4ade80':sc>=45?'#fbbf24':'#ef4444'):'var(--text)';return`<div class="mock-card ${r.done?'done-mock':isToday?'active-mock':''}"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div><div style="font-size:13px;font-weight:700">Mock ${m.n}</div><div style="font-size:11px;color:var(--muted)">${fmtFull(m.date)}${isToday?' · TODAY':''}</div></div><button class="btn-sm" onclick="toggleMock('${m.date}')" style="${r.done?'color:#4ade80;border-color:#4ade8044':''}">${r.done?'✓ Done':'Mark done'}</button></div><div style="font-size:11px;color:var(--faint);margin-bottom:10px">Review: ${fmt(m.revStart)}–${fmt(m.revEnd)} · Buffer: ${fmt(m.buffer)}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div><label class="lbl">Score %</label><input class="inp-sm" type="number" min="0" max="100" value="${r.score}" oninput="updMock('${m.date}','score',+this.value)" style="width:100%;${sc!==null?'color:'+scCol:''}"></div><div><label class="lbl">Weak areas</label><input class="inp-sm" type="text" value="${esc(r.weak||'')}" oninput="updMock('${m.date}','weak',this.value)" style="width:100%;" placeholder="e.g. Machines, CS"></div></div></div>`;}).join('');
-  function testRow(subId,key,label,color){
-    const t=getSubTest(subId,key);
-    const sc=t.score!==''?+t.score:null;
-    const scCol=sc!==null?(sc>=75?'#4ade80':sc>=50?'#fbbf24':'#ef4444'):'var(--text)';
-    return`<div style="display:grid;grid-template-columns:130px 1fr 90px 90px 86px;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--border)">
-      <div style="font-size:12px;font-weight:700;color:${color}">${label}</div>
-      <input class="inp-sm" type="text" value="${esc(t.notes||'')}" placeholder="Notes / weak areas" oninput="updSubTest(${subId},'${key}','notes',this.value)" style="width:100%;">
-      <input class="inp-sm" type="date" value="${t.date||''}" onchange="updSubTest(${subId},'${key}','date',this.value)" style="width:100%;">
-      <input class="inp-sm" type="number" min="0" max="100" value="${t.score||''}" placeholder="Score %" oninput="updSubTest(${subId},'${key}','score',+this.value)" style="width:100%;${sc!==null?'color:'+scCol:''}">
-      <button class="btn-sm" onclick="toggleSubTest(${subId},'${key}')" style="${t.done?'color:#4ade80;border-color:#4ade8044':''}">${t.done?'✓ Done':'Mark done'}</button>
-    </div>`;
-  }
-  const testHtml=subjects.map(s=>{
-    const doneCount=TEST_KEYS.filter(k=>getSubTest(s.id,k).done).length;
-    const allDone=doneCount===4;
-    const scores=TEST_KEYS.map(k=>getSubTest(s.id,k)).filter(t=>t.score!=='').map(t=>+t.score);
-    const avg=scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length):null;
-    const avgCol=avg!==null?(avg>=75?'#4ade80':avg>=50?'#fbbf24':'#ef4444'):'var(--muted)';
-    return`<div class="card" style="margin-bottom:10px;padding:14px 16px;${allDone?'border-color:#4ade8044':''}">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:4px">
-        <div>
-          <div style="font-size:13px;font-weight:700">${esc(s.name)}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px;">${doneCount}/4 tests done${avg!==null?' · avg <b style="color:'+avgCol+'">'+avg+'%</b>':''}</div>
-        </div>
-        <div style="display:flex;gap:4px;align-items:center;">
-          ${TEST_KEYS.map(k=>`<div style="width:10px;height:10px;border-radius:50%;background:${getSubTest(s.id,k).done?'#4ade80':'var(--border)'}" title="${{s1:'Subject Test 1',s2:'Subject Test 2',m1:'Mixed Test 1',m2:'Mixed Test 2'}[k]}"></div>`).join('')}
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:130px 1fr 90px 90px 86px;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint)">Test</div>
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint)">Notes / Weak Areas</div>
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint)">Date</div>
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint)">Score %</div>
-        <div></div>
-      </div>
-      ${testRow(s.id,'s1','📘 Subject T1','#00d4ff')}
-      ${testRow(s.id,'s2','📘 Subject T2','#00d4ff')}
-      ${testRow(s.id,'m1','🔀 Mixed T1','#c084fc')}
-      ${testRow(s.id,'m2','🔀 Mixed T2','#c084fc')}
-    </div>`;
-  }).join('');
-  $('sec-rev2').innerHTML=`<div class="section"><div class="sec-hdr"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;width:100%"><div><h2>Revision 2 + Full-length Mocks</h2><div class="sub">Starts Jan 1, 2027 · Mock every Sunday from Jan 3 · prep ends Feb 5</div></div></div></div>
-    <div class="g4" style="margin-bottom:16px"><div class="hcard" style="border:1px solid #00d4ff22"><div class="hlbl">Tests Done</div><div class="hval" style="color:#00d4ff">${testDone}<span style="font-size:13px;color:var(--faint);font-weight:400">/${testTotal}</span></div><div class="hsub">4 per subject (2 subject + 2 mixed)</div></div><div class="hcard" style="border:1px solid #4ade8022"><div class="hlbl">Subjects Full</div><div class="hval" style="color:#4ade80">${subjects.filter(s=>TEST_KEYS.every(k=>getSubTest(s.id,k).done)).length}<span style="font-size:13px;color:var(--faint);font-weight:400">/${subjects.length}</span></div><div class="hsub">all 4 tests cleared</div></div><div class="hcard" style="border:1px solid #fbbf2422"><div class="hlbl">Mock avg</div><div class="hval" style="color:${avgScore>=65?'#4ade80':avgScore>=45?'#fbbf24':'#ef4444'}">${avgScore!==null?avgScore+'%':'—'}</div><div class="hsub">Best: ${bestScore!==null?bestScore+'%':'—'}</div></div><div class="hcard" style="border:1px solid #c084fc22"><div class="hlbl">Mocks done</div><div class="hval" style="color:#c084fc">${mockSched.filter(m=>mockRec(m.date).done).length}<span style="font-size:13px;color:var(--faint);font-weight:400">/${mockSched.length}</span></div></div></div>
-    <div class="section"><div class="sec-hdr"><h2>Mock Test Schedule</h2><div class="sub">5 Sundays · Jan 3 → Jan 31, 2027</div></div><div class="mock-grid">${mockCards}</div></div>
-    <div class="section"><div class="sec-hdr"><h2>Test Tracker</h2><div class="sub">2 Subject tests + 2 Mixed-topic tests per subject &nbsp;&middot;&nbsp; <a href="https://learn.examdost.com/ots/ee?mode=topics#topics" target="_blank" style="color:var(--acc);text-decoration:none;font-weight:700;font-size:12px;">🔗 ExamDost Topic Tests ↗</a></div></div>${testHtml}</div></div>`;
-}
-
-/* ══ EXPORT / IMPORT ══ */
-function exportData(){loadDisc();loadSampleMocks();const data={subjects,daily,settings,milestones:[...earnedMilestones],subTests,rev1Done,rev1Notes,rev1Pages,mockData,pyqData,discData,sampleMocks};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`gate2027-backup-${TODAY}.json`;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);dataStatus('✓ Backup exported','#4ade80');}
-function importData(){const inp=document.createElement('input');inp.type='file';inp.accept='.json';inp.onchange=e=>{const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=ev=>{try{const d=JSON.parse(ev.target.result);if(d.subjects)subjects=d.subjects;if(d.daily)daily=d.daily;if(d.settings)settings=d.settings;if(d.milestones)earnedMilestones=new Set(d.milestones);if(d.subTests)subTests=d.subTests;if(d.rev1Done)rev1Done=d.rev1Done;if(d.rev1Notes)rev1Notes=d.rev1Notes;if(d.rev1Pages)rev1Pages=d.rev1Pages;if(d.mockData)mockData=d.mockData;if(d.pyqData)pyqData=d.pyqData;if(d.discData)discData=d.discData;if(d.sampleMocks)sampleMocks=d.sampleMocks;lsSet('gate-sample-mocks',sampleMocks);lsSet('gate-discipline',discData);lsSet('gate-subjects',subjects);lsSet('gate-daily',daily);lsSet('gate-settings',settings);lsSet('gate-milestones',[...earnedMilestones]);lsSet('gate-sub-tests',subTests);lsSet('gate-rev1-done',rev1Done);lsSet('gate-rev1-notes',rev1Notes);lsSet('gate-rev1-pages',rev1Pages);lsSet('gate-mocks',mockData);lsSet('gate-pyq-data',pyqData);lsSet(MIGRATION_KEY,'1');renderAll();dataStatus('✓ Data imported','#4ade80');}catch(err){dataStatus('✗ Import failed: '+err.message,'#ef4444');}};reader.readAsText(file);};document.body.appendChild(inp);inp.click();inp.remove();}
-function copyData(){loadDisc();loadSampleMocks();const data={subjects,daily,settings,milestones:[...earnedMilestones],subTests,rev1Done,rev1Notes,rev1Pages,mockData,pyqData,discData,sampleMocks};const txt=JSON.stringify(data);navigator.clipboard.writeText(txt).then(()=>dataStatus('✓ Copied','#4ade80')).catch(()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();dataStatus('✓ Copied (fallback)','#4ade80');});}
-
-function dbThreeCards(
-  activeSub,hDone,vDone,hPct,vPct,dLeft,subCol,
-  r1ActiveSub,r1Slot,r1TodayPg,r1Target,r1PgsDone,r1TotPg,r1PgPct,r1Col2,
-  pyqMonthSubs,pyqMonthSubNames,pyqMonthAcc,pyqMonthCol,pyqMonthC,pyqMonthW,pyqPendingNames
-){
-  /* ── Study card ── */
-  var studyCard='<div class="db-today-card" style="margin-bottom:0;padding:12px 14px;">'
-    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
-      +'<div class="db-today-lbl" style="color:var(--acc);margin:0;">📚 STUDY</div>'
-      +'<div style="font-size:10px;color:var(--faint);">'+dLeft+'d · '+activeSub.status+'</div>'
-    +'</div>'
-    +'<div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:8px;line-height:1.2;">'+esc(activeSub.name)+'</div>'
-    +'<div style="display:flex;gap:10px;">'
-      +'<div style="flex:1;">'
-        +'<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:3px;">'
-          +'<div style="font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;">Hours</div>'
-          +'<div style="font-size:13px;font-weight:800;color:'+subCol+';">'+hDone.toFixed(1)+'<span style="font-size:9px;color:var(--faint);font-weight:400;">/'+activeSub.targetHrs+'</span></div>'
+  var sched={};
+  subjects.forEach(function(s){var sl=REV1_SCHEDULE[s.id];sched[s.id]=sl?Object.assign({},sl,{overflow:sl.end>'2027-01-03'}):{start:'',end:'',days:0,perDay:0,overflow:false};});
+  var rev1Subs=subjects.filter(function(s){return REV1_SCHEDULE[s.id]&&REV1_SCHEDULE[s.id].days>0;});
+  var doneCount=rev1Subs.filter(function(s){return rev1Done[s.id];}).length;
+  var totalPages=allPages();
+  var rev1DonePages=subjects.reduce(function(t,s){return t+Math.min(pagesDone(s.id),subPages(s.id));},0);
+  var snDonePages=subjects.reduce(function(t,s){return t+Math.min(snPagesDone(s.id),subPages(s.id));},0);
+  var rev1Pct=totalPages?Math.round(rev1DonePages/totalPages*100):0;
+  var snPct=totalPages?Math.round(snDonePages/totalPages*100):0;
+  var rev1Today=subjects.reduce(function(t,s){return t+pagesOn(s.id,rev1LogDate);},0);
+  var snToday=subjects.reduce(function(t,s){return t+snPagesOn(s.id,rev1LogDate);},0);
+  var activeSubs=subjects.filter(function(s){return['active','ready','overdue'].includes(rev1Status(s,sched[s.id]));});
+  var todayTarget=activeSubs.reduce(function(t,s){return t+pageTarget(s.id,sched[s.id]);},0);
+  var OD_PATH='C:\\Users\\AswithGiduturi\\OneDrive - DESRI\\Documents\\G2027_2028\\Video Notes';
+  var rows='';
+  subjects.forEach(function(sub){
+    var slot=sched[sub.id];var st=rev1Status(sub,slot);var tagArr=REV1_TAG[st];var bg=tagArr[0],col=tagArr[1],label=tagArr[2];
+    var dim=(st==='locked'||st==='overflow')?'opacity:.6;':'';var tot=subPages(sub.id);
+    var r1Dn=Math.min(pagesDone(sub.id),tot);var r1Pct=tot?Math.round(r1Dn/tot*100):0;
+    var r1Pcol=r1Pct>=100?'#4ade80':r1Pct>=50?'#00d4ff':'#fb923c';
+    var r1Tgt=pageTarget(sub.id,slot);var r1Today=pagesOn(sub.id,rev1LogDate);
+    var r1Pace=r1Tgt>0?(r1Today>=r1Tgt?['#003d1f','#4ade80','\u2713 ON TRACK']:r1Today>=r1Tgt*0.6?['#2d1900','#fbbf24','\u26a1 CLOSE']:['#2d0000','#ef4444','\u26a0 BEHIND']):null;
+    var snDn=Math.min(snPagesDone(sub.id),tot);var snPct2=tot?Math.round(snDn/tot*100):0;
+    var snPcol=snPct2>=100?'#4ade80':snPct2>=50?'#a78bfa':'#c084fc';
+    var snTgt=snPageTarget(sub.id);var snTdy=snPagesOn(sub.id,rev1LogDate);
+    var snPace=snTgt>0?(snTdy>=snTgt?['#003d1f','#4ade80','\u2713 ON TRACK']:snTdy>=snTgt*0.6?['#2d1900','#fbbf24','\u26a1 CLOSE']:['#2d0000','#ef4444','\u26a0 BEHIND']):null;
+    var r1Bar=tot?('<div style="width:50px;height:5px;background:var(--border);border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:3px"><div style="height:100%;width:'+r1Pct+'%;background:'+r1Pcol+';border-radius:3px;"></div></div>'+r1Pct+'%'):'—';
+    var snBar=tot?('<div style="width:50px;height:5px;background:var(--border);border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:3px"><div style="height:100%;width:'+snPct2+'%;background:'+snPcol+';border-radius:3px;"></div></div>'+snPct2+'%'):'—';
+    var r1Tracker=!tot?''
+      :'<div style="background:#0a141e;border:1px solid var(--border);border-radius:8px;padding:12px 14px;">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px"><span style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px">\ud83d\udcd6 Pages Revised</span>'+(r1Pace?'<span style="font-size:10px;background:'+r1Pace[0]+';color:'+r1Pace[1]+';padding:2px 8px;border-radius:4px;font-weight:700">'+r1Pace[2]+'</span>':'')+'</div>'
+        +'<div style="display:flex;align-items:baseline;gap:7px;margin-bottom:6px"><span style="font-size:22px;font-weight:800;color:'+r1Pcol+'">'+r1Dn+'</span><span style="font-size:12px;color:var(--faint)">/ '+tot+' pages</span><span style="margin-left:auto;font-size:11px;color:var(--faint)">'+(tot-r1Dn)+' left</span></div>'
+        +'<div style="height:6px;background:var(--card);border-radius:3px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:'+r1Pct+'%;background:'+r1Pcol+';border-radius:3px;"></div></div>'
+        +'<div style="font-size:10px;color:var(--faint);margin-bottom:10px">'+r1Pct+'% complete'+(r1Tgt>0?' \u00b7 need <strong style="color:'+col+'">'+r1Tgt+' pg/day</strong> by '+fmt(slot.end):'')+'</div>'
+        +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:9px;border-top:1px solid var(--border)"><span style="font-size:11px;color:var(--muted)">Pages on '+fmt(rev1LogDate)+':</span>'
+          +'<button onclick="stepRevPages('+sub.id+',-5)" style="background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:5px;width:30px;height:28px;font-size:12px;cursor:pointer">\u22125</button>'
+          +'<input class="inp-sm" type="number" min="0" value="'+r1Today+'" onchange="setRevPages('+sub.id+',\''+rev1LogDate+'\',this.value)" style="width:62px;text-align:center;font-weight:700;color:'+(r1Today>0?'#4ade80':'var(--text)')+';">'
+          +'<button onclick="stepRevPages('+sub.id+',5)" style="background:var(--acc);border:none;color:var(--navy);border-radius:5px;width:30px;height:28px;font-size:12px;font-weight:700;cursor:pointer">+5</button>'
+          +(r1Tgt>0?'<span style="font-size:11px;color:var(--faint)">target '+r1Tgt+'</span>':'')
         +'</div>'
-        +'<div class="db-pbar" style="margin-top:0;"><div class="db-pbar-fill" style="width:'+hPct+'%;background:'+subCol+'"></div></div>'
-        +'<div style="font-size:9px;color:var(--faint);margin-top:2px;">'+hPct+'%</div>'
-      +'</div>'
-      +'<div style="flex:1;">'
-        +'<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:3px;">'
-          +'<div style="font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;">Videos</div>'
-          +'<div style="font-size:13px;font-weight:800;color:var(--acc);">'+vDone+'<span style="font-size:9px;color:var(--faint);font-weight:400;">/'+activeSub.videos+'</span></div>'
-        +'</div>'
-        +'<div class="db-pbar" style="margin-top:0;"><div class="db-pbar-fill" style="width:'+vPct+'%;background:var(--acc)"></div></div>'
-        +'<div style="font-size:9px;color:var(--faint);margin-top:2px;">'+vPct+'%</div>'
-      +'</div>'
-    +'</div>'
-  +'</div>';
-
-  /* ── Rev1 card ── */
-  var r1Inner;
-  if(r1ActiveSub){
-    r1Inner='<div style="font-size:13px;font-weight:800;color:var(--text);margin-bottom:8px;line-height:1.2;">'+esc(r1ActiveSub.name)+'</div>'
-      +'<div style="font-size:10px;color:var(--muted);margin-bottom:8px;">'+fmt(r1Slot.start)+' \u2013 '+fmt(r1Slot.end)+' \u00b7 '+r1Slot.days+'d</div>'
-      +'<div style="display:flex;gap:10px;">'
-        +'<div style="flex:1;">'
-          +'<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:3px;">'
-            +'<div style="font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;">Today</div>'
-            +'<div style="font-size:13px;font-weight:800;color:'+r1Col2+';">'+r1TodayPg+'<span style="font-size:9px;color:var(--faint);font-weight:400;">/'+r1Target+'</span></div>'
-          +'</div>'
-        +'</div>'
-        +'<div style="flex:1;">'
-          +'<div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:3px;">'
-            +'<div style="font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;">Total</div>'
-            +'<div style="font-size:13px;font-weight:800;color:#c084fc;">'+r1PgsDone+'<span style="font-size:9px;color:var(--faint);font-weight:400;">/'+r1TotPg+'p</span></div>'
-          +'</div>'
-        +'</div>'
-      +'</div>'
-      +'<div style="margin-top:6px;">'
-        +'<div style="font-size:9px;color:var(--faint);margin-bottom:2px;">Progress '+r1PgPct+'%</div>'
-        +'<div class="db-pbar"><div class="db-pbar-fill" style="width:'+r1PgPct+'%;background:#c084fc"></div></div>'
       +'</div>';
-  } else {
-    var r1DaysAway=diffDays(TODAY,REV1_START);
-    var r1StartMsg=r1DaysAway===1?'Starts tomorrow \u00b7 9 Sep':r1DaysAway===0?'Starts today \u00b7 9 Sep':'Starts in '+r1DaysAway+' day'+(r1DaysAway!==1?'s':'')+' \u00b7 9 Sep';
-    r1Inner='<div style="font-size:12px;color:#c084fc;font-weight:700;margin-top:8px;">'+r1StartMsg+'</div>'
-      +'<div style="font-size:10px;color:var(--faint);margin-top:4px;">Network Analysis first \u00b7 240 pages/day</div>';
-  }
-  var rev1Card='<div class="db-today-card" style="margin-bottom:0;border-color:#c084fc33;padding:12px 14px;">'
-    +'<div class="db-today-lbl" style="color:#c084fc;margin-bottom:6px;">\u{1f4d6} REVISION 1</div>'
-    +r1Inner
-  +'</div>';
-
-  /* ── PYQ card ── */
-  /* find today's slot OR the next upcoming slot as preview */
-  var _plan=typeof PYQ_PLAN!=='undefined'?PYQ_PLAN:[];
-  var todayPlanSlot=_plan.find(function(s){return s.date===TODAY;})||null;
-  var nextPlanSlot=!todayPlanSlot?(_plan.find(function(s){return s.date>TODAY;})||null):null;
-  var tpsSlot=todayPlanSlot||nextPlanSlot;  /* whichever is relevant */
-  var pyqTodayHtml='';
-  if(tpsSlot){
-    var tps=tpsSlot;
-    var isUpcoming=!todayPlanSlot&&!!nextPlanSlot;
-    var daysUntil=isUpcoming?diffDays(TODAY,tps.date):0;
-    var tpSubShort={1:'Network Theory',2:'Signals & Systems',3:'Control Systems',4:'Measurements',5:'EMFT',6:'Machines',7:'Power Systems',8:'Power Electronics',9:'Digital Electronics',10:'Analog Electronics'}[tps.subId]||'';
-    var tpAct=!isUpcoming&&typeof getPyqPlanActual==='function'?getPyqPlanActual(tps.date,tps.subId,tps.ti,tps.part):0;
-    var tpDone=!isUpcoming&&tpAct>=tps.target&&tps.target>0;
-    var tpPartLabel=tps.totalDays>1?' (pt '+tps.part+'/'+tps.totalDays+')':'';
-    var tpActCol=tpDone?'#4ade80':tpAct>0?'#fbbf24':'var(--muted)';
-    var tpLabel=isUpcoming?'UPCOMING \u00b7 '+fmt(tps.date)+(daysUntil===1?' (tomorrow)':daysUntil>1?' (in '+daysUntil+' days)':''):'TODAY\u2019S TARGET';
-    var tpLabelCol=isUpcoming?'var(--muted)':'var(--faint)';
-    pyqTodayHtml='<div style="margin-top:8px;padding:8px 10px;background:#1a1400;border:1px solid #fbbf2433;border-radius:6px;">'
-      +'<div style="font-size:9px;color:'+tpLabelCol+';text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">'+tpLabel+'</div>'
-      +'<div style="font-size:11px;font-weight:700;color:#fbbf24;line-height:1.3;">'+esc(tpSubShort)+' \u00b7 '+esc(tps.name)+tpPartLabel+'</div>'
-      +'<div style="display:flex;align-items:baseline;gap:6px;margin-top:4px;">'
-        +(isUpcoming
-          ?'<span style="font-size:13px;color:var(--muted);">Target: <strong style="color:#fbbf24;">'+tps.target+' q</strong></span>'
-          :'<span style="font-size:22px;font-weight:800;color:'+tpActCol+';">'+tpAct+'</span>'
-           +'<span style="font-size:11px;color:var(--faint);">/ '+tps.target+' q</span>'
-           +(tpDone?'<span style="font-size:10px;color:#4ade80;margin-left:auto;">\u2713 Done</span>':'')
-        )
+    var snTracker=!tot?'<div style="font-size:12px;color:var(--faint);padding:6px 0;">No PDF mapped.</div>'
+      :'<div style="background:#0d0a1a;border:1px solid #a78bfa33;border-radius:8px;padding:12px 14px;">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px"><span style="font-size:10px;color:#a78bfa;font-weight:700;text-transform:uppercase;letter-spacing:.5px">\u270f\ufe0f Short Notes Pages</span>'+(snPace?'<span style="font-size:10px;background:'+snPace[0]+';color:'+snPace[1]+';padding:2px 8px;border-radius:4px;font-weight:700">'+snPace[2]+'</span>':'')+'</div>'
+        +'<div style="display:flex;align-items:baseline;gap:7px;margin-bottom:6px"><span style="font-size:22px;font-weight:800;color:'+snPcol+'">'+snDn+'</span><span style="font-size:12px;color:var(--faint)">/ '+tot+' pages</span><span style="margin-left:auto;font-size:11px;color:var(--faint)">'+(tot-snDn)+' left</span></div>'
+        +'<div style="height:6px;background:var(--card);border-radius:3px;overflow:hidden;margin-bottom:6px"><div style="height:100%;width:'+snPct2+'%;background:'+snPcol+';border-radius:3px;"></div></div>'
+        +'<div style="font-size:10px;color:var(--faint);margin-bottom:10px">'+snPct2+'% complete'+(snTgt>0?' \u00b7 need <strong style="color:'+snPcol+'">'+snTgt+' pg/day</strong> by '+fmt(slot.end):'')+'</div>'
+        +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:9px;border-top:1px solid #a78bfa33"><span style="font-size:11px;color:var(--muted)">Pages on '+fmt(rev1LogDate)+':</span>'
+          +'<button onclick="stepSnPages('+sub.id+',-5)" style="background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:5px;width:30px;height:28px;font-size:12px;cursor:pointer">\u22125</button>'
+          +'<input class="inp-sm" type="number" min="0" value="'+snTdy+'" onchange="setSnPages('+sub.id+',\''+rev1LogDate+'\',this.value)" style="width:62px;text-align:center;font-weight:700;color:'+(snTdy>0?'#a78bfa':'var(--text)')+';">'
+          +'<button onclick="stepSnPages('+sub.id+',5)" style="background:#6d28d9;border:none;color:#fff;border-radius:5px;width:30px;height:28px;font-size:12px;font-weight:700;cursor:pointer">+5</button>'
+          +(snTgt>0?'<span style="font-size:11px;color:var(--faint)">target '+snTgt+'</span>':'')
+        +'</div>'
+      +'</div>';
+    rows+='<div style="'+dim+'background:var(--navy);border:1px solid var(--border);border-left:3px solid '+col+';border-radius:9px;margin-bottom:8px;overflow:hidden;">'
+      +'<div style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;" onclick="rev1Toggle('+sub.id+')">'
+        +'<div style="flex:1;min-width:180px;">'
+          +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;"><span style="font-size:11px;font-weight:700;color:var(--faint);">#'+sub.id+'</span><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:'+bg+';color:'+col+';border:1px solid '+col+'44;">'+label+'</span>'+(rev1Done[sub.id]?'<span style="font-size:10px;color:#4ade80;font-weight:700;">\u2713 Revised</span>':'')+'</div>'
+          +'<div style="font-size:13px;font-weight:700;color:var(--text);">'+esc(sub.name)+'</div>'
+          +'<div style="font-size:10px;color:var(--faint);margin-top:2px;">'+esc(sub.faculty)+' \u00b7 '+fmt(slot.start)+' \u2013 '+fmt(slot.end)+' ('+slot.days+'d)</div>'
+        +'</div>'
+        +'<div style="display:flex;gap:14px;align-items:center;flex-shrink:0;flex-wrap:wrap;">'
+          +'<div style="text-align:center;"><div style="font-size:9px;color:var(--muted);margin-bottom:3px;">REV1</div><div style="font-size:11px;font-weight:700;color:'+r1Pcol+';">'+r1Bar+'</div></div>'
+          +'<div style="text-align:center;"><div style="font-size:9px;color:var(--muted);margin-bottom:3px;">SHORT NOTES</div><div style="font-size:11px;font-weight:700;color:'+snPcol+';">'+snBar+'</div></div>'
+          +'<span id="rev1-arr-'+sub.id+'" style="font-size:12px;color:var(--muted);width:14px;flex-shrink:0;">\u25b8</span>'
+        +'</div>'
+      +'</div>'
+      +'<div id="rev1-exp-'+sub.id+'" style="display:none;border-top:1px solid var(--border);padding:14px 16px;">'
+        +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#0d1b2a;border:1px solid #1e3a5a;border-radius:7px;padding:8px 12px;margin-bottom:14px;">'
+          +'<span style="font-size:11px;color:var(--muted);">\ud83d\udcc2 Notes:</span><code style="font-size:10px;color:#7dd3fc;word-break:break-all;">'+OD_PATH+'</code>'
+          +'<button onclick="navigator.clipboard.writeText(\''+OD_PATH+'\').then(function(){this.textContent=\'\u2713 Copied\';setTimeout(function(){document.querySelectorAll(\'.od-copy-btn\').forEach(function(b){b.textContent=\'Copy\';});},1500);}).call(this);" class="od-copy-btn" style="background:#0f2d4a;border:1px solid #1e3a5a;color:#7dd3fc;border-radius:5px;padding:3px 9px;font-size:10px;cursor:pointer;white-space:nowrap;flex-shrink:0;">Copy</button>'
+        +'</div>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">'+r1Tracker+snTracker+'</div>'
+        +'<div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;">'
+          +'<div><label class="lbl">Revision remarks</label><textarea class="inp" rows="2" style="font-size:12px;margin-top:4px;" placeholder="Weak topics, formulas to recheck\u2026" oninput="setRev1Note('+sub.id+',this.value);">'+esc(rev1Notes[sub.id]||'')+'</textarea></div>'
+          +'<button class="btn-g" style="font-size:11px;padding:6px 14px;margin-top:18px;white-space:nowrap;'+(rev1Done[sub.id]?'color:#4ade80;border-color:#4ade8066':'')+'" onclick="toggleRev1Done('+sub.id+')">'+(rev1Done[sub.id]?'\u2713 Revised':'Mark Revised')+'</button>'
+        +'</div>'
       +'</div>'
     +'</div>';
-  }
-  var pyqInner;
-  if(pyqMonthSubs.length>0){
-    pyqInner='<div style="font-size:11px;color:var(--muted);margin-top:4px;">'+esc(pyqMonthSubNames.join(', '))+'</div>'
-      +'<div style="margin-top:8px;display:flex;gap:16px;">'
-        +'<div><div style="font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Accuracy</div>'
-        +'<div style="font-size:22px;font-weight:800;color:'+pyqMonthCol+';">'+(pyqMonthAcc!==null?pyqMonthAcc+'%':'\u2014')+'</div></div>'
-        +'<div><div style="font-size:9px;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Questions</div>'
-        +'<div style="font-size:22px;font-weight:800;color:#fbbf24;">'+(pyqMonthC+pyqMonthW)+'</div></div>'
-      +'</div>'
-      +'<div style="font-size:10px;color:var(--faint);margin-top:6px;">'+pyqMonthC+' correct \u00b7 '+pyqMonthW+' wrong</div>'
-      +pyqTodayHtml;
-  } else {
-    var pendMsg=pyqPendingNames&&pyqPendingNames.length>0
-      ?'<div style="font-size:10px;color:var(--faint);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-top:8px;">Complete this month</div>'
-       +'<div style="font-size:11px;color:#fbbf24;margin-top:4px;line-height:1.5;">'+esc(pyqPendingNames.join(', '))+'</div>'
-      :'<div style="font-size:11px;color:#4ade80;margin-top:8px;">\u2713 All completed subjects have PYQ logged</div>';
-    pyqInner='<div style="font-size:11px;color:var(--faint);margin-top:4px;">No sessions this month</div>'+pyqTodayHtml+pendMsg;
-  }
-  var pyqCard='<div class="db-today-card" style="margin-bottom:0;border-color:#fbbf2433;padding:12px 14px;">'
-    +'<div class="db-today-lbl" style="color:#fbbf24;margin-bottom:6px;">\u{1f3af} PYQ \u2014 THIS MONTH</div>'
-    +pyqInner
-  +'</div>';
-
-  return '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;">'
-    +studyCard+rev1Card+pyqCard
-  +'</div>';
+  });
+  var html='<div class="section"><div class="sec-hdr"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;width:100%"><div><h2>Revision 1</h2><div class="sub">9 Sep 2026 \u2013 31 Dec 2026 \u00b7 Click a subject to expand</div></div></div></div>'
+    +'<div class="g4" style="margin-bottom:16px;">'
+      +'<div class="hcard" style="border:1px solid #00d4ff22"><div class="hlbl">Pages Revised</div><div class="hval" style="color:#00d4ff">'+rev1DonePages+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+totalPages+'</span></div><div class="pbar-bg"><div class="pbar-fill" style="width:'+rev1Pct+'%;background:#00d4ff;"></div></div></div>'
+      +'<div class="hcard" style="border:1px solid #a78bfa22"><div class="hlbl">SN Pages</div><div class="hval" style="color:#a78bfa">'+snDonePages+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+totalPages+'</span></div><div class="pbar-bg"><div class="pbar-fill" style="width:'+snPct+'%;background:#a78bfa;"></div></div></div>'
+      +'<div class="hcard" style="border:1px solid #4ade8022"><div class="hlbl">Subjects Revised</div><div class="hval" style="color:#4ade80">'+doneCount+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+rev1Subs.length+'</span></div><div class="hsub">'+activeSubs.length+' active now</div></div>'
+      +'<div class="hcard" style="border:1px solid #fbbf2422"><div class="hlbl">Pages Today</div><div class="hval" style="color:'+(rev1Today>=todayTarget&&todayTarget>0?'#4ade80':'#fbbf24')+'">'+rev1Today+'<span style="font-size:13px;color:var(--faint);font-weight:400;"> rev</span></div><div class="hsub">'+(snToday>0?snToday+' SN pages':'')+'</div></div>'
+    +'</div>'
+    +'<div class="card" style="padding:11px 15px;margin-bottom:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'
+      +'<span class="lbl" style="margin:0;">Logging pages for</span>'
+      +'<button onclick="navRev1Date(-1)" style="background:var(--navy);border:1px solid var(--border);border-radius:7px;width:30px;height:30px;cursor:pointer;color:var(--text);font-size:13px;display:inline-flex;align-items:center;justify-content:center;">&#9664;</button>'
+      +'<input type="date" value="'+rev1LogDate+'" onchange="setRev1LogDate(this.value)" style="background:var(--navy);border:1px solid var(--acc);border-radius:6px;padding:5px 9px;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;outline:none;">'
+      +'<button onclick="navRev1Date(1)" style="background:var(--navy);border:1px solid var(--border);border-radius:7px;width:30px;height:30px;cursor:pointer;color:var(--text);font-size:13px;display:inline-flex;align-items:center;justify-content:center;">&#9654;</button>'
+      +(rev1LogDate!==TODAY?'<button class="btn-g" style="font-size:11px;padding:4px 10px;" onclick="setRev1LogDate(\''+TODAY+'\')">&#8629; Today</button>':'')
+    +'</div>'
+    +rows+'</div>';
+  $('sec-rev1').innerHTML=html;
 }
+
+
+/* ══ SAMPLE MOCK TRACKER ══ */
+function loadSampleMocks(){ sampleMocks=lsGet('gate-sample-mocks')||[]; }
+function saveSampleMocks(){ lsSet('gate-sample-mocks',sampleMocks); showSaveToast(); }
+function smToggleLog(){
+  var el=document.getElementById('sm-log-form'),arr=document.getElementById('sm-log-arr');
+  if(!el)return;var open=el.style.display!=='none';
+  el.style.display=open?'none':'block';
+  if(arr)arr.textContent=open?'\u25b8 Log a Sample Mock':'\u25be Log a Sample Mock';
+}
+function addSampleMock(){
+  var dEl=$('sm-date'),cEl=$('sm-correct'),wEl=$('sm-wrong'),nEl=$('sm-notes');
+  var date=dEl&&dEl.value?dEl.value:TODAY;
+  var correct=Math.max(0,parseInt((cEl&&cEl.value)||0)||0);
+  var wrong=Math.max(0,parseInt((wEl&&wEl.value)||0)||0);
+  var notes=nEl?nEl.value.trim():'';
+  if(correct===0&&wrong===0){if(cEl)cEl.focus();return;}
+  sampleMocks.push({id:'sm_'+Date.now(),date:date,correct:correct,wrong:wrong,notes:notes});
+  sampleMocks.sort(function(a,b){return b.date.localeCompare(a.date);});
+  saveSampleMocks();
+  if(dEl)dEl.value='';if(cEl)cEl.value='';if(wEl)wEl.value='';if(nEl)nEl.value='';
+  renderSampleMocks();
+}
+function deleteSampleMock(idx){
+  if(!confirm('Delete this mock entry?'))return;
+  sampleMocks.splice(idx,1);saveSampleMocks();renderSampleMocks();
+}
+function renderSampleMocks(){
+  loadSampleMocks();var el=$('sec-sample');if(!el)return;
+  var total=sampleMocks.length;
+  var scores=sampleMocks.map(function(m){var t=m.correct+m.wrong;return t>0?Math.round(m.correct/t*100):null;}).filter(function(s){return s!==null;});
+  var avgAcc=scores.length?Math.round(scores.reduce(function(a,b){return a+b;},0)/scores.length):null;
+  var bestAcc=scores.length?Math.max.apply(null,scores):null;
+  var totalC=sampleMocks.reduce(function(t,m){return t+(m.correct||0);},0);
+  var totalW=sampleMocks.reduce(function(t,m){return t+(m.wrong||0);},0);
+  function accCol(c){return c===null?'var(--muted)':c>=75?'#4ade80':c>=55?'#fbbf24':'#ef4444';}
+  var rows=sampleMocks.length===0
+    ?'<div style="text-align:center;padding:20px;color:var(--faint);font-size:12px;">No sample mocks logged yet.</div>'
+    :('<div style="margin-top:12px;">'
+      +'<div style="display:grid;grid-template-columns:100px 52px 52px 64px 1fr 30px;gap:8px;padding:4px 12px;margin-bottom:2px;">'
+        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);">Date</div>'
+        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--faint);text-align:center;">\u2713</div>'
+        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--faint);text-align:center;">\u2717</div>'
+        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--faint);text-align:center;">Acc%</div>'
+        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--faint);">Notes</div><div></div>'
+      +'</div>'
+      +sampleMocks.map(function(m,idx){
+          var t=m.correct+m.wrong,acc=t>0?Math.round(m.correct/t*100):null,col=accCol(acc),isToday=m.date===TODAY;
+          return '<div style="display:grid;grid-template-columns:100px 52px 52px 64px 1fr 30px;gap:8px;align-items:center;padding:9px 12px;border-radius:8px;margin-bottom:5px;background:var(--navy);border:1px solid '+(isToday?'#fbbf2444':'var(--border)')+';">'
+            +'<div style="font-size:12px;font-weight:700;color:'+(isToday?'#fbbf24':'var(--text)')+';">'+fmtFull(m.date)+'</div>'
+            +'<div style="text-align:center;font-size:16px;font-weight:800;color:#4ade80;">'+m.correct+'</div>'
+            +'<div style="text-align:center;font-size:16px;font-weight:800;color:#ef4444;">'+m.wrong+'</div>'
+            +'<div style="text-align:center;font-size:16px;font-weight:800;color:'+col+';">'+(acc!==null?acc+'%':'\u2014')+'</div>'
+            +'<div style="font-size:11px;color:var(--muted);">'+(m.notes?esc(m.notes):'<span style="color:var(--faint);">\u2014</span>')+'</div>'
+            +'<button onclick="deleteSampleMock('+idx+')" title="Delete" style="background:none;border:1px solid var(--border);border-radius:5px;color:var(--faint);cursor:pointer;width:26px;height:26px;font-size:11px;">\u2715</button>'
+          +'</div>';
+        }).join('')+'</div>');
+  el.innerHTML=''
+    +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-bottom:14px;">'
+      +'<div class="hcard" style="border:1px solid #fbbf2422;"><div class="hlbl">Sample Mocks</div><div class="hval" style="color:#fbbf24;">'+total+'</div><div class="hsub">full-length tests</div></div>'
+      +'<div class="hcard" style="border:1px solid #4ade8022;"><div class="hlbl">Avg Accuracy</div><div class="hval" style="color:'+accCol(avgAcc)+'">'+(avgAcc!==null?avgAcc+'%':'\u2014')+'</div><div class="hsub">across all mocks</div></div>'
+      +'<div class="hcard" style="border:1px solid #00d4ff22;"><div class="hlbl">Best Score</div><div class="hval" style="color:'+accCol(bestAcc)+'">'+(bestAcc!==null?bestAcc+'%':'\u2014')+'</div><div class="hsub">highest accuracy</div></div>'
+      +'<div class="hcard" style="border:1px solid #c084fc22;"><div class="hlbl">Total Qs</div><div class="hval" style="color:#c084fc;">'+(totalC+totalW)+'</div><div class="hsub"><span style="color:#4ade80;">'+totalC+' \u2713</span> &nbsp; <span style="color:#ef4444;">'+totalW+' \u2717</span></div></div>'
+    +'</div>'
+    +'<div style="background:var(--navy);border:1px solid #fbbf2433;border-radius:9px;overflow:hidden;margin-bottom:4px;">'
+      +'<div onclick="smToggleLog()" style="padding:11px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;">'
+        +'<span id="sm-log-arr" style="font-size:12px;font-weight:700;color:#fbbf24;">\u25b8 Log a Sample Mock</span>'
+        +'<span style="font-size:10px;color:var(--faint);">click to expand</span>'
+      +'</div>'
+      +'<div id="sm-log-form" style="display:none;padding:12px 14px;border-top:1px solid var(--border);">'
+        +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">'
+          +'<div><label class="lbl">Date</label><input type="date" id="sm-date" class="inp-sm" value="'+TODAY+'" style="width:130px;"></div>'
+          +'<div><label class="lbl">Correct \u2713</label><input type="number" id="sm-correct" class="inp-sm" min="0" placeholder="e.g. 42" style="width:80px;border-color:#4ade8044;"></div>'
+          +'<div><label class="lbl">Wrong \u2717</label><input type="number" id="sm-wrong" class="inp-sm" min="0" placeholder="e.g. 15" style="width:80px;border-color:#ef444444;"></div>'
+          +'<div style="flex:1;min-width:160px;"><label class="lbl">Notes (optional)</label><input type="text" id="sm-notes" class="inp-sm" placeholder="Weak areas, remarks..." style="width:100%;"></div>'
+          +'<div><button class="btn" onclick="addSampleMock()">Save Mock</button></div>'
+        +'</div>'
+      +'</div>'
+    +'</div>'
+    +rows;
+}
+
 
 function renderDashboard(){
   const el=$('db-root');if(!el)return;
@@ -2926,243 +2858,11 @@ function renderDashboard(){
     ${todayCard}
     ${activeSubCard}
     <div class="db-section-hdr" style="margin-bottom:10px;">🎯 Discipline Score</div>
-    <div id="disc-card-root"></div>`;
+    <div id="disc-card-root"></div>
+    <div class="db-section-hdr" style="margin-top:24px;margin-bottom:10px;">📝 Sample Mocks</div>
+    <div id="sec-sample"></div>`;
   renderDiscCard();
-}
-
-/* ══ STUDY TAB VIEW TOGGLE ══ */
-function studySetView(v){
-  studyTabView=v;
-  var pv=$('study-view-progress'), mv=$('study-view-milestones');
-  var bp=$('study-btn-progress'), bm=$('study-btn-milestones');
-  if(pv) pv.style.display=v==='progress'?'':'none';
-  if(mv) mv.style.display=v==='milestones'?'':'none';
-  function hi(b,on){if(!b)return;b.style.borderColor=on?'var(--acc)':'var(--border)';b.style.background=on?'#001e2e':'var(--navy)';b.style.color=on?'var(--acc)':'var(--muted)';}
-  hi(bp,v==='progress'); hi(bm,v==='milestones');
-  if(v==='milestones') renderMilestones();
-}
-
-/* ══ REV1 TAB VIEW TOGGLE ══ */
-function rev1SetView(v){
-  rev1TabView=v;
-  var nv=$('rev1-view-notes'), sv=$('rev1-view-sn');
-  var bn=$('rev1-btn-notes'), bs=$('rev1-btn-sn');
-  if(nv) nv.style.display=v==='notes'?'':'none';
-  if(sv) sv.style.display=v==='sn'?'':'none';
-  function hi(b,on){if(!b)return;b.style.borderColor=on?'var(--acc)':'var(--border)';b.style.background=on?'#001e2e':'var(--navy)';b.style.color=on?'var(--acc)':'var(--muted)';}
-  hi(bn,v==='notes'); hi(bs,v==='sn');
-  if(v==='sn') renderShortNotes();
-}
-
-/* ══ REV2 TAB VIEW TOGGLE ══ */
-function rev2SetView(v){
-  rev2TabView=v;
-  var tv=$('rev2-view-tracker'), sv=$('rev2-view-sample');
-  var bt=$('rev2-btn-tracker'), bs=$('rev2-btn-sample');
-  if(tv) tv.style.display=v==='tracker'?'':'none';
-  if(sv) sv.style.display=v==='sample'?'':'none';
-  function hi(b,on){if(!b)return;b.style.borderColor=on?'var(--acc)':'var(--border)';b.style.background=on?'#001e2e':'var(--navy)';b.style.color=on?'var(--acc)':'var(--muted)';}
-  hi(bt,v==='tracker'); hi(bs,v==='sample');
-  if(v==='sample') renderSampleMocks();
-}
-
-/* ══ SHORT NOTES HELPERS ══ */
-function snPagesDone(id){ return Object.values(snPages[id]||{}).reduce(function(t,v){return t+(+v||0);},0); }
-function snPagesOn(id,date){ return +((snPages[id]||{})[date]||0); }
-function setSnPages(id,date,val){
-  var v=Math.max(0,Math.round(+val||0));
-  if(!snPages[id]) snPages[id]={};
-  if(v===0) delete snPages[id][date]; else snPages[id][date]=v;
-  lsSet('gate-sn-pages',snPages); showSaveToast(); renderShortNotes();
-}
-function stepSnPages(id,delta){ setSnPages(id,rev1LogDate,snPagesOn(id,rev1LogDate)+delta); }
-function setSnNote(id,val){ snNotes[id]=val; clearTimeout(saveTimers['sn']); saveTimers['sn']=setTimeout(function(){lsSet('gate-sn-notes',snNotes);showSaveToast();},600); }
-function snPageTarget(id){
-  var tot=subPages(id); if(!tot) return 0;
-  var dn=snPagesDone(id), left=Math.max(0,tot-dn);
-  var slot=REV1_SCHEDULE[id]; if(!slot) return 0;
-  var dl;
-  if(TODAY<slot.start) dl=slot.days;
-  else if(TODAY>slot.end) dl=1;
-  else dl=Math.max(1,diffDays(TODAY,slot.end)+1);
-  return Math.ceil(left/dl);
-}
-
-/* ══ RENDER SHORT NOTES ══ */
-function renderShortNotes(){
-  loadRev1();
-  var el=$('sec-sn'); if(!el) return;
-  var totalPages=allPages();
-  var donePages=subjects.reduce(function(t,s){return t+Math.min(snPagesDone(s.id),subPages(s.id));},0);
-  var pagePct=totalPages?Math.round(donePages/totalPages*100):0;
-  var pagesToday=subjects.reduce(function(t,s){return t+snPagesOn(s.id,rev1LogDate);},0);
-  var startedCount=subjects.filter(function(s){return snPagesDone(s.id)>0;}).length;
-
-  var cards='';
-  subjects.forEach(function(sub){
-    var slot=REV1_SCHEDULE[sub.id]; if(!slot) return;
-    var tot=subPages(sub.id);
-    var dn=Math.min(snPagesDone(sub.id),tot);
-    var pct=tot?Math.round(dn/tot*100):0;
-    var pcol=pct>=100?'#4ade80':pct>=50?'#a78bfa':'#c084fc';
-    var tgt=snPageTarget(sub.id);
-    var today=snPagesOn(sub.id,rev1LogDate);
-    var stCol,stBg,stLabel;
-    if(!tot){stLabel='No PDF';stBg='#0d1e2e';stCol='#4a6a80';}
-    else if(pct>=100){stLabel='Done \u2713';stBg='#003d1f';stCol='#4ade80';}
-    else if(sub.status!=='Completed'){stLabel='Locked';stBg='#0d1b2a';stCol='#4a7a9b';}
-    else if(TODAY>=slot.start&&TODAY<=slot.end){stLabel='Writing';stBg='#0a1020';stCol='#a78bfa';}
-    else if(TODAY>slot.end&&pct<100){stLabel='Overdue';stBg='#2d1900';stCol='#fbbf24';}
-    else{stLabel='Ready';stBg='#1a0d2e';stCol='#c084fc';}
-    var pace=null;
-    if(tgt>0){if(today>=tgt)pace=['#003d1f','#4ade80','\u2713 ON TRACK'];else if(today>=tgt*0.6)pace=['#2d1900','#fbbf24','\u26a1 CLOSE'];else pace=['#2d0000','#ef4444','\u26a0 BEHIND'];}
-    var dim=(sub.status!=='Completed'&&pct===0)?'opacity:.65;':'';
-    var tracker=!tot
-      ?'<div style="font-size:12px;color:var(--faint);padding:8px 0;">No PDF mapped.</div>'
-      :'<div style="background:var(--navy);border-radius:8px;padding:12px 14px;margin-bottom:12px;">'
-        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;">'
-          +'<span style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;">\u270f\ufe0f Short Notes Pages Written</span>'
-          +(pace?'<span style="font-size:10px;background:'+pace[0]+';color:'+pace[1]+';padding:2px 8px;border-radius:4px;font-weight:700;">'+pace[2]+'</span>':'')
-        +'</div>'
-        +'<div style="display:flex;align-items:baseline;gap:7px;margin-bottom:6px;">'
-          +'<span style="font-size:24px;font-weight:800;color:'+pcol+';">'+dn+'</span>'
-          +'<span style="font-size:13px;color:var(--faint);">/ '+tot+' pages</span>'
-          +'<span style="margin-left:auto;font-size:11px;color:var(--faint);">'+(tot-dn)+' left</span>'
-        +'</div>'
-        +'<div style="height:7px;background:var(--card);border-radius:4px;overflow:hidden;">'
-          +'<div style="height:100%;width:'+pct+'%;background:'+pcol+';border-radius:4px;transition:width .35s;"></div>'
-        +'</div>'
-        +'<div style="font-size:10px;color:var(--faint);margin-top:4px;margin-bottom:10px;">'
-          +pct+'% complete'+(tgt>0?' \u00b7 need <strong style="color:'+stCol+';">'+tgt+' pg/day</strong> by '+fmt(slot.end):'')
-          +' \u00b7 source: '+tot+' pages'
-        +'</div>'
-        +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:9px;border-top:1px solid var(--border);">'
-          +'<span style="font-size:11px;color:var(--muted);">Pages on '+fmt(rev1LogDate)+':</span>'
-          +'<button onclick="stepSnPages('+sub.id+',-5)" style="background:var(--card);border:1px solid var(--border);color:var(--muted);border-radius:5px;width:30px;height:28px;font-size:12px;cursor:pointer;">\u22125</button>'
-          +'<input class="inp-sm" type="number" min="0" value="'+today+'" onchange="setSnPages('+sub.id+',\''+rev1LogDate+'\',this.value)" style="width:62px;text-align:center;font-weight:700;color:'+(today>0?'#a78bfa':'var(--text)')+';">'
-          +'<button onclick="stepSnPages('+sub.id+',5)" style="background:#6d28d9;border:none;color:#fff;border-radius:5px;width:30px;height:28px;font-size:12px;font-weight:700;cursor:pointer;">+5</button>'
-          +(tgt>0?'<span style="font-size:11px;color:var(--faint);">target '+tgt+'</span>':'')
-        +'</div>'
-      +'</div>';
-    cards+='<div class="card" style="'+dim+'padding:16px 18px;border-left:3px solid '+stCol+';">'
-      +'<div style="display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap;margin-bottom:12px;">'
-        +'<div style="flex:1;min-width:170px;">'
-          +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">'
-            +'<span style="font-size:11px;font-weight:700;color:var(--faint);">#'+sub.id+'</span>'
-            +'<span style="font-size:10px;font-weight:700;padding:2px 9px;border-radius:12px;background:'+stBg+';color:'+stCol+';border:1px solid '+stCol+'44;">'+stLabel+'</span>'
-          +'</div>'
-          +'<div style="font-size:14px;font-weight:700;">'+esc(sub.name)+'</div>'
-          +'<div style="font-size:11px;color:var(--faint);margin-top:2px;">'+esc(sub.faculty)+' \u00b7 '+tot+' source pages \u00b7 '+fmt(slot.start)+' \u2013 '+fmt(slot.end)+'</div>'
-        +'</div>'
-      +'</div>'
-      +tracker
-      +'<label class="lbl">Short Notes Remarks</label>'
-      +'<textarea class="inp" rows="2" style="font-size:12px;margin-top:4px;" placeholder="Coverage notes, chapters done..." oninput="setSnNote('+sub.id+',this.value)">'+esc(snNotes[sub.id]||'')+'</textarea>'
-    +'</div>';
-  });
-
-  var activeSubs=subjects.filter(function(s){return s.status==='Completed'||snPagesDone(s.id)>0;});
-  var snTodayTgt=activeSubs.reduce(function(t,s){return t+snPageTarget(s.id);},0);
-
-  el.innerHTML='<div class="section">'
-    +'<div class="g4" style="margin-bottom:16px;">'
-      +'<div class="hcard" style="border:1px solid #a78bfa22;"><div class="hlbl">SN Pages Written</div><div class="hval" style="color:#a78bfa;">'+donePages+'<span style="font-size:13px;color:var(--faint);font-weight:400;">\/'+totalPages+'</span></div><div class="pbar-bg"><div class="pbar-fill" style="width:'+pagePct+'%;background:#a78bfa;"></div></div></div>'
-      +'<div class="hcard" style="border:1px solid #4ade8022;"><div class="hlbl">Subjects Started</div><div class="hval" style="color:#4ade80;">'+startedCount+'<span style="font-size:13px;color:var(--faint);font-weight:400;">\/'+subjects.length+'</span></div><div class="hsub">'+pagePct+'% overall</div></div>'
-      +'<div class="hcard" style="border:1px solid #c084fc22;"><div class="hlbl">SN Pages Today</div><div class="hval" style="color:'+(pagesToday>=snTodayTgt&&snTodayTgt>0?'#4ade80':'#c084fc')+';">'+pagesToday+'</div><div class="hsub">'+(snTodayTgt>0?'target '+snTodayTgt:'write away!')+'</div></div>'
-      +'<div class="hcard" style="border:1px solid #fbbf2422;"><div class="hlbl">Overall %</div><div class="hval" style="color:#fbbf24;font-size:20px;">'+pagePct+'%</div><div class="pbar-bg"><div class="pbar-fill" style="width:'+pagePct+'%;background:#fbbf24;"></div></div></div>'
-    +'</div>'
-    +'<div class="card" style="padding:11px 15px;margin-bottom:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'
-      +'<span class="lbl" style="margin:0;">Logging for</span>'
-      +'<button onclick="navRev1Date(-1)" style="background:var(--navy);border:1px solid var(--border);border-radius:7px;width:30px;height:30px;cursor:pointer;color:var(--text);font-size:13px;display:inline-flex;align-items:center;justify-content:center;">&#9664;</button>'
-      +'<input type="date" value="'+rev1LogDate+'" onchange="setRev1LogDate(this.value);renderShortNotes();" style="background:var(--navy);border:1px solid #a78bfa;border-radius:6px;padding:5px 9px;color:var(--text);font-size:13px;font-weight:600;cursor:pointer;outline:none;">'
-      +'<button onclick="navRev1Date(1)" style="background:var(--navy);border:1px solid var(--border);border-radius:7px;width:30px;height:30px;cursor:pointer;color:var(--text);font-size:13px;display:inline-flex;align-items:center;justify-content:center;">&#9654;</button>'
-      +(rev1LogDate!==TODAY?'<button class="btn-g" style="font-size:11px;padding:4px 10px;" onclick="setRev1LogDate(\''+TODAY+'\');renderShortNotes();">&#8629; Today</button>':'')
-      +'<span style="margin-left:auto;font-size:11px;color:var(--faint);">Shared date with Rev1 tracker</span>'
-    +'</div>'
-    +'<div class="card" style="padding:10px 14px;margin-bottom:16px;background:#0d0a1a;border:1px solid #a78bfa44;">'
-      +'<div style="font-size:12px;color:var(--muted);">\u270f\ufe0f <strong style="color:#a78bfa;">Short Notes</strong> \u2014 Write condensed notes from your original PDFs. Track pages covered per subject. Total source: <strong>'+totalPages+'</strong> pages.</div>'
-    +'</div>'
-    +'<div class="g2">'+cards+'</div>'
-  +'</div>';
-}
-
-/* ══ SAMPLE MOCK TRACKER ══ */
-function loadSampleMocks(){ sampleMocks=lsGet('gate-sample-mocks')||[]; }
-function saveSampleMocks(){ lsSet('gate-sample-mocks',sampleMocks); showSaveToast(); }
-function addSampleMock(){
-  var dEl=$('sm-date'), cEl=$('sm-correct'), wEl=$('sm-wrong'), nEl=$('sm-notes');
-  var date=dEl&&dEl.value?dEl.value:TODAY;
-  var correct=Math.max(0,parseInt((cEl&&cEl.value)||0)||0);
-  var wrong=Math.max(0,parseInt((wEl&&wEl.value)||0)||0);
-  var notes=nEl?nEl.value.trim():'';
-  if(correct===0&&wrong===0){if(cEl)cEl.focus();return;}
-  sampleMocks.push({id:'sm_'+Date.now(),date:date,correct:correct,wrong:wrong,notes:notes});
-  sampleMocks.sort(function(a,b){return b.date.localeCompare(a.date);});
-  saveSampleMocks();
-  if(dEl)dEl.value=''; if(cEl)cEl.value=''; if(wEl)wEl.value=''; if(nEl)nEl.value='';
   renderSampleMocks();
-}
-function deleteSampleMock(idx){
-  if(!confirm('Delete this mock entry?'))return;
-  sampleMocks.splice(idx,1);
-  saveSampleMocks(); renderSampleMocks();
-}
-function renderSampleMocks(){
-  loadSampleMocks();
-  var el=$('sec-sample'); if(!el) return;
-  var total=sampleMocks.length;
-  var scores=sampleMocks.map(function(m){var t=m.correct+m.wrong;return t>0?Math.round(m.correct/t*100):null;}).filter(function(s){return s!==null;});
-  var avgAcc=scores.length?Math.round(scores.reduce(function(a,b){return a+b;},0)/scores.length):null;
-  var bestAcc=scores.length?Math.max.apply(null,scores):null;
-  var totalC=sampleMocks.reduce(function(t,m){return t+(m.correct||0);},0);
-  var totalW=sampleMocks.reduce(function(t,m){return t+(m.wrong||0);},0);
-  function accCol(c){return c===null?'var(--muted)':c>=75?'#4ade80':c>=55?'#fbbf24':'#ef4444';}
-  var rows=sampleMocks.length===0
-    ?'<div style="text-align:center;padding:32px;color:var(--faint);font-size:13px;">No sample mocks logged yet. Add your first one above.</div>'
-    :sampleMocks.map(function(m,idx){
-        var t=m.correct+m.wrong;
-        var acc=t>0?Math.round(m.correct/t*100):null;
-        var col=accCol(acc);
-        var isToday=m.date===TODAY;
-        return '<div style="display:grid;grid-template-columns:100px 52px 52px 64px 1fr 30px;gap:8px;align-items:center;padding:10px 12px;border-radius:8px;margin-bottom:6px;background:var(--navy);border:1px solid '+(isToday?'#fbbf2444':'var(--border)')+';">'
-          +'<div style="font-size:12px;font-weight:700;color:'+(isToday?'#fbbf24':'var(--text)')+';">'+fmtFull(m.date)+'</div>'
-          +'<div style="text-align:center;"><div style="font-size:9px;color:#4ade80;font-weight:700;margin-bottom:1px;">\u2713 Correct</div><div style="font-size:17px;font-weight:800;color:#4ade80;">'+m.correct+'</div></div>'
-          +'<div style="text-align:center;"><div style="font-size:9px;color:#ef4444;font-weight:700;margin-bottom:1px;">\u2717 Wrong</div><div style="font-size:17px;font-weight:800;color:#ef4444;">'+m.wrong+'</div></div>'
-          +'<div style="text-align:center;"><div style="font-size:9px;color:var(--faint);font-weight:700;margin-bottom:1px;">Acc %</div><div style="font-size:17px;font-weight:800;color:'+col+';">'+(acc!==null?acc+'%':'\u2014')+'</div></div>'
-          +'<div style="font-size:11px;color:var(--muted);">'+(m.notes?esc(m.notes):'<span style="color:var(--faint);">\u2014</span>')+'</div>'
-          +'<button onclick="deleteSampleMock('+idx+')" title="Delete" style="background:none;border:1px solid var(--border);border-radius:5px;color:var(--faint);cursor:pointer;width:28px;height:28px;font-size:12px;">\u2715</button>'
-        +'</div>';
-      }).join('');
-
-  var hdr=sampleMocks.length>0
-    ?'<div style="display:grid;grid-template-columns:100px 52px 52px 64px 1fr 30px;gap:8px;padding:4px 12px;margin-bottom:2px;">'
-      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);">Date</div>'
-      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);text-align:center;">Correct</div>'
-      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);text-align:center;">Wrong</div>'
-      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);text-align:center;">Accuracy</div>'
-      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--faint);">Notes</div>'
-      +'<div></div>'
-    +'</div>':'' ;
-
-  el.innerHTML='<div class="section">'
-    +'<div class="g4" style="margin-bottom:16px;">'
-      +'<div class="hcard" style="border:1px solid #fbbf2422;"><div class="hlbl">Sample Mocks</div><div class="hval" style="color:#fbbf24;">'+total+'</div><div class="hsub">full-length tests</div></div>'
-      +'<div class="hcard" style="border:1px solid #4ade8022;"><div class="hlbl">Avg Accuracy</div><div class="hval" style="color:'+accCol(avgAcc)+'">'+(avgAcc!==null?avgAcc+'%':'\u2014')+'</div><div class="hsub">across all mocks</div></div>'
-      +'<div class="hcard" style="border:1px solid #00d4ff22;"><div class="hlbl">Best Score</div><div class="hval" style="color:'+accCol(bestAcc)+'">'+(bestAcc!==null?bestAcc+'%':'\u2014')+'</div><div class="hsub">highest accuracy</div></div>'
-      +'<div class="hcard" style="border:1px solid #c084fc22;"><div class="hlbl">Total Qs</div><div class="hval" style="color:#c084fc;">'+(totalC+totalW)+'</div><div class="hsub"><span style="color:#4ade80;">'+totalC+' \u2713</span> &nbsp; <span style="color:#ef4444;">'+totalW+' \u2717</span></div></div>'
-    +'</div>'
-    +'<div class="card" style="padding:16px 18px;margin-bottom:16px;border:1px solid #fbbf2433;">'
-      +'<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;">\u2795 Log a Sample Mock</div>'
-      +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">'
-        +'<div><label class="lbl">Date</label><input type="date" id="sm-date" class="inp-sm" value="'+TODAY+'" style="width:130px;"></div>'
-        +'<div><label class="lbl">Correct \u2713</label><input type="number" id="sm-correct" class="inp-sm" min="0" placeholder="e.g. 42" style="width:80px;border-color:#4ade8044;"></div>'
-        +'<div><label class="lbl">Wrong \u2717</label><input type="number" id="sm-wrong" class="inp-sm" min="0" placeholder="e.g. 15" style="width:80px;border-color:#ef444444;"></div>'
-        +'<div style="flex:1;min-width:160px;"><label class="lbl">Notes (optional)</label><input type="text" id="sm-notes" class="inp-sm" placeholder="Weak areas, remarks..." style="width:100%;"></div>'
-        +'<div><button class="btn" onclick="addSampleMock()">Save Mock</button></div>'
-      +'</div>'
-    +'</div>'
-    +hdr+rows
-  +'</div>';
 }
 
 /* ══ TAB NAV ══ */
@@ -3171,9 +2871,9 @@ function switchMainTab(id){
   document.querySelectorAll('.nav-tab').forEach((t,i)=>t.classList.toggle('active',['dashboard','study','rev1','pyq','rev2'][i]===id));
   $('panel-'+id).classList.add('active');
   if(id==='dashboard')renderDashboard();
-  if(id==='study'){setTimeout(function(){studySetView(studyTabView||'progress');},50);}
-  if(id==='rev1'){renderRevision1();setTimeout(function(){rev1SetView(rev1TabView||'notes');},50);}
-  if(id==='rev2'){renderRevision2();setTimeout(function(){rev2SetView(rev2TabView||'tracker');},50);}
+  if(id==='study'){renderProgress();}
+  if(id==='rev1'){renderRevision1();}
+  if(id==='rev2'){renderRevision2();}
   if(id==='pyq')renderPyq();
   window.scrollTo(0,0);
 }
@@ -3193,7 +2893,7 @@ var FIXED_BLOCKS = [
   { id:'pyq',   icon:'🎯', label:'PYQ Practice',        desc:'PYQ practice as per target',           key:'pyq'   },
   { id:'study', icon:'📚', label:'Study Videos',        desc:'Watch videos as per study schedule',   key:'study' },
   { id:'rev1',  icon:'📖', label:'Revision 1',          desc:'Revise notes as per Rev1 target',      key:'rev1'  },
-  { id:'notes', icon:'📝', label:'Short Notes Writing', desc:'Write short notes from todays study',  key:'notes' },
+  { id:'notes', icon:'✏️', label:'Short Notes Writing', desc:'Write short notes from todays study',  key:'notes' },
 ];
 
 /* ── score computation for a given date ── */
@@ -3753,7 +3453,7 @@ function renderDiscCard(){
 
 function scoreLabel(sc){ return sc>=95?'Disciplined':sc>=80?'Good':sc>=60?'Average':sc>=40?'Below Avg':'Needs work'; }
 
-function renderAll(){renderProgress();renderMilestones();renderEntry();renderSubjects();renderLearningPath();setTimeout(function(){studySetView(studyTabView||'progress');},80);}
+function renderAll(){renderProgress();renderEntry();renderSubjects();renderLearningPath();}
 
 document.addEventListener('DOMContentLoaded',async ()=>{
   // Boot: load from Firestore first, then init app
