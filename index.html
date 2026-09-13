@@ -366,9 +366,9 @@ select.inp-sm{cursor:pointer;}
 <nav class="top-nav">
   <div class="nav-brand">⚡ G2027</div>
   <button class="nav-tab active" onclick="switchMainTab('dashboard')">🏠 Dashboard</button>
-  <button class="nav-tab" onclick="switchMainTab(\'study\')">📚 Study</button>
-  <button class="nav-tab" onclick="switchMainTab(\'rev1\')">📖 Revision 1</button>
-  <button class="nav-tab" onclick="switchMainTab(\'pyq\')">🎯 PYQ</button>
+  <button class="nav-tab" onclick="switchMainTab('study')">📚 Study</button>
+  <button class="nav-tab" onclick="switchMainTab('rev1')">📖 Revision 1</button>
+  <button class="nav-tab" onclick="switchMainTab('pyq')">🎯 PYQ</button>
   <button class="nav-tab" onclick="switchMainTab('rev2')">🚀 Rev 2 & Mocks</button>
   <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">
     <span class="tt-icon" id="tt-icon">🌙</span><span id="tt-label">Dark</span>
@@ -3152,9 +3152,9 @@ function renderDashboard(){
       <div class="db-today-item"><div class="db-today-lbl">Streak</div><div class="db-today-val" style="color:var(--amber)">🔥${streak}</div></div>
       <div class="db-today-item"><div class="db-today-lbl">Milestones</div><div class="db-today-val" style="color:var(--purple)">${earnedMilestones.size}<span style="font-size:12px;color:var(--faint);font-weight:400">/${MILESTONE_DEFS.length}</span></div></div>
       <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-        <button class="db-go-btn" onclick="switchMainTab(\'study\')">📚 Study log →</button>
-        <button class="db-go-btn" style="background:transparent;border-color:#c084fc;color:#c084fc;" onclick="switchMainTab(\'rev1\')">📖 Rev 1 log →</button>
-        ${TODAY>='2026-09-01'?`<button class="db-go-btn" style="background:transparent;border-color:#fbbf24;color:#fbbf24;" onclick="switchMainTab(\'pyq\')">🎯 PYQ log →</button>`:''}
+        <button class="db-go-btn" onclick="switchMainTab('study')">📚 Study log →</button>
+        <button class="db-go-btn" style="background:transparent;border-color:#c084fc;color:#c084fc;" onclick="switchMainTab('rev1')">📖 Rev 1 log →</button>
+        ${TODAY>='2026-09-01'?`<button class="db-go-btn" style="background:transparent;border-color:#fbbf24;color:#fbbf24;" onclick="switchMainTab('pyq')">🎯 PYQ log →</button>`:''}
         <button class="db-go-btn" style="background:transparent;border-color:#4ade80;color:#4ade80;" onclick="switchMainTab('rev2')">🚀 Rev 2 & Mocks →</button>
       </div>
     </div>
@@ -3607,9 +3607,10 @@ function renderDiscCard(){
         +'<div style="display:flex;flex-direction:column;gap:7px;font-size:12px;">'
           +'<div style="display:flex;gap:8px;align-items:center;"><span>📚</span><span>Study Videos</span></div>'
           +'<div style="display:flex;gap:8px;align-items:center;"><span>📖</span><span>Revision 1</span></div>'
-          +'<div style="display:flex;gap:8px;align-items:center;"><span>🎯</span><span>PYQ Practice</span>'
-          +(TODAY>="2026-09-14"&&TODAY<="2026-09-20"?'<span style="font-size:10px;background:#a78bfa22;color:#a78bfa;padding:1px 6px;border-radius:4px;font-weight:600;">Sep 14–20: Aptitude PYQs</span>':"")+
-          +'</div>'
+          +'<div style="display:flex;gap:8px;align-items:center;">'
+          +'<span>🎯</span><span>PYQ Practice</span>'
+          +(TODAY>="2026-09-14"&&TODAY<="2026-09-20"?'<span style="font-size:10px;background:#a78bfa22;color:#a78bfa;padding:1px 6px;border-radius:4px;font-weight:600;margin-left:4px;">Sep 14–20: Aptitude PYQs</span>':"")+
+          '</div>'
           +'<div style="display:flex;gap:8px;align-items:center;"><span>📝</span><span>Short Notes Writing</span></div>'
         +'</div>'
       +'</div>'
