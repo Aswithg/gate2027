@@ -3484,7 +3484,13 @@ function discHeatmapHtml(){
     else if(sc>=1){ bg='#ef4444'; }
     else { bg='#1a3248'; }
     var opacity = d<=TODAY ? '1' : '0.3';
-    cells+='<div class="disc-hm-cell" style="background:'+bg+';opacity:'+opacity+';" title="'+d+': '+sc+' pts"></div>';
+    var titleStr = d+': '+sc+' pts';
+    if(d<=TODAY && sc<100){
+      var sigRes = calcDiscScore(d);
+      var missed = sigRes.signals.filter(function(s){ return s.earned===0; }).map(function(s){ return s.icon+' '+s.name+' (0/'+s.pts+')'; });
+      if(missed.length) titleStr += ' | Missed: '+missed.join(', ');
+    }
+    cells+='<div class="disc-hm-cell" style="background:'+bg+';opacity:'+opacity+';" title="'+titleStr+'"></div>';
     d=addDays(d,1);
   }
   return cells;
