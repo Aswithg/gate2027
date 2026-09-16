@@ -351,6 +351,45 @@ select.inp-sm{cursor:pointer;}
 .disc-edit-save{padding:3px 10px;border-radius:10px;font-size:10px;font-weight:700;cursor:pointer;border:none;background:var(--acc);color:var(--navy);}
 .disc-edit-cancel{padding:3px 10px;border-radius:10px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);}
 .disc-block-dur{font-size:10px;color:var(--faint);margin-left:4px;}
+
+/* ── MISSED ENTRY MODAL ── */
+.me-overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:10000;display:none;align-items:center;justify-content:center;}
+.me-overlay.show{display:flex;}
+.me-box{background:var(--card);border:2px solid #fbbf24;border-radius:16px;padding:0;max-width:560px;width:94%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 0 40px rgba(251,191,36,.18);}
+.me-header{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.me-header-icon{font-size:28px;}
+.me-header-text{flex:1;}
+.me-header-title{font-size:16px;font-weight:800;color:#fbbf24;margin-bottom:2px;}
+.me-header-sub{font-size:12px;color:var(--muted);}
+.me-body{flex:1;overflow-y:auto;padding:16px 22px;}
+.me-section{margin-bottom:14px;}
+.me-section-hdr{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.me-item{display:flex;align-items:center;gap:10px;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;}
+.me-item.complete{border-color:#4ade8044;background:#001f0f;}
+.me-item-icon{font-size:18px;flex-shrink:0;}
+.me-item-info{flex:1;min-width:0;}
+.me-item-name{font-size:13px;font-weight:700;color:var(--text);}
+.me-item-pts{font-size:10px;color:var(--muted);margin-top:1px;}
+.me-item-ctrl{flex-shrink:0;}
+.me-check-btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--muted);font-family:var(--font);transition:all .15s;}
+.me-check-btn.done{border-color:#4ade80;background:#003d1f;color:#4ade80;}
+.me-check-btn:hover:not(.done){border-color:var(--acc);color:var(--acc);}
+.me-yn-row{display:flex;gap:6px;}
+.me-yn-btn{padding:5px 13px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--muted);font-family:var(--font);transition:all .15s;}
+.me-yn-btn.sel-yes{border-color:#4ade80;background:#003d1f;color:#4ade80;}
+.me-yn-btn.sel-no{border-color:#ef4444;background:#2d0000;color:#ef4444;}
+.me-yn-btn:hover:not(.sel-yes):not(.sel-no){border-color:var(--faint);color:var(--text);}
+.me-score-preview{background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:14px;}
+.me-score-ring{flex-shrink:0;}
+.me-score-info{flex:1;}
+.me-score-val{font-size:22px;font-weight:800;}
+.me-score-lbl{font-size:11px;color:var(--muted);margin-top:1px;}
+.me-footer{padding:14px 22px 18px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;flex-shrink:0;}
+.me-btn-save{padding:9px 22px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;background:#fbbf24;color:#000;font-family:var(--font);transition:all .15s;}
+.me-btn-save:hover{background:#f59e0b;}
+.me-btn-skip{padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--font);transition:all .15s;}
+.me-btn-skip:hover{border-color:var(--faint);color:var(--text);}
+
 </style>
 </head>
 <body>
@@ -387,6 +426,26 @@ select.inp-sm{cursor:pointer;}
   </div>
 </div>
 
+
+
+
+<!-- MISSED ENTRY MODAL -->
+<div class="me-overlay" id="me-overlay">
+  <div class="me-box">
+    <div class="me-header">
+      <div class="me-header-icon">⚠️</div>
+      <div class="me-header-text">
+        <div class="me-header-title">Incomplete Entry Detected</div>
+        <div class="me-header-sub" id="me-header-sub">You have missing discipline items from yesterday</div>
+      </div>
+    </div>
+    <div class="me-body" id="me-body"><!-- filled by JS --></div>
+    <div class="me-footer">
+      <button class="me-btn-skip" onclick="meDismiss()">Skip for now</button>
+      <button class="me-btn-save" onclick="meSaveAndClose()">✓ Save &amp; Continue</button>
+    </div>
+  </div>
+</div>
 
 <!-- DASHBOARD TAB -->
 <div class="tab-panel active" id="panel-dashboard">
@@ -3785,7 +3844,7 @@ function renderAll(){renderProgress();renderEntry();renderSubjects();renderLearn
 document.addEventListener('DOMContentLoaded',async ()=>{
   // Boot: load from Firestore first, then init app
   await fbInit();
-  loadAll();loadRev1();loadMocks();loadPyq();loadDisc();loadSampleMocks();renderAll();checkMilestones();renderDashboard();
+  loadAll();loadRev1();loadMocks();loadPyq();loadDisc();loadSampleMocks();renderAll();checkMilestones();renderDashboard();checkMissedEntry();
   /* restore saved theme */
   const theme=lsGet('gate-theme');
   if(theme==='light'){applyLight();}
@@ -3807,6 +3866,235 @@ function toggleTheme(){
   if(isLight){applyDark();lsSet('gate-theme','dark');}
   else{applyLight();lsSet('gate-theme','light');}
 }
+/* ══════════════════════════════════════════
+   MISSED ENTRY MODAL SYSTEM
+   Shows on page load when a new day is detected and yesterday has missing disc items.
+   Storage key: gate-last-seen-date (tracks last known date)
+════════════════════════════════════════════ */
+var _mePendingDate = null;   /* date being edited in modal */
+var _mePendingVals = {};     /* {key: value} edits staged in modal before save */
+
+/* Check on boot whether yesterday needs filling */
+function checkMissedEntry(){
+  /* only check if within the disc tracking window */
+  if(TODAY < DISC_START) return;
+  var yesterday = addDays(TODAY, -1);
+  if(yesterday < DISC_START) return;
+
+  /* have we already prompted for yesterday this session? */
+  var seenKey = 'gate-me-seen-' + yesterday;
+  if(lsGet(seenKey)) return;
+
+  /* compute what's missing for yesterday */
+  var missing = getMissingItems(yesterday);
+  if(missing.length === 0){
+    /* nothing missing — mark as seen and return */
+    lsSet(seenKey, '1');
+    return;
+  }
+
+  /* show the modal */
+  _mePendingDate = yesterday;
+  _mePendingVals = {};
+  renderMeModal();
+  var overlay = document.getElementById('me-overlay');
+  if(overlay) overlay.classList.add('show');
+}
+
+/* Returns list of missing item descriptors for a date */
+function getMissingItems(date){
+  loadDisc();
+  var log = discData.logs[date]||{};
+  var dd = daily[date]||{};
+  var missing = [];
+
+  /* Fixed blocks */
+  FIXED_BLOCKS.forEach(function(fb){
+    if(!log['fb_'+fb.key]){
+      missing.push({ type:'fixed', key:'fb_'+fb.key, icon:fb.icon, name:fb.label, pts:20 });
+    }
+  });
+
+  /* Exercise */
+  if(!(dd.habits && dd.habits.exercise)){
+    missing.push({ type:'habit', key:'exercise', icon:'🏃', name:'Exercise', pts:5, note:'Toggle in Study tab' });
+  }
+  /* Chess */
+  if(!(dd.habits && dd.habits.chess)){
+    missing.push({ type:'habit', key:'chess', icon:'♟', name:'Chess', pts:5, note:'Toggle in Study tab' });
+  }
+  /* Wake */
+  if(log.wokeOnTime === undefined || log.wokeOnTime === null){
+    missing.push({ type:'log', key:'wokeOnTime', icon:'⏰', name:'Woke Up at 6:00 AM', pts:5, yesNo:true });
+  }
+  /* Self Control */
+  if(log.selfControl === undefined || log.selfControl === null){
+    missing.push({ type:'log', key:'selfControl', icon:'🧠', name:'Self Control', pts:5, yesNo:true });
+  }
+
+  return missing;
+}
+
+/* Compute projected score after pending edits are applied */
+function meProjectedScore(date){
+  loadDisc();
+  var log = Object.assign({}, discData.logs[date]||{});
+  var dd  = daily[date]||{};
+
+  /* merge pending vals */
+  Object.keys(_mePendingVals).forEach(function(k){
+    log[k] = _mePendingVals[k];
+  });
+
+  var total = 0;
+
+  FIXED_BLOCKS.forEach(function(fb){
+    if(log['fb_'+fb.key]) total += 20;
+  });
+
+  var exDone = dd.habits && dd.habits.exercise;
+  if(exDone) total += 5;
+  var chessDone = dd.habits && dd.habits.chess;
+  if(chessDone) total += 5;
+  if(log.wokeOnTime === true) total += 5;
+  if(log.selfControl === true) total += 5;
+
+  return Math.min(100, total);
+}
+
+/* Render the body of the modal */
+function renderMeModal(){
+  var date = _mePendingDate;
+  if(!date) return;
+
+  loadDisc();
+  var log = discData.logs[date]||{};
+  var dd  = daily[date]||{};
+
+  var sub = document.getElementById('me-header-sub');
+  if(sub) sub.textContent = 'Missing discipline items from ' + fmtFull(date);
+
+  var missing = getMissingItems(date);
+  var projScore = meProjectedScore(date);
+  var projCol = discColor(projScore);
+
+  /* score preview */
+  var scorePreview = '<div class="me-score-preview">'
+    + '<div class="me-score-ring">'+discRingHtml(projScore,54,5)+'</div>'
+    + '<div class="me-score-info">'
+      + '<div class="me-score-val" style="color:'+projCol+'">'+projScore+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/100</span></div>'
+      + '<div class="me-score-lbl">Projected score after edits · '+scoreLabel(projScore)+'</div>'
+    + '</div>'
+    + '<div style="text-align:right;font-size:11px;color:var(--muted);">'+missing.length+' item'+(missing.length!==1?'s':'')+' missing</div>'
+  +'</div>';
+
+  /* fixed blocks section */
+  var fixedMissing = missing.filter(function(m){ return m.type==='fixed'; });
+  var fixedHtml = '';
+  if(fixedMissing.length > 0){
+    fixedHtml = '<div class="me-section"><div class="me-section-hdr">📋 Fixed Daily Blocks (20 pts each)</div>';
+    fixedMissing.forEach(function(m){
+      var val = _mePendingVals[m.key];
+      var isDone = !!val;
+      fixedHtml += '<div class="me-item'+(isDone?' complete':'')+'">'
+        + '<div class="me-item-icon">'+m.icon+'</div>'
+        + '<div class="me-item-info"><div class="me-item-name">'+esc(m.name)+'</div><div class="me-item-pts">'+m.pts+' pts</div></div>'
+        + '<div class="me-item-ctrl">'
+          + '<button class="me-check-btn'+(isDone?' done':'')+'" onclick="meToggleFixed(\''+m.key+'\')">'
+            + (isDone ? '✓ Done' : 'Mark Done')
+          + '</button>'
+        + '</div>'
+      +'</div>';
+    });
+    fixedHtml += '</div>';
+  }
+
+  /* habit section (exercise / chess) — read-only note since they come from Study tab */
+  var habitMissing = missing.filter(function(m){ return m.type==='habit'; });
+  var habitHtml = '';
+  if(habitMissing.length > 0){
+    habitHtml = '<div class="me-section"><div class="me-section-hdr">🏃 Habits (5 pts each)</div>';
+    habitMissing.forEach(function(m){
+      habitHtml += '<div class="me-item" style="opacity:.75">'
+        + '<div class="me-item-icon">'+m.icon+'</div>'
+        + '<div class="me-item-info"><div class="me-item-name">'+esc(m.name)+'</div>'
+          + '<div class="me-item-pts" style="color:#fbbf24;">Set via Study tab habits toggle · '+m.pts+' pts</div>'
+        + '</div>'
+      +'</div>';
+    });
+    habitHtml += '</div>';
+  }
+
+  /* yes/no section */
+  var ynMissing = missing.filter(function(m){ return m.type==='log'; });
+  var ynHtml = '';
+  if(ynMissing.length > 0){
+    ynHtml = '<div class="me-section"><div class="me-section-hdr">✅ Yes / No Signals (5 pts each)</div>';
+    ynMissing.forEach(function(m){
+      var val = _mePendingVals.hasOwnProperty(m.key) ? _mePendingVals[m.key] : null;
+      ynHtml += '<div class="me-item'+(val===true?' complete':'')+'">'
+        + '<div class="me-item-icon">'+m.icon+'</div>'
+        + '<div class="me-item-info"><div class="me-item-name">'+esc(m.name)+'</div><div class="me-item-pts">'+m.pts+' pts</div></div>'
+        + '<div class="me-item-ctrl"><div class="me-yn-row">'
+          + '<button class="me-yn-btn'+(val===true?' sel-yes':'')+'" onclick="meSetYN(\''+m.key+'\',true)">✓ Yes</button>'
+          + '<button class="me-yn-btn'+(val===false?' sel-no':'')+'" onclick="meSetYN(\''+m.key+'\',false)">✗ No</button>'
+        + '</div></div>'
+      +'</div>';
+    });
+    ynHtml += '</div>';
+  }
+
+  var body = document.getElementById('me-body');
+  if(body) body.innerHTML = scorePreview + fixedHtml + habitHtml + ynHtml;
+}
+
+/* Toggle a fixed block in pending state */
+function meToggleFixed(key){
+  if(_mePendingVals.hasOwnProperty(key)){
+    delete _mePendingVals[key];
+  } else {
+    _mePendingVals[key] = true;
+  }
+  renderMeModal();
+}
+
+/* Set yes/no value in pending state */
+function meSetYN(key, val){
+  _mePendingVals[key] = val;
+  renderMeModal();
+}
+
+/* Save all pending edits to discData and dismiss */
+function meSaveAndClose(){
+  if(!_mePendingDate) { meDismiss(); return; }
+  loadDisc();
+  if(!discData.logs[_mePendingDate]) discData.logs[_mePendingDate] = {};
+  Object.keys(_mePendingVals).forEach(function(k){
+    discData.logs[_mePendingDate][k] = _mePendingVals[k];
+  });
+  saveDisc();
+  /* mark seen */
+  lsSet('gate-me-seen-' + _mePendingDate, '1');
+  /* close */
+  var overlay = document.getElementById('me-overlay');
+  if(overlay) overlay.classList.remove('show');
+  _mePendingDate = null;
+  _mePendingVals = {};
+  /* refresh discipline card if dashboard is active */
+  var discRoot = document.getElementById('disc-card-root');
+  if(discRoot) renderDiscCard();
+  showSaveToast();
+}
+
+/* Dismiss without saving */
+function meDismiss(){
+  if(_mePendingDate) lsSet('gate-me-seen-' + _mePendingDate, '1');
+  var overlay = document.getElementById('me-overlay');
+  if(overlay) overlay.classList.remove('show');
+  _mePendingDate = null;
+  _mePendingVals = {};
+}
+
 
 
 </script>
