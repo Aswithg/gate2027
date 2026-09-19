@@ -3298,42 +3298,36 @@ var DAILY_SCHEDULE = [
   { key:'shortnotes', color:'#4ade80', from:'23:00', to:'24:00', label:'Short Notes Revision' },
 ];
 
-/* ── score computation — 6-signal / 100-pt system ── */
+/* ── score computation — 6-signal / 100-pt ── */
 function calcDiscScore(date){
   loadDisc();
   var log = discData.logs[date]||{};
   var result = { total:0, signals:[] };
 
-  /* 1. Video Classes 20pts */
   var vcDone = !!(log['sched_vidclass']);
   result.signals.push({ name:'Video Classes', note:'6:00 AM – 9:00 AM', pts:20, earned:vcDone?20:0, schedKey:'vidclass' });
   result.total += vcDone?20:0;
 
-  /* 2. Revision 1 20pts */
   var r1Done = !!(log['sched_rev1notes']);
   result.signals.push({ name:'Revision 1', note:'10:00 AM – 12:00 PM', pts:20, earned:r1Done?20:0, schedKey:'rev1notes' });
   result.total += r1Done?20:0;
 
-  /* 3. Short Notes 20pts */
   var snDone = !!(log['sched_shortnotes']);
   result.signals.push({ name:'Short Notes', note:'11:00 PM – 12:00 AM', pts:20, earned:snDone?20:0, schedKey:'shortnotes' });
   result.total += snDone?20:0;
 
-  /* 4. PYQ 20pts */
   var pyqDone = !!(log['fb_pyq']);
   result.signals.push({ name:'PYQ Practice', note:'Mark when done', pts:20, earned:pyqDone?20:0, fixedKey:'fb_pyq' });
   result.total += pyqDone?20:0;
 
-  /* 5. Self Control 10pts */
   var scEarned=0, scNote='Mark below';
   if(log.selfControl===true){ scEarned=10; scNote='Maintained ✓'; }
   else if(log.selfControl===false){ scNote='Broken today'; }
   result.signals.push({ name:'Self Control', note:scNote, pts:10, earned:scEarned, isSelfCtrl:true });
   result.total += scEarned;
 
-  /* 6. As per schedule 10pts */
-  var sdone = DAILY_SCHEDULE.filter(function(s){ return !!(log['sched_'+s.key]); }).length;
-  var schedEarned = sdone===DAILY_SCHEDULE.length ? 10 : 0;
+  var sdone=DAILY_SCHEDULE.filter(function(s){ return !!(log['sched_'+s.key]); }).length;
+  var schedEarned=sdone===DAILY_SCHEDULE.length?10:0;
   result.signals.push({ name:'As Per Schedule', note:sdone+'/'+DAILY_SCHEDULE.length+' slots', pts:10, earned:schedEarned, isSchedAll:true });
   result.total += schedEarned;
 
@@ -3352,10 +3346,9 @@ function calcDiscStreak(){
   }
   return streak;
 }
-
-/* ── max discipline streak ever ── */
+/* ── max streak ever ── */
 function calcDiscMaxStreak(){
-  var maxS=0, cur=0, d=DISC_START;
+  var maxS=0,cur=0,d=DISC_START;
   while(d<=TODAY){
     if(calcDiscScore(d).total>=90){ cur++; if(cur>maxS)maxS=cur; }
     else cur=0;
@@ -3363,7 +3356,6 @@ function calcDiscMaxStreak(){
   }
   return maxS;
 }
-
 function calcSchedSlotStreak(slotKey){
   var streak=0; var d=addDays(TODAY,0);
   for(var i=0;i<193;i++){
@@ -3691,9 +3683,9 @@ function discBlockFormHtml(date){
 var discOpen = false;
 function toggleDiscDetail(){ discOpen=!discOpen; renderDiscCard(); }
 
-/* 24-hour schedule clock SVG */
+/* ── simple donut clock: arcs + time labels only ── */
 function schedClockSvg(log){
-  var SIZE=220, CX=110, CY=110, R=88, TOTAL=1440;
+  var SIZE=240, CX=120, CY=120, R=96, INN=58, TOTAL=1440;
   function ang(t){
     var p=t.split(':'), m=parseInt(p[0])*60+(parseInt(p[1])||0);
     return (m/TOTAL)*2*Math.PI - Math.PI/2;
@@ -3703,38 +3695,45 @@ function schedClockSvg(log){
     var s=xy(r,a1), e=xy(r,a2);
     return 'M'+s.x.toFixed(2)+','+s.y.toFixed(2)+' A'+r+','+r+' 0 '+(large?1:0)+' 1 '+e.x.toFixed(2)+','+e.y.toFixed(2);
   }
-  var paths='';
+  /* gap between arcs in radians */
+  var GAP = 0.025;
+  var paths='', labels='';
   DAILY_SCHEDULE.forEach(function(sl){
     var toH=sl.to==='24:00'?1440:parseInt(sl.to.split(':')[0])*60+(parseInt(sl.to.split(':')[1])||0);
     var frH=parseInt(sl.from.split(':')[0])*60+(parseInt(sl.from.split(':')[1])||0);
-    var a1=ang(sl.from), a2=(toH/TOTAL)*2*Math.PI-Math.PI/2;
+    var a1=ang(sl.from)+GAP, a2=(toH/TOTAL)*2*Math.PI-Math.PI/2-GAP;
     var large=(toH-frH)>720?1:0;
     var done=!!(log['sched_'+sl.key]);
-    paths+='<path d="'+arc(R,a1,a2,large)+'" fill="none" stroke="'+sl.color+'" stroke-width="'+(done?24:16)+'" stroke-linecap="butt" opacity="'+(done?1:.28)+'"/>';
-  });
-  var ticks='';
-  for(var h=0;h<24;h++){
-    var a=(h/24)*2*Math.PI-Math.PI/2;
-    var r0=h%6===0?R-16:R-10;
-    var p1=xy(R+2,a), p2=xy(r0,a);
-    ticks+='<line x1="'+p1.x.toFixed(1)+'" y1="'+p1.y.toFixed(1)+'" x2="'+p2.x.toFixed(1)+'" y2="'+p2.y.toFixed(1)+'" stroke="#1a3248" stroke-width="'+(h%6===0?2:1)+'"/>';
-    if(h%6===0){
-      var lp=xy(R-26,a);
-      ticks+='<text x="'+lp.x.toFixed(1)+'" y="'+(lp.y+4).toFixed(1)+'" text-anchor="middle" font-size="8" fill="#4a6a80" font-family="system-ui">'+(h===0?'00':String(h).padStart(2,'0'))+'</text>';
+    /* arc */
+    paths+='<path d="'+arc(R,a1,a2,large)+' L'+xy(INN,a2).x.toFixed(2)+','+xy(INN,a2).y.toFixed(2)
+      +' '+arc(INN,a2,a1,large).replace('M','').split(' A')[0]+' A'+INN+','+INN+' 0 '+(large?1:0)+' 0 '+xy(INN,a1).x.toFixed(2)+','+xy(INN,a1).y.toFixed(2)+' Z"'
+      +' fill="'+sl.color+'" opacity="'+(done?1:.22)+'"/>';
+    /* time label at midpoint of arc */
+    var aMid = (ang(sl.from) + (toH/TOTAL)*2*Math.PI-Math.PI/2) / 2;
+    /* only show label for slots wide enough */
+    var durMins = toH - frH;
+    if(durMins >= 60){
+      var lp = xy((R+INN)/2, aMid);
+      var timeStr = sl.from.replace(':00','')+'h';
+      labels+='<text x="'+lp.x.toFixed(1)+'" y="'+(lp.y+3).toFixed(1)+'" text-anchor="middle" font-size="7" font-weight="700" fill="'+(done?'#fff':'#7a9ab5')+'" font-family="system-ui">'+timeStr+'</text>';
     }
-  }
-  var nm=new Date(); nm=nm.getHours()*60+nm.getMinutes();
-  var na=(nm/TOTAL)*2*Math.PI-Math.PI/2, np=xy(R+6,na);
-  var nowLine='<line x1="'+CX+'" y1="'+CY+'" x2="'+np.x.toFixed(1)+'" y2="'+np.y.toFixed(1)+'" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"/>';
+  });
+  /* hour markers on outer rim */
+  var rimTicks='';
+  [0,3,6,9,12,15,18,21].forEach(function(h){
+    var a=(h/24)*2*Math.PI-Math.PI/2;
+    var p=xy(R+8,a);
+    rimTicks+='<text x="'+p.x.toFixed(1)+'" y="'+(p.y+3).toFixed(1)+'" text-anchor="middle" font-size="7" fill="#4a6a80" font-family="system-ui">'+(h===0?'0':h)+'h</text>';
+  });
+  /* done count badge in centre */
+  var doneCount=DAILY_SCHEDULE.filter(function(s){ return !!(log['sched_'+s.key]); }).length;
   return '<svg width="'+SIZE+'" height="'+SIZE+'" viewBox="0 0 '+SIZE+' '+SIZE+'" style="display:block;">'
-    +'<circle cx="'+CX+'" cy="'+CY+'" r="'+R+'" fill="none" stroke="#0d1e2e" stroke-width="32"/>'
-    +'<circle cx="'+CX+'" cy="'+CY+'" r="'+R+'" fill="none" stroke="#1a3248" stroke-width="2"/>'
-    +paths+ticks+nowLine
-    +'<circle cx="'+CX+'" cy="'+CY+'" r="48" fill="var(--navy)"/>'
-    +'<circle cx="'+CX+'" cy="'+CY+'" r="5" fill="#ef4444"/>'
-    +'<text x="'+CX+'" y="'+(CY-10)+'" text-anchor="middle" font-size="10" font-weight="800" fill="var(--acc)" font-family="system-ui">Daily</text>'
-    +'<text x="'+CX+'" y="'+(CY+6)+'" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="system-ui">Schedule</text>'
-    +'<text x="'+CX+'" y="'+(CY+20)+'" text-anchor="middle" font-size="8" fill="var(--faint)" font-family="system-ui">24h clock</text>'
+    +'<circle cx="'+CX+'" cy="'+CY+'" r="'+INN+'" fill="var(--navy)"/>'
+    +paths+labels+rimTicks
+    +'<circle cx="'+CX+'" cy="'+CY+'" r="'+(INN-2)+'" fill="var(--navy)"/>'
+    +'<text x="'+CX+'" y="'+(CY-12)+'" text-anchor="middle" font-size="22" font-weight="800" fill="var(--acc)" font-family="system-ui">'+doneCount+'</text>'
+    +'<text x="'+CX+'" y="'+(CY+4)+'" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="system-ui">of '+DAILY_SCHEDULE.length+'</text>'
+    +'<text x="'+CX+'" y="'+(CY+17)+'" text-anchor="middle" font-size="8" fill="var(--faint)" font-family="system-ui">slots done</text>'
     +'</svg>';
 }
 
@@ -3771,7 +3770,6 @@ function renderDiscCard(){
   var scS     = calcSelfCtrlStreak();
   var log     = discData.logs[TODAY]||{};
 
-  /* signal icons map */
   var ICONS = {
     'Video Classes':'&#x1F3AC;',
     'Revision 1':'&#x1F4D6;',
@@ -3781,7 +3779,7 @@ function renderDiscCard(){
     'As Per Schedule':'&#x1F5D3;&#xFE0F;'
   };
 
-  /* signals HTML */
+  /* signals — now every card has its own Finished/Pending toggle */
   var sigHtml = sc.signals.map(function(sig){
     var isEarned = sig.earned >= sig.pts;
     var cls = isEarned?'earned':sig.earned===0?'missed':'';
@@ -3789,30 +3787,42 @@ function renderDiscCard(){
     var ptsStr = (isEarned?'+':'')+sig.earned+'/'+sig.pts;
     var icon = ICONS[sig.name]||'&#x2B50;';
     var toggleHtml = '';
-    if(sig.isSelfCtrl){
+
+    if(sig.schedKey){
+      /* schedule-backed signal: toggle marks the slot done/pending */
+      var sdone = !!(log['sched_'+sig.schedKey]);
+      toggleHtml = '<div style="margin-top:6px;">'
+        +'<label class="sched-toggle" style="vertical-align:middle;margin-right:6px;"><input type="checkbox" '+(sdone?'checked':'')+' data-sk="'+sig.schedKey+'" onchange="toggleSchedSlot(this.dataset.sk,this.checked)"><span class="sched-toggle-slider"></span></label>'
+        +'<span style="font-size:10px;font-weight:700;color:'+(sdone?'#4ade80':'var(--faint)')+'">'+(sdone?'Finished':'Pending')+'</span>'
+        +'</div>';
+    } else if(sig.fixedKey){
+      var fbDone = !!(log[sig.fixedKey]);
+      toggleHtml = '<div style="margin-top:6px;">'
+        +'<label class="sched-toggle" style="vertical-align:middle;margin-right:6px;"><input type="checkbox" '+(fbDone?'checked':'')+' data-fk="'+sig.fixedKey+'" onchange="discToggleLog(\''+TODAY+'\',this.dataset.fk,this.checked)"><span class="sched-toggle-slider"></span></label>'
+        +'<span style="font-size:10px;font-weight:700;color:'+(fbDone?'#4ade80':'var(--faint)')+'">'+(fbDone?'Finished':'Pending')+'</span>'
+        +'</div>';
+    } else if(sig.isSelfCtrl){
       var sCT=log.selfControl;
       var sYesCls=sCT===true?'on':'', sNoCls=sCT===false?'on':'';
       var sNoStyle=sCT===false?'background:#2a0000;border-color:#ef4444;color:#ef4444;':'';
-      toggleHtml='<div style="display:flex;gap:5px;margin-top:5px;">'
+      toggleHtml='<div style="display:flex;gap:5px;margin-top:6px;">'
         +'<button class="disc-manual-toggle '+sYesCls+'" onclick="discToggleLog(\''+TODAY+'\',\'selfControl\',true)">&#x2713; Yes</button>'
         +'<button class="disc-manual-toggle '+sNoCls+'" style="'+sNoStyle+'" onclick="discToggleLog(\''+TODAY+'\',\'selfControl\',false)">&#x2717; No</button>'
         +'</div>';
     }
-    if(sig.fixedKey){
-      var fbDone=!!(log[sig.fixedKey]);
-      toggleHtml='<div style="margin-top:5px;">'
-        +'<button class="disc-block-btn '+(fbDone?'done':'')+'" onclick="discToggleLog(\''+TODAY+'\',\''+sig.fixedKey+'\','+(fbDone?'false':'true')+')">'+(fbDone?'&#x2713; Done':'Mark done')+'</button>'
-        +'</div>';
-    }
+
     return '<div class="disc-signal '+cls+'">'
       +'<span class="disc-sig-icon">'+icon+'</span>'
-      +'<div class="disc-sig-body"><div class="disc-sig-name">'+sig.name+'</div><div class="disc-sig-note">'+sig.note+'</div>'+toggleHtml+'</div>'
+      +'<div class="disc-sig-body">'
+        +'<div class="disc-sig-name">'+sig.name+'</div>'
+        +'<div class="disc-sig-note">'+sig.note+'</div>'
+        +toggleHtml
+      +'</div>'
       +'<span class="disc-sig-pts '+ptsCls+'">'+ptsStr+'</span>'
       +'</div>';
   }).join('');
 
-  /* schedule slots */
-  var schedDoneCount = DAILY_SCHEDULE.filter(function(s){ return !!(log['sched_'+s.key]); }).length;
+  /* schedule slots list (beside the clock) */
   var schedHtml = DAILY_SCHEDULE.map(function(sl){
     var done=!!(log['sched_'+sl.key]);
     return '<div class="sched-slot '+(done?'done':'pending')+'">'
@@ -3827,6 +3837,8 @@ function renderDiscCard(){
       +'</div>'
       +'</div>';
   }).join('');
+
+  var schedDoneCount = DAILY_SCHEDULE.filter(function(s){ return !!(log['sched_'+s.key]); }).length;
 
   el.innerHTML = '<div class="disc-card">'
     +'<div class="disc-compact" onclick="toggleDiscDetail()">'
@@ -3851,18 +3863,15 @@ function renderDiscCard(){
       +'<button class="disc-expand-btn" onclick="event.stopPropagation();toggleDiscDetail();">'+(discOpen?'&#x25B2; Close':'&#x25BC; Details')+'</button>'
     +'</div>'
     +'<div class="disc-detail '+(discOpen?'open':'')+'">'
-      /* schedule clock + slots */
+      /* schedule donut + slot list */
       +'<div style="margin-bottom:18px;">'
-        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">'
-          +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">&#x1F5D3; Daily Schedule &mdash; '+TODAY+'</div>'
-          +'<div style="font-size:10px;background:var(--navy);border:1px solid var(--border);border-radius:6px;padding:2px 9px;color:'+(schedDoneCount===DAILY_SCHEDULE.length?'#4ade80':'var(--faint)')+'">'+schedDoneCount+'/'+DAILY_SCHEDULE.length+' done</div>'
-        +'</div>'
+        +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">&#x1F5D3; Daily Schedule &mdash; '+TODAY+'</div>'
         +'<div class="sched-clock-wrap">'
           +'<div class="sched-clock-svg">'+schedClockSvg(log)+'</div>'
           +'<div class="sched-slots">'+schedHtml+'</div>'
         +'</div>'
       +'</div>'
-      /* score breakdown */
+      /* score breakdown — each card now has its own toggle */
       +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;border-top:1px solid var(--border);padding-top:14px;">&#x1F4CA; Score Breakdown &mdash; Today</div>'
       +'<div class="disc-signals">'+sigHtml+'</div>'
       /* heatmap */
@@ -3959,7 +3968,6 @@ function getMissingItems(date){
     missing.push({ type:'log', key:'selfControl', name:'Self Control', pts:10, yesNo:true });
   return missing;
 }
-
 /* Compute projected score after pending edits */
 function meProjectedScore(date){
   loadDisc();
@@ -4002,7 +4010,7 @@ function renderMeModal(){
     + '<div style="text-align:right;font-size:11px;color:var(--muted);">'+missing.length+' item'+(missing.length!==1?'s':'')+' missing</div>'
   +'</div>';
 
-  /* schedule slots */
+  /* schedule slots section */
   var schedMissing = missing.filter(function(m){ return m.type==='sched'; });
   var schedHtml2 = '';
   if(schedMissing.length > 0){
@@ -4017,7 +4025,6 @@ function renderMeModal(){
     });
     schedHtml2 += '</div>';
   }
-  /* PYQ & other fixed signals */
   var fixedMissing = missing.filter(function(m){ return m.type==='fixed'; });
   var fixedHtml = '';
   if(fixedMissing.length > 0){
@@ -4032,7 +4039,6 @@ function renderMeModal(){
     });
     fixedHtml += '</div>';
   }
-  /* yes/no signals */
   var ynMissing = missing.filter(function(m){ return m.type==='log'; });
   var ynHtml = '';
   if(ynMissing.length > 0){
