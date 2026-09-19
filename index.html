@@ -305,6 +305,24 @@ select.inp-sm{cursor:pointer;}
 .disc-plan-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
 .disc-plan-title{font-size:12px;font-weight:700;color:var(--text);}
 .disc-plan-date{font-size:11px;color:var(--muted);}
+/* ── SCHEDULE CLOCK ── */
+.sched-clock-wrap{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;margin-bottom:16px;}
+.sched-clock-svg{flex-shrink:0;}
+.sched-slots{flex:1;min-width:240px;display:flex;flex-direction:column;gap:6px;}
+.sched-slot{display:flex;align-items:center;gap:10px;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:9px 12px;transition:border-color .2s;}
+.sched-slot.done{border-color:#4ade8055;background:#002d1433;}
+.sched-slot-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.sched-slot-body{flex:1;min-width:0;}
+.sched-slot-time{font-size:10px;font-weight:700;color:var(--muted);}
+.sched-slot-label{font-size:11px;font-weight:700;color:var(--text);margin-top:1px;}
+.sched-toggle-wrap{display:flex;align-items:center;gap:5px;margin-left:auto;flex-shrink:0;}
+.sched-toggle-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--faint);}
+.sched-toggle{position:relative;display:inline-block;width:38px;height:20px;flex-shrink:0;}
+.sched-toggle input{opacity:0;width:0;height:0;}
+.sched-toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#1a3248;border-radius:20px;transition:.3s;}
+.sched-toggle-slider:before{position:absolute;content:"";height:14px;width:14px;left:3px;bottom:3px;background:var(--muted);border-radius:50%;transition:.3s;}
+.sched-toggle input:checked+.sched-toggle-slider{background:#4ade8066;}
+.sched-toggle input:checked+.sched-toggle-slider:before{transform:translateX(18px);background:#4ade80;}
 .disc-block{background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:10px 13px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .disc-block.done-block{border-color:#4ade8066;background:#002d1433;}
 .disc-block.missed-block{border-color:#ef444466;background:#2a000033;}
@@ -3265,124 +3283,141 @@ var discData = { plans:{}, logs:{} };
 function loadDisc(){ var d=lsGet('gate-discipline'); if(d){ discData.plans=d.plans||{}; discData.logs=d.logs||{}; } }
 function saveDisc(){ lsSet('gate-discipline', discData); }
 
-/* ── FIXED DAILY BLOCKS — always present, not stored in plans ── */
-var FIXED_BLOCKS = [
-  { id:'study', icon:'📚', label:'Study Videos',        desc:'Watch videos as per study schedule',   key:'study' },
-  { id:'rev1',  icon:'📖', label:'Revision 1',          desc:'Revise notes as per Rev1 target',      key:'rev1'  },
-  { id:'pyq',   icon:'🎯', label:'PYQ Practice',        desc:'PYQ practice as per target',           key:'pyq'   },
-  { id:'notes', icon:'✏️', label:'Short Notes Writing', desc:'Write short notes from todays study',  key:'notes' },
+/* ── DAILY SCHEDULE SLOTS ── */
+var DAILY_SCHEDULE = [
+  { key:'freshup',    color:'#a78bfa', from:'05:00', to:'06:00', label:'Fresh up + Exercise + Puzzle' },
+  { key:'vidclass',   color:'#00d4ff', from:'06:00', to:'09:00', label:'Video Classes' },
+  { key:'breakfast',  color:'#fbbf24', from:'09:00', to:'10:00', label:'Breakfast + Walking' },
+  { key:'rev1notes',  color:'#c084fc', from:'10:00', to:'12:00', label:'Revision 1 + Short Notes' },
+  { key:'travel1',    color:'#4a6a80', from:'12:00', to:'13:00', label:'Travel to Office' },
+  { key:'lunch',      color:'#fbbf24', from:'13:00', to:'14:00', label:'Lunch + TT' },
+  { key:'office1',    color:'#64748b', from:'14:00', to:'18:00', label:'Office Work (Afternoon)' },
+  { key:'snacks',     color:'#fbbf24', from:'18:00', to:'19:00', label:'Snacks + TT' },
+  { key:'office2',    color:'#64748b', from:'19:00', to:'22:00', label:'Office Work (Evening)' },
+  { key:'travel2',    color:'#4a6a80', from:'22:00', to:'23:00', label:'Travel + Update Sheet' },
+  { key:'shortnotes', color:'#4ade80', from:'23:00', to:'24:00', label:'Short Notes Revision' },
 ];
 
-/* ── score computation for a given date ── */
+/* ── score computation — 6-signal / 100-pt system ── */
 function calcDiscScore(date){
   loadDisc();
-  var dd = daily[date]||{};
   var log = discData.logs[date]||{};
   var result = { total:0, signals:[] };
 
-  /* Fixed blocks — 20 pts each (80 pts total) */
-  FIXED_BLOCKS.forEach(function(fb){
-    var done = !!(log['fb_'+fb.key]);
-    var earned = done ? 20 : 0;
-    result.signals.push({ icon:fb.icon, name:fb.label, note:fb.desc, pts:20, earned:earned, auto:false, fixedKey:'fb_'+fb.key });
-    result.total += earned;
-  });
+  /* 1. Video Classes 20pts */
+  var vcDone = !!(log['sched_vidclass']);
+  result.signals.push({ name:'Video Classes', note:'6:00 AM – 9:00 AM', pts:20, earned:vcDone?20:0, schedKey:'vidclass' });
+  result.total += vcDone?20:0;
 
-  /* Exercise (5 pts) — from Study tab habit */
-  var exDone = !!(dd.habits&&dd.habits.exercise);
-  var exEarned = exDone ? 5 : 0;
-  result.signals.push({ icon:'🏃', name:'Exercise', note: exDone?'Habit toggled ✓':'Toggle in Study tab', pts:5, earned:exEarned, auto:true });
-  result.total += exEarned;
+  /* 2. Revision 1 20pts */
+  var r1Done = !!(log['sched_rev1notes']);
+  result.signals.push({ name:'Revision 1', note:'10:00 AM – 12:00 PM', pts:20, earned:r1Done?20:0, schedKey:'rev1notes' });
+  result.total += r1Done?20:0;
 
-  /* Chess (5 pts) — from Study tab habit */
-  var chessDone = !!(dd.habits&&dd.habits.chess);
-  var chessEarned = chessDone ? 5 : 0;
-  result.signals.push({ icon:'♟', name:'Chess', note: chessDone?'Habit toggled ✓':'Toggle in Study tab', pts:5, earned:chessEarned, auto:true });
-  result.total += chessEarned;
+  /* 3. Short Notes 20pts */
+  var snDone = !!(log['sched_shortnotes']);
+  result.signals.push({ name:'Short Notes', note:'11:00 PM – 12:00 AM', pts:20, earned:snDone?20:0, schedKey:'shortnotes' });
+  result.total += snDone?20:0;
 
-  /* Woke up at 6:00 AM (5 pts) */
-  var wakeEarned = 0;
-  var wakeNote = 'Mark below';
-  if(log.wokeOnTime===true){ wakeEarned=5; wakeNote='On time ✓ (6:00 AM)'; }
-  else if(log.wokeOnTime===false){ wakeNote='Missed (6:00 AM target)'; }
-  result.signals.push({ icon:'⏰', name:'Woke Up at 6:00 AM', note:wakeNote, pts:5, earned:wakeEarned, auto:false, key:'wokeOnTime', isPlan:true });
-  result.total += wakeEarned;
+  /* 4. PYQ 20pts */
+  var pyqDone = !!(log['fb_pyq']);
+  result.signals.push({ name:'PYQ Practice', note:'Mark when done', pts:20, earned:pyqDone?20:0, fixedKey:'fb_pyq' });
+  result.total += pyqDone?20:0;
 
-  /* Self Control (5 pts) */
-  var scEarned = 0;
-  var scNote = 'Mark below';
-  if(log.selfControl===true){ scEarned=5; scNote='Maintained ✓'; }
+  /* 5. Self Control 10pts */
+  var scEarned=0, scNote='Mark below';
+  if(log.selfControl===true){ scEarned=10; scNote='Maintained ✓'; }
   else if(log.selfControl===false){ scNote='Broken today'; }
-  result.signals.push({ icon:'🧠', name:'Self Control', note:scNote, pts:5, earned:scEarned, auto:false, key:'selfControl', isSelfCtrl:true });
+  result.signals.push({ name:'Self Control', note:scNote, pts:10, earned:scEarned, isSelfCtrl:true });
   result.total += scEarned;
+
+  /* 6. As per schedule 10pts */
+  var sdone = DAILY_SCHEDULE.filter(function(s){ return !!(log['sched_'+s.key]); }).length;
+  var schedEarned = sdone===DAILY_SCHEDULE.length ? 10 : 0;
+  result.signals.push({ name:'As Per Schedule', note:sdone+'/'+DAILY_SCHEDULE.length+' slots', pts:10, earned:schedEarned, isSchedAll:true });
+  result.total += schedEarned;
 
   result.total = Math.min(100, result.total);
   return result;
 }
 
-/* ── streak of days with score ≥ 80 ── */
+/* ── discipline streak ≥ 90 ── */
 function calcDiscStreak(){
-  var streak = 0;
-  var d = addDays(TODAY, 0);
+  var streak=0; var d=addDays(TODAY,0);
   for(var i=0;i<193;i++){
-    if(d < DISC_START) break;
-    var sc = calcDiscScore(d);
-    if(sc.total >= 95) streak++;
+    if(d<DISC_START) break;
+    if(calcDiscScore(d).total>=90) streak++;
     else break;
-    d = addDays(d, -1);
+    d=addDays(d,-1);
   }
   return streak;
 }
 
-/* ── per-signal streaks ── */
-function calcBlockStreak(fbKey){
-  /* counts consecutive days (backward from today) where fb_<key> was logged */
-  var streak = 0;
-  var d = addDays(TODAY, 0);
+/* ── max discipline streak ever ── */
+function calcDiscMaxStreak(){
+  var maxS=0, cur=0, d=DISC_START;
+  while(d<=TODAY){
+    if(calcDiscScore(d).total>=90){ cur++; if(cur>maxS)maxS=cur; }
+    else cur=0;
+    d=addDays(d,1);
+  }
+  return maxS;
+}
+
+function calcSchedSlotStreak(slotKey){
+  var streak=0; var d=addDays(TODAY,0);
   for(var i=0;i<193;i++){
-    if(d < DISC_START) break;
-    var log = discData.logs[d]||{};
-    if(log['fb_'+fbKey]) streak++;
+    if(d<DISC_START) break;
+    var lg=discData.logs[d]||{};
+    if(lg['sched_'+slotKey]) streak++;
     else break;
-    d = addDays(d, -1);
+    d=addDays(d,-1);
   }
   return streak;
 }
-function calcPyqStreak(){   return calcBlockStreak('pyq');   }
-function calcRev1Streak(){  return calcBlockStreak('rev1');  }
-function calcNotesStreak(){ return calcBlockStreak('notes'); }
-function calcWakeStreak(){
-  var streak = 0;
-  var d = addDays(TODAY, 0);
+function calcPyqStreak(){
+  var streak=0; var d=addDays(TODAY,0);
   for(var i=0;i<193;i++){
-    if(d < DISC_START) break;
-    var log = discData.logs[d]||{};
-    if(log.wokeOnTime === true) streak++;
+    if(d<DISC_START) break;
+    var lg=discData.logs[d]||{};
+    if(lg['fb_pyq']) streak++;
     else break;
-    d = addDays(d, -1);
+    d=addDays(d,-1);
+  }
+  return streak;
+}
+function calcRev1Streak(){ return calcSchedSlotStreak('rev1notes'); }
+function calcNotesStreak(){ return calcSchedSlotStreak('shortnotes'); }
+function calcVidStreak(){ return calcSchedSlotStreak('vidclass'); }
+function calcWakeStreak(){
+  var streak=0; var d=addDays(TODAY,0);
+  for(var i=0;i<193;i++){
+    if(d<DISC_START) break;
+    var lg=discData.logs[d]||{};
+    if(lg.wokeOnTime===true) streak++;
+    else break;
+    d=addDays(d,-1);
   }
   return streak;
 }
 function calcSelfCtrlStreak(){
-  var streak = 0;
-  var d = addDays(TODAY, 0);
+  var streak=0; var d=addDays(TODAY,0);
   for(var i=0;i<193;i++){
-    if(d < DISC_START) break;
-    var log = discData.logs[d]||{};
-    if(log.selfControl === true) streak++;
+    if(d<DISC_START) break;
+    var lg=discData.logs[d]||{};
+    if(lg.selfControl===true) streak++;
     else break;
-    d = addDays(d, -1);
+    d=addDays(d,-1);
   }
   return streak;
 }
 function calcChessStreak(){
-  var streak = 0;
-  var d = addDays(TODAY, 0);
+  var streak=0; var d=addDays(TODAY,0);
   for(var i=0;i<193;i++){
-    if(d < DISC_START) break;
+    if(d<DISC_START) break;
     if(!!(daily[d]&&daily[d].habits&&daily[d].habits.chess)) streak++;
     else break;
-    d = addDays(d, -1);
+    d=addDays(d,-1);
   }
   return streak;
 }
@@ -3399,7 +3434,7 @@ function calcDiscAvg7(){
 }
 
 /* ── score color ── */
-function discColor(sc){ return sc>=80?'#4ade80':sc>=50?'#fbbf24':'#ef4444'; }
+function discColor(sc){ return sc>=90?'#4ade80':sc>=70?'#fbbf24':'#ef4444'; }
 
 /* ── SVG ring ── */
 function discRingHtml(score, size, sw){
@@ -3538,8 +3573,8 @@ function discHeatmapHtml(){
     var sc=calcDiscScore(d).total;
     var bg;
     if(d>TODAY){ bg='var(--border)'; }
-    else if(sc>=95){ bg='#4ade80'; }
-    else if(sc>=80){ bg='#fbbf24'; }
+    else if(sc>=90){ bg='#4ade80'; }
+    else if(sc>=70){ bg='#fbbf24'; }
     else if(sc>=1){ bg='#ef4444'; }
     else { bg='#1a3248'; }
     var opacity = d<=TODAY ? '1' : '0.3';
@@ -3656,179 +3691,187 @@ function discBlockFormHtml(date){
 var discOpen = false;
 function toggleDiscDetail(){ discOpen=!discOpen; renderDiscCard(); }
 
+/* 24-hour schedule clock SVG */
+function schedClockSvg(log){
+  var SIZE=220, CX=110, CY=110, R=88, TOTAL=1440;
+  function ang(t){
+    var p=t.split(':'), m=parseInt(p[0])*60+(parseInt(p[1])||0);
+    return (m/TOTAL)*2*Math.PI - Math.PI/2;
+  }
+  function xy(r,a){ return {x:CX+r*Math.cos(a), y:CY+r*Math.sin(a)}; }
+  function arc(r,a1,a2,large){
+    var s=xy(r,a1), e=xy(r,a2);
+    return 'M'+s.x.toFixed(2)+','+s.y.toFixed(2)+' A'+r+','+r+' 0 '+(large?1:0)+' 1 '+e.x.toFixed(2)+','+e.y.toFixed(2);
+  }
+  var paths='';
+  DAILY_SCHEDULE.forEach(function(sl){
+    var toH=sl.to==='24:00'?1440:parseInt(sl.to.split(':')[0])*60+(parseInt(sl.to.split(':')[1])||0);
+    var frH=parseInt(sl.from.split(':')[0])*60+(parseInt(sl.from.split(':')[1])||0);
+    var a1=ang(sl.from), a2=(toH/TOTAL)*2*Math.PI-Math.PI/2;
+    var large=(toH-frH)>720?1:0;
+    var done=!!(log['sched_'+sl.key]);
+    paths+='<path d="'+arc(R,a1,a2,large)+'" fill="none" stroke="'+sl.color+'" stroke-width="'+(done?24:16)+'" stroke-linecap="butt" opacity="'+(done?1:.28)+'"/>';
+  });
+  var ticks='';
+  for(var h=0;h<24;h++){
+    var a=(h/24)*2*Math.PI-Math.PI/2;
+    var r0=h%6===0?R-16:R-10;
+    var p1=xy(R+2,a), p2=xy(r0,a);
+    ticks+='<line x1="'+p1.x.toFixed(1)+'" y1="'+p1.y.toFixed(1)+'" x2="'+p2.x.toFixed(1)+'" y2="'+p2.y.toFixed(1)+'" stroke="#1a3248" stroke-width="'+(h%6===0?2:1)+'"/>';
+    if(h%6===0){
+      var lp=xy(R-26,a);
+      ticks+='<text x="'+lp.x.toFixed(1)+'" y="'+(lp.y+4).toFixed(1)+'" text-anchor="middle" font-size="8" fill="#4a6a80" font-family="system-ui">'+(h===0?'00':String(h).padStart(2,'0'))+'</text>';
+    }
+  }
+  var nm=new Date(); nm=nm.getHours()*60+nm.getMinutes();
+  var na=(nm/TOTAL)*2*Math.PI-Math.PI/2, np=xy(R+6,na);
+  var nowLine='<line x1="'+CX+'" y1="'+CY+'" x2="'+np.x.toFixed(1)+'" y2="'+np.y.toFixed(1)+'" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"/>';
+  return '<svg width="'+SIZE+'" height="'+SIZE+'" viewBox="0 0 '+SIZE+' '+SIZE+'" style="display:block;">'
+    +'<circle cx="'+CX+'" cy="'+CY+'" r="'+R+'" fill="none" stroke="#0d1e2e" stroke-width="32"/>'
+    +'<circle cx="'+CX+'" cy="'+CY+'" r="'+R+'" fill="none" stroke="#1a3248" stroke-width="2"/>'
+    +paths+ticks+nowLine
+    +'<circle cx="'+CX+'" cy="'+CY+'" r="48" fill="var(--navy)"/>'
+    +'<circle cx="'+CX+'" cy="'+CY+'" r="5" fill="#ef4444"/>'
+    +'<text x="'+CX+'" y="'+(CY-10)+'" text-anchor="middle" font-size="10" font-weight="800" fill="var(--acc)" font-family="system-ui">Daily</text>'
+    +'<text x="'+CX+'" y="'+(CY+6)+'" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="system-ui">Schedule</text>'
+    +'<text x="'+CX+'" y="'+(CY+20)+'" text-anchor="middle" font-size="8" fill="var(--faint)" font-family="system-ui">24h clock</text>'
+    +'</svg>';
+}
+
+function toggleSchedSlot(key, val){
+  loadDisc();
+  if(!discData.logs[TODAY]) discData.logs[TODAY]={};
+  discData.logs[TODAY]['sched_'+key]=val;
+  saveDisc(); renderDiscCard();
+}
+
 function renderDiscCard(){
   loadAll(); loadRev1(); loadPyq();
   var el = document.getElementById('disc-card-root');
   if(!el) return;
-  /* If today is before DISC_START, show a countdown card instead */
   if(TODAY < DISC_START){
     var daysTo = diffDays(TODAY, DISC_START);
     el.innerHTML = '<div class="disc-card" style="text-align:center;padding:32px 20px;">'
-      +'<div style="font-size:36px;margin-bottom:10px;">🎯</div>'
+      +'<div style="font-size:36px;margin-bottom:10px;">&#x1F3AF;</div>'
       +'<div style="font-size:16px;font-weight:800;color:var(--acc);margin-bottom:8px;">Discipline Tracking Starts Sep 14, 2026</div>'
       +'<div style="font-size:13px;color:var(--muted);margin-bottom:16px;">'+daysTo+' day'+(daysTo===1?'':'s')+' to go</div>'
-      +'<div style="background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:14px 18px;text-align:left;max-width:420px;margin:0 auto;">'
-        +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">Your Daily Fixed Schedule</div>'
-        +'<div style="display:flex;flex-direction:column;gap:7px;font-size:12px;">'
-          +'<div style="display:flex;gap:8px;align-items:center;"><span>📚</span><span>Study Videos</span></div>'
-          +'<div style="display:flex;gap:8px;align-items:center;"><span>📖</span><span>Revision 1</span></div>'
-          +'<div style="display:flex;gap:8px;align-items:center;">'
-          +'<span>🎯</span><span>PYQ Practice</span>'
-          +(TODAY>="2026-09-14"&&TODAY<="2026-09-20"?'<span style="font-size:10px;background:#a78bfa22;color:#a78bfa;padding:1px 6px;border-radius:4px;font-weight:600;margin-left:4px;">Sep 14–20: Aptitude PYQs</span>':"")+
-          '</div>'
-          +'<div style="display:flex;gap:8px;align-items:center;"><span>📝</span><span>Short Notes Writing</span></div>'
-        +'</div>'
-      +'</div>'
       +'</div>';
     return;
   }
-  var sc = calcDiscScore(TODAY);
-  var streak = calcDiscStreak();
-  var avg7 = calcDiscAvg7();
-  var col = discColor(sc.total);
-  var pyqS   = calcPyqStreak();
-  var rev1S  = calcRev1Streak();
-  var notesS = calcNotesStreak();
-  var wakeS  = calcWakeStreak();
-  var scS    = calcSelfCtrlStreak();
-  var chessS = calcChessStreak();
-  var plan = discGetPlan(TODAY);
-  var log = discData.logs[TODAY]||{};
-  var tmrw = addDays(TODAY,1);
-  var tmrwPlan = discGetPlan(tmrw);
+
+  var sc      = calcDiscScore(TODAY);
+  var streak  = calcDiscStreak();
+  var maxStrk = calcDiscMaxStreak();
+  var avg7    = calcDiscAvg7();
+  var col     = discColor(sc.total);
+  var vidS    = calcVidStreak();
+  var rev1S   = calcRev1Streak();
+  var notesS  = calcNotesStreak();
+  var pyqS    = calcPyqStreak();
+  var scS     = calcSelfCtrlStreak();
+  var log     = discData.logs[TODAY]||{};
+
+  /* signal icons map */
+  var ICONS = {
+    'Video Classes':'&#x1F3AC;',
+    'Revision 1':'&#x1F4D6;',
+    'Short Notes':'&#x1F4DD;',
+    'PYQ Practice':'&#x1F3AF;',
+    'Self Control':'&#x1F9E0;',
+    'As Per Schedule':'&#x1F5D3;&#xFE0F;'
+  };
 
   /* signals HTML */
-  var sigHtml = sc.signals.map(function(sig, idx){
+  var sigHtml = sc.signals.map(function(sig){
     var isEarned = sig.earned >= sig.pts;
-    var cls = isEarned?'earned': sig.earned===0?'missed':'';
+    var cls = isEarned?'earned':sig.earned===0?'missed':'';
     var ptsCls = isEarned?'earned':'missed';
     var ptsStr = (isEarned?'+':'')+sig.earned+'/'+sig.pts;
+    var icon = ICONS[sig.name]||'&#x2B50;';
     var toggleHtml = '';
-    if(sig.isPlan){
-      var wOT = log.wokeOnTime;
-      var wYesCls = wOT===true?'on':'';
-      var wNoCls = wOT===false?'on':'';
-      var wNoStyle = wOT===false?'background:#2a0000;border-color:#ef4444;color:#ef4444;':'';
-      toggleHtml = '<div style="display:flex;gap:5px;">'
-        +'<button class="disc-manual-toggle '+wYesCls+'" onclick="discToggleLog(\''+TODAY+'\',\'wokeOnTime\',true)">✓ Yes</button>'
-        +'<button class="disc-manual-toggle '+wNoCls+'" style="'+wNoStyle+'" onclick="discToggleLog(\''+TODAY+'\',\'wokeOnTime\',false)">✗ No</button>'
+    if(sig.isSelfCtrl){
+      var sCT=log.selfControl;
+      var sYesCls=sCT===true?'on':'', sNoCls=sCT===false?'on':'';
+      var sNoStyle=sCT===false?'background:#2a0000;border-color:#ef4444;color:#ef4444;':'';
+      toggleHtml='<div style="display:flex;gap:5px;margin-top:5px;">'
+        +'<button class="disc-manual-toggle '+sYesCls+'" onclick="discToggleLog(\''+TODAY+'\',\'selfControl\',true)">&#x2713; Yes</button>'
+        +'<button class="disc-manual-toggle '+sNoCls+'" style="'+sNoStyle+'" onclick="discToggleLog(\''+TODAY+'\',\'selfControl\',false)">&#x2717; No</button>'
         +'</div>';
     }
-    if(sig.isSelfCtrl){
-      var sCT = log.selfControl;
-      var sYesCls = sCT===true?'on':'';
-      var sNoCls  = sCT===false?'on':'';
-      var sNoStyle = sCT===false?'background:#2a0000;border-color:#ef4444;color:#ef4444;':'';
-      toggleHtml = '<div style="display:flex;gap:5px;">'
-        +'<button class="disc-manual-toggle '+sYesCls+'" onclick="discToggleLog(\''+TODAY+'\',\'selfControl\',true)">✓ Yes</button>'
-        +'<button class="disc-manual-toggle '+sNoCls+'" style="'+sNoStyle+'" onclick="discToggleLog(\''+TODAY+'\',\'selfControl\',false)">✗ No</button>'
+    if(sig.fixedKey){
+      var fbDone=!!(log[sig.fixedKey]);
+      toggleHtml='<div style="margin-top:5px;">'
+        +'<button class="disc-block-btn '+(fbDone?'done':'')+'" onclick="discToggleLog(\''+TODAY+'\',\''+sig.fixedKey+'\','+(fbDone?'false':'true')+')">'+(fbDone?'&#x2713; Done':'Mark done')+'</button>'
         +'</div>';
     }
     return '<div class="disc-signal '+cls+'">'
-      +'<span class="disc-sig-icon">'+sig.icon+'</span>'
-      +'<div class="disc-sig-body"><div class="disc-sig-name">'+sig.name+'</div><div class="disc-sig-note">'+sig.note+'</div>'
-      +(toggleHtml?'<div style="margin-top:5px;">'+toggleHtml+'</div>':'')
-      +'</div>'
+      +'<span class="disc-sig-icon">'+icon+'</span>'
+      +'<div class="disc-sig-body"><div class="disc-sig-name">'+sig.name+'</div><div class="disc-sig-note">'+sig.note+'</div>'+toggleHtml+'</div>'
       +'<span class="disc-sig-pts '+ptsCls+'">'+ptsStr+'</span>'
       +'</div>';
   }).join('');
 
-  /* today's fixed blocks + extra blocks */
-  /* auto-detect current subject for links */
-  var _fbSub = autoDetectSubject(TODAY) || subjects.find(function(s){ return s.id===(daily[TODAY]||{}).subjectId; });
-  var _fbSubId = _fbSub ? _fbSub.id : 0;
-  var _fbYtUrl = _fbSubId ? discGetYt(_fbSubId) : '';
-  var _fbNotesPath = _fbSubId ? discGetNotesPath(_fbSubId) : '';
-  var _fbNotesUrl = _fbNotesPath || '';
-  var _fbPyqUrl = _fbSubId ? discGetPyqUrl(_fbSubId) : 'https://hub.prepfusion.in';
-
-  var fixedBlocksHtml = FIXED_BLOCKS.map(function(fb){
-    var done = !!(log['fb_'+fb.key]);
-    var cls = done ? 'done-block' : '';
-    var doneCls = done ? 'done' : '';
-    /* pick the right resource link per block type */
-    var linkHtml = '';
-    if(fb.key==='study' && _fbYtUrl){
-      linkHtml = '<a href="'+_fbYtUrl+'" target="_blank" class="disc-block-link yt">▶ YouTube</a>';
-    } else if(fb.key==='rev1'){
-      /* Notes stored in OneDrive — no link in app */
-      linkHtml = '';
-    } else if(fb.key==='pyq'){
-      linkHtml = '<a href="'+_fbPyqUrl+'" target="_blank" class="disc-block-link pq">🔗 PrepFusion</a>';
-    }
-    return '<div class="disc-block '+cls+'" style="border-left:3px solid '+(done?'#4ade80':'var(--border)')+';">'
-      +'<div class="disc-block-info">'
-        +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
-
-          +'<span class="disc-block-dur">'+(fb.id==='notes'?'1h':fb.id==='study'?'4h':fb.id==='rev1'?'3h':'1h')+'</span>'
-          +'<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;background:rgba(0,212,255,.1);color:var(--acc);">'+fb.icon+' '+fb.label+'</span>'
-          +linkHtml
-        +'</div>'
-        +'<div class="disc-block-desc" style="margin-top:3px;color:var(--muted);">'+fb.desc+'</div>'
+  /* schedule slots */
+  var schedDoneCount = DAILY_SCHEDULE.filter(function(s){ return !!(log['sched_'+s.key]); }).length;
+  var schedHtml = DAILY_SCHEDULE.map(function(sl){
+    var done=!!(log['sched_'+sl.key]);
+    return '<div class="sched-slot '+(done?'done':'pending')+'">'
+      +'<div class="sched-slot-dot" style="background:'+sl.color+(done?'':';opacity:.35')+';"></div>'
+      +'<div class="sched-slot-body">'
+        +'<div class="sched-slot-time">'+sl.from+' &ndash; '+sl.to+'</div>'
+        +'<div class="sched-slot-label">'+sl.label+'</div>'
       +'</div>'
-      +'<div class="disc-block-btns">'
-        +'<button class="disc-block-btn '+doneCls+'" onclick="discToggleLog(\''+TODAY+'\',\'fb_'+fb.key+'\','+(done?'false':'true')+')">'+( done?'✓':'Mark done')+'</button>'
+      +'<div class="sched-toggle-wrap">'
+        +'<span class="sched-toggle-lbl">'+(done?'Done':'Pending')+'</span>'
+        +'<label class="sched-toggle"><input type="checkbox" '+(done?'checked':'')+' data-slkey="'+sl.key+'" onchange="toggleSchedSlot(this.dataset.slkey,this.checked)"><span class="sched-toggle-slider"></span></label>'
       +'</div>'
       +'</div>';
   }).join('');
-  var extraBlocks = (plan.blocks||[]);
-  var extraBlocksHtml = extraBlocks.length===0 ? '' : extraBlocks.map(function(b,i){ return discBlockRowHtml(b,i,TODAY,true); }).join('');
-
-  /* tomorrow's plan editor */
-  var tmrwBlocks = tmrwPlan.blocks||[];
-  var tmrwBlocksHtml = tmrwBlocks.length===0
-    ? '<div style="font-size:11px;color:var(--faint);padding:4px 0;">No blocks added yet — plan tonight!</div>'
-    : tmrwBlocks.map(function(b,i){ return discBlockRowHtml(b,i,tmrw,false); }).join('');
 
   el.innerHTML = '<div class="disc-card">'
-    /* compact header */
     +'<div class="disc-compact" onclick="toggleDiscDetail()">'
       +'<div class="disc-ring-wrap">'
         +discRingHtml(sc.total,64,6)
         +'<div class="disc-ring-lbl"><div class="disc-ring-score" style="color:'+col+'">'+sc.total+'</div><div class="disc-ring-txt">score</div></div>'
       +'</div>'
       +'<div class="disc-stats">'
-        /* ── individual streaks row ── */
         +'<div class="disc-streaks-row">'
-          +'<div class="disc-streak-chip" title="PYQ Practice streak"><span class="dsc-fire">🎯</span><span class="dsc-num" style="color:'+(pyqS>=7?'#4ade80':pyqS>=3?'#fbbf24':'var(--acc)')+'">'+pyqS+'</span><span class="dsc-lbl">PYQ</span></div>'
-          +'<div class="disc-streak-chip" title="Revision 1 streak"><span class="dsc-fire">📖</span><span class="dsc-num" style="color:'+(rev1S>=7?'#4ade80':rev1S>=3?'#fbbf24':'var(--acc)')+'">'+rev1S+'</span><span class="dsc-lbl">Rev1</span></div>'
-          +'<div class="disc-streak-chip" title="Short Notes streak"><span class="dsc-fire">📝</span><span class="dsc-num" style="color:'+(notesS>=7?'#4ade80':notesS>=3?'#fbbf24':'var(--acc)')+'">'+notesS+'</span><span class="dsc-lbl">Notes</span></div>'
-          +'<div class="disc-streak-chip" title="Woke at 6 AM streak"><span class="dsc-fire">⏰</span><span class="dsc-num" style="color:'+(wakeS>=7?'#4ade80':wakeS>=3?'#fbbf24':'var(--acc)')+'">'+wakeS+'</span><span class="dsc-lbl">Wake</span></div>'
-          +'<div class="disc-streak-chip" title="Self Control streak"><span class="dsc-fire">🧠</span><span class="dsc-num" style="color:'+(scS>=7?'#4ade80':scS>=3?'#fbbf24':'var(--acc)')+'">'+scS+'</span><span class="dsc-lbl">Control</span></div>'
-          +'<div class="disc-streak-chip" title="Chess streak"><span class="dsc-fire">♟</span><span class="dsc-num" style="color:'+(chessS>=7?'#4ade80':chessS>=3?'#fbbf24':'var(--acc)')+'">'+chessS+'</span><span class="dsc-lbl">Chess</span></div>'
+          +'<div class="disc-streak-chip" title="Video Classes streak"><span class="dsc-fire">&#x1F3AC;</span><span class="dsc-num" style="color:'+(vidS>=7?'#4ade80':vidS>=3?'#fbbf24':'var(--acc)')+'">'+vidS+'</span><span class="dsc-lbl">Video</span></div>'
+          +'<div class="disc-streak-chip" title="Revision 1 streak"><span class="dsc-fire">&#x1F4D6;</span><span class="dsc-num" style="color:'+(rev1S>=7?'#4ade80':rev1S>=3?'#fbbf24':'var(--acc)')+'">'+rev1S+'</span><span class="dsc-lbl">Rev1</span></div>'
+          +'<div class="disc-streak-chip" title="Short Notes streak"><span class="dsc-fire">&#x1F4DD;</span><span class="dsc-num" style="color:'+(notesS>=7?'#4ade80':notesS>=3?'#fbbf24':'var(--acc)')+'">'+notesS+'</span><span class="dsc-lbl">Notes</span></div>'
+          +'<div class="disc-streak-chip" title="PYQ streak"><span class="dsc-fire">&#x1F3AF;</span><span class="dsc-num" style="color:'+(pyqS>=7?'#4ade80':pyqS>=3?'#fbbf24':'var(--acc)')+'">'+pyqS+'</span><span class="dsc-lbl">PYQ</span></div>'
+          +'<div class="disc-streak-chip" title="Self Control streak"><span class="dsc-fire">&#x1F9E0;</span><span class="dsc-num" style="color:'+(scS>=7?'#4ade80':scS>=3?'#fbbf24':'var(--acc)')+'">'+scS+'</span><span class="dsc-lbl">Control</span></div>'
           +'<div class="disc-streak-divider"></div>'
-          +'<div class="disc-streak-chip disc-streak-disc" title="Overall discipline streak (score ≥ 80)"><span class="dsc-fire">🔥</span><span class="dsc-num" style="color:'+(streak>=7?'#4ade80':streak>=3?'#fbbf24':'var(--acc)')+'">'+streak+'</span><span class="dsc-lbl">Discipline</span></div>'
+          +'<div class="disc-streak-chip disc-streak-disc" title="Discipline streak (score &ge;90)"><span class="dsc-fire">&#x1F525;</span><span class="dsc-num" style="color:'+(streak>=7?'#4ade80':streak>=3?'#fbbf24':'var(--acc)')+'">'+streak+'</span><span class="dsc-lbl">Streak</span></div>'
+          +'<div class="disc-streak-chip disc-streak-disc" title="All-time max discipline streak"><span class="dsc-fire">&#x1F3C6;</span><span class="dsc-num" style="color:#fbbf24">'+maxStrk+'</span><span class="dsc-lbl">Max</span></div>'
         +'</div>'
-        /* ── summary stats ── */
         +'<div class="disc-stat" style="margin-left:auto;"><div class="disc-stat-val" style="color:'+discColor(avg7)+'">'+avg7+'</div><div class="disc-stat-lbl">7-Day Avg</div></div>'
         +'<div class="disc-stat"><div class="disc-stat-val" style="color:'+col+'">'+scoreLabel(sc.total)+'</div><div class="disc-stat-lbl">Today</div></div>'
       +'</div>'
-      +'<button class="disc-expand-btn" onclick="event.stopPropagation();toggleDiscDetail();">'+(discOpen?'▲ Close':'▼ Details')+'</button>'
+      +'<button class="disc-expand-btn" onclick="event.stopPropagation();toggleDiscDetail();">'+(discOpen?'&#x25B2; Close':'&#x25BC; Details')+'</button>'
     +'</div>'
-    /* expandable detail */
     +'<div class="disc-detail '+(discOpen?'open':'')+'">'
-      +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">Score Breakdown - Today</div>'
-      +'<div class="disc-signals">'+sigHtml+'</div>'
-      /* today's plan adherence */
-      +'<div class="disc-plan-section">'        +'<div class="disc-plan-hdr"><div class="disc-plan-title">📋 Daily Fixed Blocks <span style="font-size:10px;color:var(--muted);">'+TODAY+'</span></div></div>'        +'<div style="font-size:10px;color:var(--faint);margin-bottom:8px;">These 4 blocks are your non-negotiable daily targets. Mark each done when complete.</div>'        +fixedBlocksHtml        +(extraBlocksHtml?'<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:10px 0 6px;">Extra Blocks</div>'+extraBlocksHtml:'')        +'<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:10px 0 6px;">+ Add Extra Block</div>'        +discBlockFormHtml(TODAY)      +'</div>'      /* tomorrow plan editor */
-      +'<div class="disc-plan-section" style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px;">'
-        +'<div class="disc-plan-hdr"><div class="disc-plan-title">🌙 Plan Tomorrow <span style="font-size:10px;color:var(--muted);">'+tmrw+'</span></div></div>'
-        +'<div class="disc-plan-editor">'
-          +'<div class="disc-wake-row"><span class="disc-wake-lbl">⏰ Wake time:</span>'
-            +'<input class="disc-inp" type="time" id="disc-wake-inp" value="'+(tmrwPlan.wakeTime||'05:00')+'" onchange="discSetWake(\''+tmrw+'\',this.value)" style="width:110px;"/>'
-          +'</div>'
-          +'<div class="disc-section-mini">Study Blocks</div>'
-          +tmrwBlocksHtml
-          +discBlockFormHtml(tmrw)
+      /* schedule clock + slots */
+      +'<div style="margin-bottom:18px;">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">'
+          +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">&#x1F5D3; Daily Schedule &mdash; '+TODAY+'</div>'
+          +'<div style="font-size:10px;background:var(--navy);border:1px solid var(--border);border-radius:6px;padding:2px 9px;color:'+(schedDoneCount===DAILY_SCHEDULE.length?'#4ade80':'var(--faint)')+'">'+schedDoneCount+'/'+DAILY_SCHEDULE.length+' done</div>'
+        +'</div>'
+        +'<div class="sched-clock-wrap">'
+          +'<div class="sched-clock-svg">'+schedClockSvg(log)+'</div>'
+          +'<div class="sched-slots">'+schedHtml+'</div>'
         +'</div>'
       +'</div>'
+      /* score breakdown */
+      +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;border-top:1px solid var(--border);padding-top:14px;">&#x1F4CA; Score Breakdown &mdash; Today</div>'
+      +'<div class="disc-signals">'+sigHtml+'</div>'
       /* heatmap */
       +'<div class="disc-heatmap">'
-        +'<div class="disc-hm-title">Discipline Heatmap · Sep 14 – Dec 31</div>'
+        +'<div class="disc-hm-title">Discipline Heatmap &middot; Sep 14 &ndash; Dec 31</div>'
         +'<div style="display:flex;gap:8px;font-size:9px;color:var(--faint);margin-bottom:6px;">'
-          +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#4ade80;border-radius:2px;"></span>≥95</span>'
-          +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#fbbf24;border-radius:2px;"></span>80–94</span>'
-          +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#ef4444;border-radius:2px;"></span>&lt;80</span>'
+          +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#4ade80;border-radius:2px;"></span>&ge;90</span>'
+          +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#fbbf24;border-radius:2px;"></span>70&ndash;89</span>'
+          +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#ef4444;border-radius:2px;"></span>&lt;70</span>'
           +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#1a3248;border-radius:2px;"></span>future</span>'
         +'</div>'
         +'<div class="disc-hm-grid">'+discHeatmapHtml()+'</div>'
@@ -3837,7 +3880,7 @@ function renderDiscCard(){
   +'</div>';
 }
 
-function scoreLabel(sc){ return sc>=95?'Disciplined':sc>=80?'Good':sc>=60?'Average':sc>=40?'Below Avg':'Needs work'; }
+function scoreLabel(sc){ return sc>=90?'Disciplined':sc>=70?'Good':sc>=50?'Average':sc>=30?'Below Avg':'Needs work'; }
 
 function renderAll(){renderProgress();renderEntry();renderSubjects();renderLearningPath();}
 
@@ -3905,60 +3948,31 @@ function checkMissedEntry(){
 function getMissingItems(date){
   loadDisc();
   var log = discData.logs[date]||{};
-  var dd = daily[date]||{};
   var missing = [];
-
-  /* Fixed blocks */
-  FIXED_BLOCKS.forEach(function(fb){
-    if(!log['fb_'+fb.key]){
-      missing.push({ type:'fixed', key:'fb_'+fb.key, icon:fb.icon, name:fb.label, pts:20 });
-    }
+  DAILY_SCHEDULE.forEach(function(sl){
+    if(!log['sched_'+sl.key])
+      missing.push({ type:'sched', key:'sched_'+sl.key, name:sl.from+'–'+sl.to+' '+sl.label });
   });
-
-  /* Exercise */
-  if(!(dd.habits && dd.habits.exercise)){
-    missing.push({ type:'habit', key:'exercise', icon:'🏃', name:'Exercise', pts:5, note:'Toggle in Study tab' });
-  }
-  /* Chess */
-  if(!(dd.habits && dd.habits.chess)){
-    missing.push({ type:'habit', key:'chess', icon:'♟', name:'Chess', pts:5, note:'Toggle in Study tab' });
-  }
-  /* Wake */
-  if(log.wokeOnTime === undefined || log.wokeOnTime === null){
-    missing.push({ type:'log', key:'wokeOnTime', icon:'⏰', name:'Woke Up at 6:00 AM', pts:5, yesNo:true });
-  }
-  /* Self Control */
-  if(log.selfControl === undefined || log.selfControl === null){
-    missing.push({ type:'log', key:'selfControl', icon:'🧠', name:'Self Control', pts:5, yesNo:true });
-  }
-
+  if(!log['fb_pyq'])
+    missing.push({ type:'fixed', key:'fb_pyq', name:'PYQ Practice', pts:20 });
+  if(log.selfControl===undefined||log.selfControl===null)
+    missing.push({ type:'log', key:'selfControl', name:'Self Control', pts:10, yesNo:true });
   return missing;
 }
 
-/* Compute projected score after pending edits are applied */
+/* Compute projected score after pending edits */
 function meProjectedScore(date){
   loadDisc();
   var log = Object.assign({}, discData.logs[date]||{});
-  var dd  = daily[date]||{};
-
-  /* merge pending vals */
-  Object.keys(_mePendingVals).forEach(function(k){
-    log[k] = _mePendingVals[k];
-  });
-
-  var total = 0;
-
-  FIXED_BLOCKS.forEach(function(fb){
-    if(log['fb_'+fb.key]) total += 20;
-  });
-
-  var exDone = dd.habits && dd.habits.exercise;
-  if(exDone) total += 5;
-  var chessDone = dd.habits && dd.habits.chess;
-  if(chessDone) total += 5;
-  if(log.wokeOnTime === true) total += 5;
-  if(log.selfControl === true) total += 5;
-
+  Object.keys(_mePendingVals).forEach(function(k){ log[k]=_mePendingVals[k]; });
+  var total=0;
+  if(log['sched_vidclass'])   total+=20;
+  if(log['sched_rev1notes'])  total+=20;
+  if(log['sched_shortnotes']) total+=20;
+  if(log['fb_pyq'])           total+=20;
+  if(log.selfControl===true)  total+=10;
+  var sd=DAILY_SCHEDULE.filter(function(s){ return !!(log['sched_'+s.key]); }).length;
+  if(sd===DAILY_SCHEDULE.length) total+=10;
   return Math.min(100, total);
 }
 
@@ -3988,64 +4002,56 @@ function renderMeModal(){
     + '<div style="text-align:right;font-size:11px;color:var(--muted);">'+missing.length+' item'+(missing.length!==1?'s':'')+' missing</div>'
   +'</div>';
 
-  /* fixed blocks section */
+  /* schedule slots */
+  var schedMissing = missing.filter(function(m){ return m.type==='sched'; });
+  var schedHtml2 = '';
+  if(schedMissing.length > 0){
+    schedHtml2 = '<div class="me-section"><div class="me-section-hdr">Schedule Slots (complete all for +10 pts bonus)</div>';
+    schedMissing.forEach(function(m){
+      var isDone=!!_mePendingVals[m.key];
+      schedHtml2 += '<div class="me-item'+(isDone?' complete':'')+'">'
+        + '<div class="me-item-icon">&#x1F550;</div>'
+        + '<div class="me-item-info"><div class="me-item-name">'+m.name+'</div></div>'
+        + '<div class="me-item-ctrl"><button class="me-check-btn'+(isDone?' done':'')+'" data-mk="'+m.key+'" onclick="meToggleFixed(this.dataset.mk)">'+(isDone?'&#x2713; Done':'Mark Done')+'</button></div>'
+        +'</div>';
+    });
+    schedHtml2 += '</div>';
+  }
+  /* PYQ & other fixed signals */
   var fixedMissing = missing.filter(function(m){ return m.type==='fixed'; });
   var fixedHtml = '';
   if(fixedMissing.length > 0){
-    fixedHtml = '<div class="me-section"><div class="me-section-hdr">📋 Fixed Daily Blocks (20 pts each)</div>';
+    fixedHtml = '<div class="me-section"><div class="me-section-hdr">Study Signals (20 pts each)</div>';
     fixedMissing.forEach(function(m){
-      var val = _mePendingVals[m.key];
-      var isDone = !!val;
+      var isDone=!!_mePendingVals[m.key];
       fixedHtml += '<div class="me-item'+(isDone?' complete':'')+'">'
-        + '<div class="me-item-icon">'+m.icon+'</div>'
+        + '<div class="me-item-icon">&#x1F3AF;</div>'
         + '<div class="me-item-info"><div class="me-item-name">'+esc(m.name)+'</div><div class="me-item-pts">'+m.pts+' pts</div></div>'
-        + '<div class="me-item-ctrl">'
-          + '<button class="me-check-btn'+(isDone?' done':'')+'" onclick="meToggleFixed(\''+m.key+'\')">'
-            + (isDone ? '✓ Done' : 'Mark Done')
-          + '</button>'
-        + '</div>'
-      +'</div>';
+        + '<div class="me-item-ctrl"><button class="me-check-btn'+(isDone?' done':'')+'" data-mk="'+m.key+'" onclick="meToggleFixed(this.dataset.mk)">'+(isDone?'&#x2713; Done':'Mark Done')+'</button></div>'
+        +'</div>';
     });
     fixedHtml += '</div>';
   }
-
-  /* habit section (exercise / chess) — read-only note since they come from Study tab */
-  var habitMissing = missing.filter(function(m){ return m.type==='habit'; });
-  var habitHtml = '';
-  if(habitMissing.length > 0){
-    habitHtml = '<div class="me-section"><div class="me-section-hdr">🏃 Habits (5 pts each)</div>';
-    habitMissing.forEach(function(m){
-      habitHtml += '<div class="me-item" style="opacity:.75">'
-        + '<div class="me-item-icon">'+m.icon+'</div>'
-        + '<div class="me-item-info"><div class="me-item-name">'+esc(m.name)+'</div>'
-          + '<div class="me-item-pts" style="color:#fbbf24;">Set via Study tab habits toggle · '+m.pts+' pts</div>'
-        + '</div>'
-      +'</div>';
-    });
-    habitHtml += '</div>';
-  }
-
-  /* yes/no section */
+  /* yes/no signals */
   var ynMissing = missing.filter(function(m){ return m.type==='log'; });
   var ynHtml = '';
   if(ynMissing.length > 0){
-    ynHtml = '<div class="me-section"><div class="me-section-hdr">✅ Yes / No Signals (5 pts each)</div>';
+    ynHtml = '<div class="me-section"><div class="me-section-hdr">Yes / No Signals</div>';
     ynMissing.forEach(function(m){
-      var val = _mePendingVals.hasOwnProperty(m.key) ? _mePendingVals[m.key] : null;
+      var val=_mePendingVals.hasOwnProperty(m.key)?_mePendingVals[m.key]:null;
       ynHtml += '<div class="me-item'+(val===true?' complete':'')+'">'
-        + '<div class="me-item-icon">'+m.icon+'</div>'
+        + '<div class="me-item-icon">&#x1F9E0;</div>'
         + '<div class="me-item-info"><div class="me-item-name">'+esc(m.name)+'</div><div class="me-item-pts">'+m.pts+' pts</div></div>'
         + '<div class="me-item-ctrl"><div class="me-yn-row">'
-          + '<button class="me-yn-btn'+(val===true?' sel-yes':'')+'" onclick="meSetYN(\''+m.key+'\',true)">✓ Yes</button>'
-          + '<button class="me-yn-btn'+(val===false?' sel-no':'')+'" onclick="meSetYN(\''+m.key+'\',false)">✗ No</button>'
+          + '<button class="me-yn-btn'+(val===true?' sel-yes':'')+'" data-mk="'+m.key+'" onclick="meSetYN(this.dataset.mk,true)">&#x2713; Yes</button>'
+          + '<button class="me-yn-btn'+(val===false?' sel-no':'')+'" data-mk="'+m.key+'" onclick="meSetYN(this.dataset.mk,false)">&#x2717; No</button>'
         + '</div></div>'
-      +'</div>';
+        +'</div>';
     });
     ynHtml += '</div>';
   }
-
   var body = document.getElementById('me-body');
-  if(body) body.innerHTML = scorePreview + fixedHtml + habitHtml + ynHtml;
+  if(body) body.innerHTML = scorePreview + schedHtml2 + fixedHtml + ynHtml;
 }
 
 /* Toggle a fixed block in pending state */
