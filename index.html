@@ -306,17 +306,15 @@ select.inp-sm{cursor:pointer;}
 .disc-plan-title{font-size:12px;font-weight:700;color:var(--text);}
 .disc-plan-date{font-size:11px;color:var(--muted);}
 /* ── SCHEDULE CLOCK ── */
-.sched-clock-wrap{display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;margin-bottom:16px;}
-.sched-clock-svg{flex-shrink:0;}
-.sched-slots{flex:1;min-width:240px;display:flex;flex-direction:column;gap:6px;}
-.sched-slot{display:flex;align-items:center;gap:10px;background:var(--navy);border:1px solid var(--border);border-radius:8px;padding:9px 12px;transition:border-color .2s;}
-.sched-slot.done{border-color:#4ade8055;background:#002d1433;}
-.sched-slot-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.sched-clock-wrap{display:flex;gap:0;align-items:flex-start;flex-wrap:wrap;margin-bottom:16px;}
+.sched-clock-svg{flex:1;min-width:0;}
+.sched-slots{flex:1;min-width:220px;display:flex;flex-direction:column;gap:5px;padding-left:18px;}
+.sched-slot{display:flex;align-items:center;gap:8px;padding:5px 0;}
+.sched-slot-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .sched-slot-body{flex:1;min-width:0;}
-.sched-slot-time{font-size:10px;font-weight:700;color:var(--muted);}
-.sched-slot-label{font-size:11px;font-weight:700;color:var(--text);margin-top:1px;}
-.sched-toggle-wrap{display:flex;align-items:center;gap:5px;margin-left:auto;flex-shrink:0;}
-.sched-toggle-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--faint);}
+.sched-slot-time{font-size:9px;font-weight:700;color:var(--muted);}
+.sched-slot-label{font-size:11px;font-weight:600;color:var(--text);margin-top:1px;}
+/* toggle switch */
 .sched-toggle{position:relative;display:inline-block;width:38px;height:20px;flex-shrink:0;}
 .sched-toggle input{opacity:0;width:0;height:0;}
 .sched-toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#1a3248;border-radius:20px;transition:.3s;}
@@ -3346,7 +3344,6 @@ function calcDiscStreak(){
   }
   return streak;
 }
-/* ── max streak ever ── */
 function calcDiscMaxStreak(){
   var maxS=0,cur=0,d=DISC_START;
   while(d<=TODAY){
@@ -3683,57 +3680,77 @@ function discBlockFormHtml(date){
 var discOpen = false;
 function toggleDiscDetail(){ discOpen=!discOpen; renderDiscCard(); }
 
-/* ── simple donut clock: arcs + time labels only ── */
+/* ── donut clock with callout lines and labels ── */
 function schedClockSvg(log){
-  var SIZE=240, CX=120, CY=120, R=96, INN=58, TOTAL=1440;
+  var SIZE=380, CX=190, CY=190, R=120, INN=68, TOTAL=1440;
   function ang(t){
     var p=t.split(':'), m=parseInt(p[0])*60+(parseInt(p[1])||0);
     return (m/TOTAL)*2*Math.PI - Math.PI/2;
   }
   function xy(r,a){ return {x:CX+r*Math.cos(a), y:CY+r*Math.sin(a)}; }
-  function arc(r,a1,a2,large){
+  function arcPath(r,a1,a2,large){
     var s=xy(r,a1), e=xy(r,a2);
     return 'M'+s.x.toFixed(2)+','+s.y.toFixed(2)+' A'+r+','+r+' 0 '+(large?1:0)+' 1 '+e.x.toFixed(2)+','+e.y.toFixed(2);
   }
-  /* gap between arcs in radians */
-  var GAP = 0.025;
-  var paths='', labels='';
-  DAILY_SCHEDULE.forEach(function(sl){
+  var GAP=0.015;
+  var paths='', callouts='';
+
+  DAILY_SCHEDULE.forEach(function(sl, idx){
     var toH=sl.to==='24:00'?1440:parseInt(sl.to.split(':')[0])*60+(parseInt(sl.to.split(':')[1])||0);
     var frH=parseInt(sl.from.split(':')[0])*60+(parseInt(sl.from.split(':')[1])||0);
-    var a1=ang(sl.from)+GAP, a2=(toH/TOTAL)*2*Math.PI-Math.PI/2-GAP;
+    var a1=ang(sl.from)+GAP;
+    var a2=(toH/TOTAL)*2*Math.PI - Math.PI/2 - GAP;
     var large=(toH-frH)>720?1:0;
     var done=!!(log['sched_'+sl.key]);
-    /* arc */
-    paths+='<path d="'+arc(R,a1,a2,large)+' L'+xy(INN,a2).x.toFixed(2)+','+xy(INN,a2).y.toFixed(2)
-      +' '+arc(INN,a2,a1,large).replace('M','').split(' A')[0]+' A'+INN+','+INN+' 0 '+(large?1:0)+' 0 '+xy(INN,a1).x.toFixed(2)+','+xy(INN,a1).y.toFixed(2)+' Z"'
-      +' fill="'+sl.color+'" opacity="'+(done?1:.22)+'"/>';
-    /* time label at midpoint of arc */
-    var aMid = (ang(sl.from) + (toH/TOTAL)*2*Math.PI-Math.PI/2) / 2;
-    /* only show label for slots wide enough */
-    var durMins = toH - frH;
-    if(durMins >= 60){
-      var lp = xy((R+INN)/2, aMid);
-      var timeStr = sl.from.replace(':00','')+'h';
-      labels+='<text x="'+lp.x.toFixed(1)+'" y="'+(lp.y+3).toFixed(1)+'" text-anchor="middle" font-size="7" font-weight="700" fill="'+(done?'#fff':'#7a9ab5')+'" font-family="system-ui">'+timeStr+'</text>';
+
+    /* donut segment */
+    var p1=xy(R,a1), p2=xy(R,a2), p3=xy(INN,a2), p4=xy(INN,a1);
+    paths+='<path d="M'+p1.x.toFixed(2)+','+p1.y.toFixed(2)
+      +' A'+R+','+R+' 0 '+large+' 1 '+p2.x.toFixed(2)+','+p2.y.toFixed(2)
+      +' L'+p3.x.toFixed(2)+','+p3.y.toFixed(2)
+      +' A'+INN+','+INN+' 0 '+large+' 0 '+p4.x.toFixed(2)+','+p4.y.toFixed(2)
+      +' Z" fill="'+sl.color+'" opacity="'+(done?0.92:0.18)+'"/>';
+
+    /* callout: anchor at midpoint of outer arc edge */
+    var durMins=toH-frH;
+    var aMid=(ang(sl.from)+GAP + (toH/TOTAL)*2*Math.PI-Math.PI/2-GAP)/2;
+    /* elbow point: slightly beyond the outer edge */
+    var elbowR = R + 18;
+    var ep = xy(elbowR, aMid);
+    /* label anchor: further out, snapped left/right */
+    var labelR = R + 36;
+    var lp = xy(labelR, aMid);
+    var isRight = Math.cos(aMid) >= 0;
+    var textAnchor = isRight ? 'start' : 'end';
+    /* horizontal line end */
+    var hLen = 18;
+    var hx2 = lp.x + (isRight ? hLen : -hLen);
+    var hy2 = lp.y;
+    /* label text */
+    var fromH = sl.from.replace(':00','');
+    var toHH  = sl.to.replace(':00','');
+    var timeStr = fromH+'\u2013'+toHH+'h';
+    var shortName = sl.label.length>18 ? sl.label.substring(0,16)+'\u2026' : sl.label;
+    var labelX = isRight ? hx2+4 : hx2-4;
+    var dotFill = done ? sl.color : sl.color;
+    /* only draw callout for segments wide enough to be meaningful */
+    if(durMins >= 45){
+      callouts += '<line x1="'+ep.x.toFixed(1)+'" y1="'+ep.y.toFixed(1)+'" x2="'+lp.x.toFixed(1)+'" y2="'+lp.y.toFixed(1)+'" stroke="'+sl.color+'" stroke-width="1.2" opacity="'+(done?0.9:0.4)+'"/>';
+      callouts += '<line x1="'+lp.x.toFixed(1)+'" y1="'+lp.y.toFixed(1)+'" x2="'+hx2.toFixed(1)+'" y2="'+hy2.toFixed(1)+'" stroke="'+sl.color+'" stroke-width="1.2" opacity="'+(done?0.9:0.4)+'"/>';
+      callouts += '<circle cx="'+ep.x.toFixed(1)+'" cy="'+ep.y.toFixed(1)+'" r="2" fill="'+sl.color+'" opacity="'+(done?1:0.5)+'"/>';
+      callouts += '<text x="'+labelX.toFixed(1)+'" y="'+(hy2-5).toFixed(1)+'" text-anchor="'+textAnchor+'" font-size="8" font-weight="700" fill="'+(done?'var(--text)':'var(--muted)')+'" font-family="system-ui">'+timeStr+'</text>';
+      callouts += '<text x="'+labelX.toFixed(1)+'" y="'+(hy2+6).toFixed(1)+'" text-anchor="'+textAnchor+'" font-size="7.5" fill="'+(done?sl.color:'var(--faint)')+'" font-family="system-ui">'+shortName+'</text>';
     }
   });
-  /* hour markers on outer rim */
-  var rimTicks='';
-  [0,3,6,9,12,15,18,21].forEach(function(h){
-    var a=(h/24)*2*Math.PI-Math.PI/2;
-    var p=xy(R+8,a);
-    rimTicks+='<text x="'+p.x.toFixed(1)+'" y="'+(p.y+3).toFixed(1)+'" text-anchor="middle" font-size="7" fill="#4a6a80" font-family="system-ui">'+(h===0?'0':h)+'h</text>';
-  });
-  /* done count badge in centre */
+
   var doneCount=DAILY_SCHEDULE.filter(function(s){ return !!(log['sched_'+s.key]); }).length;
-  return '<svg width="'+SIZE+'" height="'+SIZE+'" viewBox="0 0 '+SIZE+' '+SIZE+'" style="display:block;">'
-    +'<circle cx="'+CX+'" cy="'+CY+'" r="'+INN+'" fill="var(--navy)"/>'
-    +paths+labels+rimTicks
-    +'<circle cx="'+CX+'" cy="'+CY+'" r="'+(INN-2)+'" fill="var(--navy)"/>'
-    +'<text x="'+CX+'" y="'+(CY-12)+'" text-anchor="middle" font-size="22" font-weight="800" fill="var(--acc)" font-family="system-ui">'+doneCount+'</text>'
-    +'<text x="'+CX+'" y="'+(CY+4)+'" text-anchor="middle" font-size="9" fill="var(--muted)" font-family="system-ui">of '+DAILY_SCHEDULE.length+'</text>'
-    +'<text x="'+CX+'" y="'+(CY+17)+'" text-anchor="middle" font-size="8" fill="var(--faint)" font-family="system-ui">slots done</text>'
+  return '<svg width="100%" height="auto" viewBox="0 0 '+SIZE+' '+SIZE+'" style="display:block;">'
+    + paths
+    + callouts
+    +'<circle cx="'+CX+'" cy="'+CY+'" r="'+(INN-1)+'" fill="var(--card)"/>'
+    +'<text x="'+CX+'" y="'+(CY-14)+'" text-anchor="middle" font-size="34" font-weight="900" fill="var(--acc)" font-family="system-ui">'+doneCount+'</text>'
+    +'<text x="'+CX+'" y="'+(CY+8)+'" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="system-ui">of '+DAILY_SCHEDULE.length+'</text>'
+    +'<text x="'+CX+'" y="'+(CY+23)+'" text-anchor="middle" font-size="9" fill="var(--faint)" font-family="system-ui">slots done</text>'
     +'</svg>';
 }
 
@@ -3779,7 +3796,12 @@ function renderDiscCard(){
     'As Per Schedule':'&#x1F5D3;&#xFE0F;'
   };
 
-  /* signals — now every card has its own Finished/Pending toggle */
+  /* ── score breakdown signals ──
+     - schedKey cards: toggle the matching slot
+     - PYQ (fixedKey): checkbox toggle
+     - Self Control: toggle switch (on/off)
+     - As Per Schedule: toggle switch to mark all slots done at once
+  */
   var sigHtml = sc.signals.map(function(sig){
     var isEarned = sig.earned >= sig.pts;
     var cls = isEarned?'earned':sig.earned===0?'missed':'';
@@ -3789,25 +3811,35 @@ function renderDiscCard(){
     var toggleHtml = '';
 
     if(sig.schedKey){
-      /* schedule-backed signal: toggle marks the slot done/pending */
+      /* Finished / Pending toggle */
       var sdone = !!(log['sched_'+sig.schedKey]);
-      toggleHtml = '<div style="margin-top:6px;">'
-        +'<label class="sched-toggle" style="vertical-align:middle;margin-right:6px;"><input type="checkbox" '+(sdone?'checked':'')+' data-sk="'+sig.schedKey+'" onchange="toggleSchedSlot(this.dataset.sk,this.checked)"><span class="sched-toggle-slider"></span></label>'
+      toggleHtml = '<div style="display:flex;align-items:center;gap:7px;margin-top:7px;">'
+        +'<label class="sched-toggle"><input type="checkbox" '+(sdone?'checked':'')+' data-sk="'+sig.schedKey+'" onchange="toggleSchedSlot(this.dataset.sk,this.checked)"><span class="sched-toggle-slider"></span></label>'
         +'<span style="font-size:10px;font-weight:700;color:'+(sdone?'#4ade80':'var(--faint)')+'">'+(sdone?'Finished':'Pending')+'</span>'
         +'</div>';
     } else if(sig.fixedKey){
+      /* PYQ toggle */
       var fbDone = !!(log[sig.fixedKey]);
-      toggleHtml = '<div style="margin-top:6px;">'
-        +'<label class="sched-toggle" style="vertical-align:middle;margin-right:6px;"><input type="checkbox" '+(fbDone?'checked':'')+' data-fk="'+sig.fixedKey+'" onchange="discToggleLog(\''+TODAY+'\',this.dataset.fk,this.checked)"><span class="sched-toggle-slider"></span></label>'
+      toggleHtml = '<div style="display:flex;align-items:center;gap:7px;margin-top:7px;">'
+        +'<label class="sched-toggle"><input type="checkbox" '+(fbDone?'checked':'')+' data-fk="'+sig.fixedKey+'" onchange="discToggleLog(\''+TODAY+'\',this.dataset.fk,this.checked)"><span class="sched-toggle-slider"></span></label>'
         +'<span style="font-size:10px;font-weight:700;color:'+(fbDone?'#4ade80':'var(--faint)')+'">'+(fbDone?'Finished':'Pending')+'</span>'
         +'</div>';
     } else if(sig.isSelfCtrl){
-      var sCT=log.selfControl;
-      var sYesCls=sCT===true?'on':'', sNoCls=sCT===false?'on':'';
-      var sNoStyle=sCT===false?'background:#2a0000;border-color:#ef4444;color:#ef4444;':'';
-      toggleHtml='<div style="display:flex;gap:5px;margin-top:6px;">'
-        +'<button class="disc-manual-toggle '+sYesCls+'" onclick="discToggleLog(\''+TODAY+'\',\'selfControl\',true)">&#x2713; Yes</button>'
-        +'<button class="disc-manual-toggle '+sNoCls+'" style="'+sNoStyle+'" onclick="discToggleLog(\''+TODAY+'\',\'selfControl\',false)">&#x2717; No</button>'
+      /* Self Control toggle switch */
+      var sCT = log.selfControl;
+      var scDone = sCT===true;
+      toggleHtml = '<div style="display:flex;align-items:center;gap:7px;margin-top:7px;">'
+        +'<label class="sched-toggle"><input type="checkbox" '+(scDone?'checked':'')+' onchange="discToggleLog(\''+TODAY+'\',\'selfControl\',this.checked)"><span class="sched-toggle-slider"></span></label>'
+        +'<span style="font-size:10px;font-weight:700;color:'+(scDone?'#4ade80':sCT===false?'#ef4444':'var(--faint)')+'">'+(scDone?'Maintained':sCT===false?'Broken':'Mark here')+'</span>'
+        +'</div>';
+    } else if(sig.isSchedAll){
+      /* As Per Schedule: toggle marks ALL slots done/undone */
+      var sdone=DAILY_SCHEDULE.length;
+      var curDone=DAILY_SCHEDULE.filter(function(s){ return !!(log['sched_'+s.key]); }).length;
+      var allDone=curDone===sdone;
+      toggleHtml = '<div style="display:flex;align-items:center;gap:7px;margin-top:7px;">'
+        +'<label class="sched-toggle"><input type="checkbox" '+(allDone?'checked':'')+' onchange="schedToggleAll(this.checked)"><span class="sched-toggle-slider"></span></label>'
+        +'<span style="font-size:10px;font-weight:700;color:'+(allDone?'#4ade80':'var(--faint)')+'">'+(allDone?'All done':'Mark all done')+'</span>'
         +'</div>';
     }
 
@@ -3822,23 +3854,17 @@ function renderDiscCard(){
       +'</div>';
   }).join('');
 
-  /* schedule slots list (beside the clock) */
-  var schedHtml = DAILY_SCHEDULE.map(function(sl){
+  /* ── schedule slots list: labels + time only, NO toggle ── */
+  var schedListHtml = DAILY_SCHEDULE.map(function(sl){
     var done=!!(log['sched_'+sl.key]);
-    return '<div class="sched-slot '+(done?'done':'pending')+'">'
+    return '<div class="sched-slot">'
       +'<div class="sched-slot-dot" style="background:'+sl.color+(done?'':';opacity:.35')+';"></div>'
       +'<div class="sched-slot-body">'
-        +'<div class="sched-slot-time">'+sl.from+' &ndash; '+sl.to+'</div>'
-        +'<div class="sched-slot-label">'+sl.label+'</div>'
-      +'</div>'
-      +'<div class="sched-toggle-wrap">'
-        +'<span class="sched-toggle-lbl">'+(done?'Done':'Pending')+'</span>'
-        +'<label class="sched-toggle"><input type="checkbox" '+(done?'checked':'')+' data-slkey="'+sl.key+'" onchange="toggleSchedSlot(this.dataset.slkey,this.checked)"><span class="sched-toggle-slider"></span></label>'
+        +'<div class="sched-slot-time">'+sl.from+' \u2013 '+sl.to+'</div>'
+        +'<div class="sched-slot-label" style="color:'+(done?'var(--text)':'var(--muted)')+'">'+sl.label+'</div>'
       +'</div>'
       +'</div>';
   }).join('');
-
-  var schedDoneCount = DAILY_SCHEDULE.filter(function(s){ return !!(log['sched_'+s.key]); }).length;
 
   el.innerHTML = '<div class="disc-card">'
     +'<div class="disc-compact" onclick="toggleDiscDetail()">'
@@ -3863,18 +3889,16 @@ function renderDiscCard(){
       +'<button class="disc-expand-btn" onclick="event.stopPropagation();toggleDiscDetail();">'+(discOpen?'&#x25B2; Close':'&#x25BC; Details')+'</button>'
     +'</div>'
     +'<div class="disc-detail '+(discOpen?'open':'')+'">'
-      /* schedule donut + slot list */
+      /* full-width donut + slim label list */
       +'<div style="margin-bottom:18px;">'
         +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">&#x1F5D3; Daily Schedule &mdash; '+TODAY+'</div>'
         +'<div class="sched-clock-wrap">'
           +'<div class="sched-clock-svg">'+schedClockSvg(log)+'</div>'
-          +'<div class="sched-slots">'+schedHtml+'</div>'
+          +'<div class="sched-slots">'+schedListHtml+'</div>'
         +'</div>'
       +'</div>'
-      /* score breakdown — each card now has its own toggle */
       +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;border-top:1px solid var(--border);padding-top:14px;">&#x1F4CA; Score Breakdown &mdash; Today</div>'
       +'<div class="disc-signals">'+sigHtml+'</div>'
-      /* heatmap */
       +'<div class="disc-heatmap">'
         +'<div class="disc-hm-title">Discipline Heatmap &middot; Sep 14 &ndash; Dec 31</div>'
         +'<div style="display:flex;gap:8px;font-size:9px;color:var(--faint);margin-bottom:6px;">'
@@ -3887,6 +3911,17 @@ function renderDiscCard(){
       +'</div>'
     +'</div>'
   +'</div>';
+}
+
+/* toggle ALL schedule slots done/undone */
+function schedToggleAll(allOn){
+  loadDisc();
+  if(!discData.logs[TODAY]) discData.logs[TODAY]={};
+  DAILY_SCHEDULE.forEach(function(sl){
+    discData.logs[TODAY]['sched_'+sl.key] = allOn ? true : undefined;
+    if(!allOn) delete discData.logs[TODAY]['sched_'+sl.key];
+  });
+  saveDisc(); renderDiscCard();
 }
 
 function scoreLabel(sc){ return sc>=90?'Disciplined':sc>=70?'Good':sc>=50?'Average':sc>=30?'Below Avg':'Needs work'; }
@@ -3968,7 +4003,6 @@ function getMissingItems(date){
     missing.push({ type:'log', key:'selfControl', name:'Self Control', pts:10, yesNo:true });
   return missing;
 }
-/* Compute projected score after pending edits */
 function meProjectedScore(date){
   loadDisc();
   var log = Object.assign({}, discData.logs[date]||{});
@@ -4010,11 +4044,10 @@ function renderMeModal(){
     + '<div style="text-align:right;font-size:11px;color:var(--muted);">'+missing.length+' item'+(missing.length!==1?'s':'')+' missing</div>'
   +'</div>';
 
-  /* schedule slots section */
   var schedMissing = missing.filter(function(m){ return m.type==='sched'; });
   var schedHtml2 = '';
   if(schedMissing.length > 0){
-    schedHtml2 = '<div class="me-section"><div class="me-section-hdr">Schedule Slots (complete all for +10 pts bonus)</div>';
+    schedHtml2 = '<div class="me-section"><div class="me-section-hdr">Schedule Slots (all done = +10 pts bonus)</div>';
     schedMissing.forEach(function(m){
       var isDone=!!_mePendingVals[m.key];
       schedHtml2 += '<div class="me-item'+(isDone?' complete':'')+'">'
