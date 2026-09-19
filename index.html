@@ -3676,7 +3676,7 @@ function toggleDiscDetail(){ discOpen=!discOpen; renderDiscCard(); }
 
 /* ── donut clock with callout lines and labels ── */
 function schedClockSvg(log){
-  var SIZE=480, CX=240, CY=240, R=155, INN=88, TOTAL=1440;
+  var SIZE=600, CX=300, CY=300, R=165, INN=95, TOTAL=1440;
   function ang(t){
     var p=t.split(':'), m=parseInt(p[0])*60+(parseInt(p[1])||0);
     return (m/TOTAL)*2*Math.PI - Math.PI/2;
@@ -3709,22 +3709,22 @@ function schedClockSvg(log){
     var durMins=toH-frH;
     var aMid=(ang(sl.from)+GAP + (toH/TOTAL)*2*Math.PI-Math.PI/2-GAP)/2;
     /* elbow point: slightly beyond the outer edge */
-    var elbowR = R + 18;
+    var elbowR = R + 22;
     var ep = xy(elbowR, aMid);
     /* label anchor: further out, snapped left/right */
-    var labelR = R + 36;
+    var labelR = R + 52;
     var lp = xy(labelR, aMid);
     var isRight = Math.cos(aMid) >= 0;
     var textAnchor = isRight ? 'start' : 'end';
     /* horizontal line end */
-    var hLen = 18;
+    var hLen = 28;
     var hx2 = lp.x + (isRight ? hLen : -hLen);
     var hy2 = lp.y;
     /* label text */
     var fromH = sl.from.replace(':00','');
     var toHH  = sl.to.replace(':00','');
     var timeStr = fromH+'\u2013'+toHH+'h';
-    var shortName = sl.label.length>18 ? sl.label.substring(0,16)+'\u2026' : sl.label;
+    var shortName = sl.label.length>22 ? sl.label.substring(0,20)+'\u2026' : sl.label;
     var labelX = isRight ? hx2+4 : hx2-4;
     var dotFill = done ? sl.color : sl.color;
     /* only draw callout for segments wide enough to be meaningful */
@@ -3738,7 +3738,7 @@ function schedClockSvg(log){
   });
 
   var doneCount=DAILY_SCHEDULE.filter(function(s){ return !!(log['sched_'+s.key]); }).length;
-  return '<svg width="100%" height="auto" viewBox="0 0 '+SIZE+' '+SIZE+'" style="display:block;">'
+  return '<svg width="100%" height="auto" viewBox="0 0 '+SIZE+' '+SIZE+'" style="display:block;overflow:visible;">'
     + paths
     + callouts
     +'<circle cx="'+CX+'" cy="'+CY+'" r="'+(INN-1)+'" fill="var(--card)"/>'
