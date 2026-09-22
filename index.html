@@ -3270,13 +3270,14 @@ function switchMainTab(id){
    Structure: { plans: { "YYYY-MM-DD": { wakeTime, blocks:[{time,desc,status}] } },
                 logs:  { "YYYY-MM-DD": { noSocial, scores:{...} } } }
 ════════════════════════════════════════════ */
-var DISC_START='2026-09-20';
+var DISC_START='2026-09-23';
 var discData = { plans:{}, logs:{} };
 function loadDisc(){ var d=lsGet('gate-discipline'); if(d){ discData.plans=d.plans||{}; discData.logs=d.logs||{}; } }
 function saveDisc(){ lsSet('gate-discipline', discData); }
 
 /* ── DAILY SCHEDULE SLOTS ── */
 var DAILY_SCHEDULE = [
+  { key:'sleep',      color:'#6366f1', from:'00:00', to:'05:00', label:'Sleep' },
   { key:'freshup',    color:'#a78bfa', from:'05:00', to:'06:00', label:'Fresh up + Exercise + Puzzle' },
   { key:'vidclass',   color:'#00d4ff', from:'06:00', to:'09:00', label:'Video Classes' },
   { key:'breakfast',  color:'#fbbf24', from:'09:00', to:'10:00', label:'Breakfast + Walking' },
@@ -3676,7 +3677,7 @@ function toggleDiscDetail(){ discOpen=!discOpen; renderDiscCard(); }
 
 /* ── donut clock with callout lines and labels ── */
 function schedClockSvg(log){
-  var SIZE=600, CX=300, CY=300, R=165, INN=95, TOTAL=1440;
+  var SIZE=700, CX=350, CY=350, R=175, INN=100, TOTAL=1440;
   function ang(t){
     var p=t.split(':'), m=parseInt(p[0])*60+(parseInt(p[1])||0);
     return (m/TOTAL)*2*Math.PI - Math.PI/2;
@@ -3709,31 +3710,31 @@ function schedClockSvg(log){
     var durMins=toH-frH;
     var aMid=(ang(sl.from)+GAP + (toH/TOTAL)*2*Math.PI-Math.PI/2-GAP)/2;
     /* elbow point: slightly beyond the outer edge */
-    var elbowR = R + 22;
+    var elbowR = R + 28;
     var ep = xy(elbowR, aMid);
     /* label anchor: further out, snapped left/right */
-    var labelR = R + 52;
+    var labelR = R + 68;
     var lp = xy(labelR, aMid);
     var isRight = Math.cos(aMid) >= 0;
     var textAnchor = isRight ? 'start' : 'end';
     /* horizontal line end */
-    var hLen = 28;
+    var hLen = 36;
     var hx2 = lp.x + (isRight ? hLen : -hLen);
     var hy2 = lp.y;
     /* label text */
     var fromH = sl.from.replace(':00','');
     var toHH  = sl.to.replace(':00','');
     var timeStr = fromH+'\u2013'+toHH+'h';
-    var shortName = sl.label.length>22 ? sl.label.substring(0,20)+'\u2026' : sl.label;
+    var shortName = sl.label.length>30 ? sl.label.substring(0,28)+'\u2026' : sl.label;
     var labelX = isRight ? hx2+4 : hx2-4;
     var dotFill = done ? sl.color : sl.color;
     /* only draw callout for segments wide enough to be meaningful */
-    if(durMins >= 45){
+    if(durMins >= 30){
       callouts += '<line x1="'+ep.x.toFixed(1)+'" y1="'+ep.y.toFixed(1)+'" x2="'+lp.x.toFixed(1)+'" y2="'+lp.y.toFixed(1)+'" stroke="'+sl.color+'" stroke-width="1.2" opacity="'+(done?0.9:0.4)+'"/>';
       callouts += '<line x1="'+lp.x.toFixed(1)+'" y1="'+lp.y.toFixed(1)+'" x2="'+hx2.toFixed(1)+'" y2="'+hy2.toFixed(1)+'" stroke="'+sl.color+'" stroke-width="1.2" opacity="'+(done?0.9:0.4)+'"/>';
       callouts += '<circle cx="'+ep.x.toFixed(1)+'" cy="'+ep.y.toFixed(1)+'" r="2" fill="'+sl.color+'" opacity="'+(done?1:0.5)+'"/>';
-      callouts += '<text x="'+labelX.toFixed(1)+'" y="'+(hy2-5).toFixed(1)+'" text-anchor="'+textAnchor+'" font-size="8" font-weight="700" fill="'+(done?'var(--text)':'var(--muted)')+'" font-family="system-ui">'+timeStr+'</text>';
-      callouts += '<text x="'+labelX.toFixed(1)+'" y="'+(hy2+6).toFixed(1)+'" text-anchor="'+textAnchor+'" font-size="7.5" fill="'+(done?sl.color:'var(--faint)')+'" font-family="system-ui">'+shortName+'</text>';
+      callouts += '<text x="'+labelX.toFixed(1)+'" y="'+(hy2-5).toFixed(1)+'" text-anchor="'+textAnchor+'" font-size="9" font-weight="700" fill="'+(done?'var(--text)':'var(--muted)')+'" font-family="system-ui">'+timeStr+'</text>';
+      callouts += '<text x="'+labelX.toFixed(1)+'" y="'+(hy2+6).toFixed(1)+'" text-anchor="'+textAnchor+'" font-size="8.5" fill="'+(done?sl.color:'var(--faint)')+'" font-family="system-ui">'+shortName+'</text>';
     }
   });
 
@@ -3949,8 +3950,16 @@ var _mePendingVals = {};     /* {key: value} edits staged in modal before save *
 function checkMissedEntry(){
   /* only check if within the disc tracking window */
   if(TODAY < DISC_START) return;
+  /* skip weekends — Sat(6) and Sun(0) are unplanned */
+  var _todayDow = new Date(TODAY+'T00:00:00').getDay();
+  if(_todayDow===0||_todayDow===6) return;
+  /* skip if yesterday was a weekend */
+  var _yesterdayDow = new Date(addDays(TODAY,-1)+'T00:00:00').getDay();
   var yesterday = addDays(TODAY, -1);
   if(yesterday < DISC_START) return;
+  /* don't prompt for a weekend yesterday */
+  var _ydow = new Date(yesterday+'T00:00:00').getDay();
+  if(_ydow===0||_ydow===6) return;
 
   /* have we already prompted for yesterday this session? */
   var seenKey = 'gate-me-seen-' + yesterday;
@@ -4075,6 +4084,15 @@ function renderMeModal(){
   }
   var body = document.getElementById('me-body');
   if(body) body.innerHTML = scorePreview + schedHtml2 + fixedHtml + ynHtml;
+}
+
+/* Mark/unmark ALL schedule slots in pending state */
+function meMarkAllSched(val){
+  DAILY_SCHEDULE.forEach(function(sl){
+    if(val){ _mePendingVals['sched_'+sl.key] = true; }
+    else { delete _mePendingVals['sched_'+sl.key]; }
+  });
+  renderMeModal();
 }
 
 /* Toggle a fixed block in pending state */
