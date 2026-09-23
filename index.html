@@ -2084,7 +2084,7 @@ const PYQ_PLAN = (function(){
       {ti:5,name:'Resonance',                                  qs:18},
       {ti:6,name:'Complex Power',                              qs:20},
       {ti:7,name:'Two Port Parameters',                        qs:19},
-    ], rev1End:'2026-09-20'},
+    ], rev1End:'2026-09-27'},
     {subId:2, topics:[
       {ti:0,name:'Basics of Signals',                          qs:28},
       {ti:1,name:'Basics of Systems',                          qs:44},
@@ -2092,7 +2092,7 @@ const PYQ_PLAN = (function(){
       {ti:3,name:'Continuous Time Fourier Transform',          qs:32},
       {ti:4,name:'Laplace Transform',                          qs:22},
       {ti:5,name:'Z Transform, DTFS and DTFT',                 qs:24},
-    ], rev1End:'2026-09-26'},
+    ], rev1End:'2026-10-07'},
     {subId:3, topics:[
       {ti:0,name:'Basics of Control Systems',                  qs:12},
       {ti:1,name:'Block Diagram and Signal Flow Graph',        qs:18},
@@ -2104,18 +2104,18 @@ const PYQ_PLAN = (function(){
       {ti:7,name:'Bode Plot',                                  qs:19},
       {ti:8,name:'State Space Analysis',                       qs:47},
       {ti:9,name:'Controllers and Compensators',               qs:18},
-    ], rev1End:'2026-10-05'},
+    ], rev1End:'2026-10-17'},
     {subId:4, topics:[
       {ti:0,name:'Error Analysis',                             qs:13},
       {ti:1,name:'Analog Measuring Instruments',               qs:65},
       {ti:2,name:'DC And AC Bridges',                          qs:13},
       {ti:3,name:'Measurement of Resistance',                  qs:5},
       {ti:4,name:'Electronic Measurement and Instrument Transformer', qs:32},
-    ], rev1End:'2026-10-10'},
+    ], rev1End:'2026-10-21'},
     {subId:5, topics:[
       {ti:0,name:'Electrostatics',                             qs:65},
       {ti:1,name:'Magnetostatics',                             qs:40},
-    ], rev1End:'2026-10-15'},
+    ], rev1End:'2026-10-25'},
     {subId:6, topics:[
       {ti:0,name:'Magnetic Circuits',                          qs:17},
       {ti:1,name:'Transformers',                               qs:102},
@@ -2123,7 +2123,7 @@ const PYQ_PLAN = (function(){
       {ti:3,name:'Three Phase Induction Machines',             qs:90},
       {ti:4,name:'Synchronous Machines',                       qs:79},
       {ti:5,name:'Miscellaneous Topics',                       qs:25},
-    ], rev1End:'2026-10-29'},
+    ], rev1End:'2026-11-15'},
     {subId:7, topics:[
       {ti:0,name:'Basics of Power System',                     qs:24},
       {ti:1,name:'Distribution Systems, HVDC, Sag & Corona',  qs:9},
@@ -2136,7 +2136,7 @@ const PYQ_PLAN = (function(){
       {ti:8,name:'Power Factor Improvement & Voltage Control', qs:21},
       {ti:9,name:'Economic Load Dispatch',                     qs:12},
       {ti:10,name:'Overhead Transmission Lines & UG Cable',    qs:13},
-    ], rev1End:'2026-11-12'},
+    ], rev1End:'2026-11-29'},
     {subId:8, topics:[
       {ti:0,name:'Power Semiconductor Devices',                qs:27},
       {ti:1,name:'AC to DC Converters (Rectifiers)',           qs:63},
@@ -2144,7 +2144,7 @@ const PYQ_PLAN = (function(){
       {ti:3,name:'DC to AC Inverters',                         qs:48},
       {ti:4,name:'AC to AC Converters',                        qs:18},
       {ti:5,name:'AC Voltage Controllers',                     qs:18},
-    ], rev1End:'2026-11-22'},
+    ], rev1End:'2026-12-13'},
     {subId:9, topics:[
       {ti:0,name:'Number Systems & Boolean Algebra',           qs:13},
       {ti:1,name:'Logic Gates & Combinational Circuits',       qs:49},
@@ -2152,21 +2152,25 @@ const PYQ_PLAN = (function(){
       {ti:3,name:'A/D & D/A Converters',                       qs:22},
       {ti:4,name:'Microprocessors',                            qs:20},
       {ti:5,name:'Logic Families & Semiconductor Memories',    qs:8},
-    ], rev1End:'2026-11-28'},
+    ], rev1End:'2026-12-22'},
     {subId:10, topics:[
       {ti:0,name:'Diode Circuits and Applications',            qs:39},
       {ti:1,name:'MOSFETs',                                    qs:15},
       {ti:2,name:'Operational Amplifier',                      qs:81},
       {ti:3,name:'BJTs',                                       qs:28},
       {ti:4,name:'Miscellaneous Topics',                       qs:1},
-    ], rev1End:'2026-12-06'},
+    ], rev1End:'2026-12-31'},
   ];
   const DAILY_MAX=25;
+  // Analog Electronics (subId 10) rev1 ends 12/31, so its PYQ naturally starts 1/1/2027.
+  // Bump its per-session cap so all 164 questions fit inside the first week of Jan (7 days).
+  const SUBJECT_MAX_OVERRIDE={10:40};
   function addDaysLocal(d,n){const dt=new Date(d+'T00:00:00');dt.setDate(dt.getDate()+n);return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;}
   subTopics.forEach(function(sub){
     let cursor=addDaysLocal(sub.rev1End,1);
+    const subMax=SUBJECT_MAX_OVERRIDE[sub.subId]||DAILY_MAX;
     sub.topics.forEach(function(t){
-      const sessions=Math.max(1,Math.ceil(t.qs/DAILY_MAX));
+      const sessions=Math.max(1,Math.ceil(t.qs/subMax));
       const perSession=Math.ceil(t.qs/sessions);
       let remaining=t.qs;
       for(let d=0;d<sessions;d++){
@@ -3270,31 +3274,51 @@ function switchMainTab(id){
    Structure: { plans: { "YYYY-MM-DD": { wakeTime, blocks:[{time,desc,status}] } },
                 logs:  { "YYYY-MM-DD": { noSocial, scores:{...} } } }
 ════════════════════════════════════════════ */
-var DISC_START='2026-09-23';
+var DISC_START='2026-09-28';
 var discData = { plans:{}, logs:{} };
 function loadDisc(){ var d=lsGet('gate-discipline'); if(d){ discData.plans=d.plans||{}; discData.logs=d.logs||{}; } }
 function saveDisc(){ lsSet('gate-discipline', discData); }
 
-/* ── DAILY SCHEDULE SLOTS ── */
-var DAILY_SCHEDULE = [
+/* ── DAILY SCHEDULE SLOTS (weekday vs weekend) ── */
+var WEEKDAY_SCHEDULE = [
   { key:'sleep',      color:'#6366f1', from:'00:00', to:'05:00', label:'Sleep' },
-  { key:'freshup',    color:'#a78bfa', from:'05:00', to:'06:00', label:'Fresh up + Exercise + Puzzle' },
+  { key:'freshup',    color:'#a78bfa', from:'05:00', to:'06:00', label:'Fresh up' },
   { key:'vidclass',   color:'#00d4ff', from:'06:00', to:'09:00', label:'Video Classes' },
   { key:'breakfast',  color:'#fbbf24', from:'09:00', to:'10:00', label:'Breakfast + Walking' },
-  { key:'rev1notes',  color:'#c084fc', from:'10:00', to:'12:00', label:'Revision 1 + Short Notes' },
-  { key:'travel1',    color:'#4a6a80', from:'12:00', to:'13:00', label:'Travel to Office' },
-  { key:'lunch',      color:'#fbbf24', from:'13:00', to:'14:00', label:'Lunch + TT' },
-  { key:'office1',    color:'#64748b', from:'14:00', to:'18:00', label:'Office Work (Afternoon)' },
-  { key:'snacks',     color:'#fbbf24', from:'18:00', to:'19:00', label:'Snacks + TT' },
-  { key:'office2',    color:'#64748b', from:'19:00', to:'22:00', label:'Office Work (Evening)' },
-  { key:'travel2',    color:'#4a6a80', from:'22:00', to:'23:00', label:'Travel + Update Sheet' },
-  { key:'shortnotes', color:'#4ade80', from:'23:00', to:'24:00', label:'Short Notes Revision' },
+  { key:'rev1notes',  color:'#c084fc', from:'10:00', to:'13:00', label:'Revision 1' },
+  { key:'travel1',    color:'#4a6a80', from:'13:00', to:'14:00', label:'Travel to Office' },
+  { key:'office1',    color:'#64748b', from:'14:00', to:'18:00', label:'Work' },
+  { key:'snacks',     color:'#fbbf24', from:'18:00', to:'19:00', label:'Break + TT' },
+  { key:'office2',    color:'#64748b', from:'19:00', to:'22:00', label:'Work' },
+  { key:'travel2',    color:'#4a6a80', from:'22:00', to:'23:00', label:'Travel to Room' },
+  { key:'shortnotes', color:'#4ade80', from:'23:00', to:'24:00', label:'Short Notes' },
 ];
+var WEEKEND_SCHEDULE = [
+  { key:'sleep',      color:'#6366f1', from:'00:00', to:'05:00', label:'Sleep' },
+  { key:'freshup',    color:'#a78bfa', from:'05:00', to:'06:00', label:'Fresh up' },
+  { key:'vidclass',   color:'#00d4ff', from:'06:00', to:'09:00', label:'Video Classes' },
+  { key:'breakfast',  color:'#fbbf24', from:'09:00', to:'10:00', label:'Breakfast + Walking' },
+  { key:'rev1notes',  color:'#c084fc', from:'10:00', to:'13:00', label:'Revision 1' },
+  { key:'travel1',    color:'#4a6a80', from:'13:00', to:'14:00', label:'Travel to Office' },
+  { key:'lunch',      color:'#fbbf24', from:'14:00', to:'15:00', label:'Lunch' },
+  { key:'mocktest',   color:'#f472b6', from:'15:00', to:'18:00', label:'Mock Test' },
+  { key:'freetime',   color:'#38bdf8', from:'18:00', to:'22:00', label:'Free Time' },
+  { key:'dinner',     color:'#fbbf24', from:'22:00', to:'23:00', label:'Dinner' },
+  { key:'shortnotes', color:'#4ade80', from:'23:00', to:'24:00', label:'Short Notes' },
+];
+function isWeekendDate(dateStr){
+  var dow = new Date(dateStr+'T00:00:00').getDay();
+  return dow===0 || dow===6;
+}
+function getDailySchedule(dateStr){
+  return isWeekendDate(dateStr) ? WEEKEND_SCHEDULE : WEEKDAY_SCHEDULE;
+}
 
 /* ── score computation — 6-signal / 100-pt ── */
 function calcDiscScore(date){
   loadDisc();
   var log = discData.logs[date]||{};
+  var DAILY_SCHEDULE = getDailySchedule(date);
   var result = { total:0, signals:[] };
 
   var vcDone = !!(log['sched_vidclass']);
@@ -3677,6 +3701,7 @@ function toggleDiscDetail(){ discOpen=!discOpen; renderDiscCard(); }
 
 /* ── donut clock with callout lines and labels ── */
 function schedClockSvg(log){
+  var DAILY_SCHEDULE = getDailySchedule(TODAY);
   var SIZE=700, CX=350, CY=350, R=175, INN=100, TOTAL=1440;
   function ang(t){
     var p=t.split(':'), m=parseInt(p[0])*60+(parseInt(p[1])||0);
@@ -3760,14 +3785,14 @@ function renderDiscCard(){
   loadAll(); loadRev1(); loadPyq();
   var el = document.getElementById('disc-card-root');
   if(!el) return;
-  if(TODAY < DISC_START){
+  var preStart = TODAY < DISC_START;
+  var previewBanner = '';
+  if(preStart){
     var daysTo = diffDays(TODAY, DISC_START);
-    el.innerHTML = '<div class="disc-card" style="text-align:center;padding:32px 20px;">'
-      +'<div style="font-size:36px;margin-bottom:10px;">&#x1F3AF;</div>'
-      +'<div style="font-size:16px;font-weight:800;color:var(--acc);margin-bottom:8px;">Discipline Tracking Starts Sep 14, 2026</div>'
-      +'<div style="font-size:13px;color:var(--muted);margin-bottom:16px;">'+daysTo+' day'+(daysTo===1?'':'s')+' to go</div>'
+    previewBanner = '<div style="text-align:center;padding:10px 14px;margin-bottom:14px;border:1px dashed var(--acc);border-radius:10px;background:rgba(0,212,255,0.06);">'
+      +'<span style="font-size:12px;font-weight:800;color:var(--acc);">&#x1F3AF; Preview &mdash; Discipline Tracking Starts Sep 28, 2026</span>'
+      +'<div style="font-size:11px;color:var(--muted);margin-top:3px;">'+daysTo+' day'+(daysTo===1?'':'s')+' to go &middot; scores below are for preview only</div>'
       +'</div>';
-    return;
   }
 
   var sc      = calcDiscScore(TODAY);
@@ -3781,6 +3806,7 @@ function renderDiscCard(){
   var pyqS    = calcPyqStreak();
   var scS     = calcSelfCtrlStreak();
   var log     = discData.logs[TODAY]||{};
+  var DAILY_SCHEDULE = getDailySchedule(TODAY);
 
   var ICONS = {
     'Video Classes':'&#x1F3AC;',
@@ -3852,6 +3878,7 @@ function renderDiscCard(){
 
 
   el.innerHTML = '<div class="disc-card">'
+    + previewBanner
     +'<div class="disc-compact" onclick="toggleDiscDetail()">'
       +'<div class="disc-ring-wrap">'
         +discRingHtml(sc.total,64,6)
@@ -3885,7 +3912,7 @@ function renderDiscCard(){
       +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;border-top:1px solid var(--border);padding-top:14px;">&#x1F4CA; Score Breakdown &mdash; Today</div>'
       +'<div class="disc-signals">'+sigHtml+'</div>'
       +'<div class="disc-heatmap">'
-        +'<div class="disc-hm-title">Discipline Heatmap &middot; Sep 14 &ndash; Dec 31</div>'
+        +'<div class="disc-hm-title">Discipline Heatmap &middot; Sep 28 &ndash; Dec 31</div>'
         +'<div style="display:flex;gap:8px;font-size:9px;color:var(--faint);margin-bottom:6px;">'
           +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#4ade80;border-radius:2px;"></span>&ge;90</span>'
           +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#fbbf24;border-radius:2px;"></span>70&ndash;89</span>'
@@ -3902,6 +3929,7 @@ function renderDiscCard(){
 function schedToggleAll(allOn){
   loadDisc();
   if(!discData.logs[TODAY]) discData.logs[TODAY]={};
+  var DAILY_SCHEDULE = getDailySchedule(TODAY);
   DAILY_SCHEDULE.forEach(function(sl){
     discData.logs[TODAY]['sched_'+sl.key] = allOn ? true : undefined;
     if(!allOn) delete discData.logs[TODAY]['sched_'+sl.key];
@@ -3985,6 +4013,7 @@ function checkMissedEntry(){
 function getMissingItems(date){
   loadDisc();
   var log = discData.logs[date]||{};
+  var DAILY_SCHEDULE = getDailySchedule(date);
   var missing = [];
   DAILY_SCHEDULE.forEach(function(sl){
     if(!log['sched_'+sl.key])
@@ -3999,6 +4028,7 @@ function getMissingItems(date){
 function meProjectedScore(date){
   loadDisc();
   var log = Object.assign({}, discData.logs[date]||{});
+  var DAILY_SCHEDULE = getDailySchedule(date);
   Object.keys(_mePendingVals).forEach(function(k){ log[k]=_mePendingVals[k]; });
   var total=0;
   if(log['sched_vidclass'])   total+=20;
@@ -4088,6 +4118,7 @@ function renderMeModal(){
 
 /* Mark/unmark ALL schedule slots in pending state */
 function meMarkAllSched(val){
+  var DAILY_SCHEDULE = getDailySchedule(_mePendingDate||TODAY);
   DAILY_SCHEDULE.forEach(function(sl){
     if(val){ _mePendingVals['sched_'+sl.key] = true; }
     else { delete _mePendingVals['sched_'+sl.key]; }
