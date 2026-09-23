@@ -2084,7 +2084,7 @@ const PYQ_PLAN = (function(){
       {ti:5,name:'Resonance',                                  qs:18},
       {ti:6,name:'Complex Power',                              qs:20},
       {ti:7,name:'Two Port Parameters',                        qs:19},
-    ], rev1End:'2026-09-27'},
+    ], rev1End:'2026-09-23'},
     {subId:2, topics:[
       {ti:0,name:'Basics of Signals',                          qs:28},
       {ti:1,name:'Basics of Systems',                          qs:44},
@@ -2092,7 +2092,7 @@ const PYQ_PLAN = (function(){
       {ti:3,name:'Continuous Time Fourier Transform',          qs:32},
       {ti:4,name:'Laplace Transform',                          qs:22},
       {ti:5,name:'Z Transform, DTFS and DTFT',                 qs:24},
-    ], rev1End:'2026-10-07'},
+    ], rev1End:'2026-09-26'},
     {subId:3, topics:[
       {ti:0,name:'Basics of Control Systems',                  qs:12},
       {ti:1,name:'Block Diagram and Signal Flow Graph',        qs:18},
@@ -2104,18 +2104,18 @@ const PYQ_PLAN = (function(){
       {ti:7,name:'Bode Plot',                                  qs:19},
       {ti:8,name:'State Space Analysis',                       qs:47},
       {ti:9,name:'Controllers and Compensators',               qs:18},
-    ], rev1End:'2026-10-17'},
+    ], rev1End:'2026-10-05'},
     {subId:4, topics:[
       {ti:0,name:'Error Analysis',                             qs:13},
       {ti:1,name:'Analog Measuring Instruments',               qs:65},
       {ti:2,name:'DC And AC Bridges',                          qs:13},
       {ti:3,name:'Measurement of Resistance',                  qs:5},
       {ti:4,name:'Electronic Measurement and Instrument Transformer', qs:32},
-    ], rev1End:'2026-10-21'},
+    ], rev1End:'2026-10-10'},
     {subId:5, topics:[
       {ti:0,name:'Electrostatics',                             qs:65},
       {ti:1,name:'Magnetostatics',                             qs:40},
-    ], rev1End:'2026-10-25'},
+    ], rev1End:'2026-10-15'},
     {subId:6, topics:[
       {ti:0,name:'Magnetic Circuits',                          qs:17},
       {ti:1,name:'Transformers',                               qs:102},
@@ -2123,7 +2123,7 @@ const PYQ_PLAN = (function(){
       {ti:3,name:'Three Phase Induction Machines',             qs:90},
       {ti:4,name:'Synchronous Machines',                       qs:79},
       {ti:5,name:'Miscellaneous Topics',                       qs:25},
-    ], rev1End:'2026-11-15'},
+    ], rev1End:'2026-10-29'},
     {subId:7, topics:[
       {ti:0,name:'Basics of Power System',                     qs:24},
       {ti:1,name:'Distribution Systems, HVDC, Sag & Corona',  qs:9},
@@ -2136,7 +2136,7 @@ const PYQ_PLAN = (function(){
       {ti:8,name:'Power Factor Improvement & Voltage Control', qs:21},
       {ti:9,name:'Economic Load Dispatch',                     qs:12},
       {ti:10,name:'Overhead Transmission Lines & UG Cable',    qs:13},
-    ], rev1End:'2026-11-29'},
+    ], rev1End:'2026-11-12'},
     {subId:8, topics:[
       {ti:0,name:'Power Semiconductor Devices',                qs:27},
       {ti:1,name:'AC to DC Converters (Rectifiers)',           qs:63},
@@ -2144,7 +2144,7 @@ const PYQ_PLAN = (function(){
       {ti:3,name:'DC to AC Inverters',                         qs:48},
       {ti:4,name:'AC to AC Converters',                        qs:18},
       {ti:5,name:'AC Voltage Controllers',                     qs:18},
-    ], rev1End:'2026-12-13'},
+    ], rev1End:'2026-11-22'},
     {subId:9, topics:[
       {ti:0,name:'Number Systems & Boolean Algebra',           qs:13},
       {ti:1,name:'Logic Gates & Combinational Circuits',       qs:49},
@@ -2152,19 +2152,17 @@ const PYQ_PLAN = (function(){
       {ti:3,name:'A/D & D/A Converters',                       qs:22},
       {ti:4,name:'Microprocessors',                            qs:20},
       {ti:5,name:'Logic Families & Semiconductor Memories',    qs:8},
-    ], rev1End:'2026-12-22'},
+    ], rev1End:'2026-11-28'},
     {subId:10, topics:[
       {ti:0,name:'Diode Circuits and Applications',            qs:39},
       {ti:1,name:'MOSFETs',                                    qs:15},
       {ti:2,name:'Operational Amplifier',                      qs:81},
       {ti:3,name:'BJTs',                                       qs:28},
       {ti:4,name:'Miscellaneous Topics',                       qs:1},
-    ], rev1End:'2026-12-31'},
+    ], rev1End:'2026-12-06'},
   ];
   const DAILY_MAX=25;
-  // Analog Electronics (subId 10) rev1 ends 12/31, so its PYQ naturally starts 1/1/2027.
-  // Bump its per-session cap so all 164 questions fit inside the first week of Jan (7 days).
-  const SUBJECT_MAX_OVERRIDE={10:40};
+  const SUBJECT_MAX_OVERRIDE={};
   function addDaysLocal(d,n){const dt=new Date(d+'T00:00:00');dt.setDate(dt.getDate()+n);return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;}
   subTopics.forEach(function(sub){
     let cursor=addDaysLocal(sub.rev1End,1);
