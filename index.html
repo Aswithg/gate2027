@@ -596,17 +596,17 @@ function $(id){return document.getElementById(id);}
    Aptitude+Maths    : 28/12 – 03/01 (7 days — overlap intentional per image)
 */
 const SEED_SUBJECTS=[
-  {id:1, name:'NETWORK ANALYSIS', faculty:'Ankit Goyal', start:'2026-06-22', end:'2026-07-07', days:16, videos:33, targetHrs:70, status:'Completed', confidence:10, remarks:''},
-  {id:2, name:'SIGNALS & SYSTEMS', faculty:'Ankit Goyal', start:'2026-07-08', end:'2026-07-25', days:18, videos:49, targetHrs:80, status:'Completed', confidence:5, remarks:''},
-  {id:3, name:'CONTROL SYSTEMS', faculty:'Ankit Goyal', start:'2026-07-26', end:'2026-08-10', days:16, videos:59, targetHrs:70, status:'Completed', confidence:5, remarks:''},
-  {id:4, name:'MEASUREMENTS', faculty:'Ankit Goyal', start:'2026-08-11', end:'2026-08-16', days:6, videos:6, targetHrs:15, status:'Completed', confidence:4, remarks:''},
-  {id:5, name:'EMFT', faculty:'Vishal Soni', start:'2026-08-17', end:'2026-08-26', days:10, videos:20, targetHrs:20, status:'Completed', confidence:3, remarks:''},
-  {id:6, name:'ELECTRICAL MACHINES', faculty:'Ankit Goyal', start:'2026-09-07', end:'2026-09-29', days:23, videos:24, targetHrs:48, status:'Skipped', confidence:10, remarks:'Deferred to 2028 — switched to full-length playlist, resume fresh'},
-  {id:7, name:'POWER SYSTEM', faculty:'Ankit Goyal', start:'2026-10-01', end:'2026-10-15', days:15, videos:77, targetHrs:50, status:'Not Started', confidence:0, remarks:''},
-  {id:8, name:'POWER ELECTRONICS', faculty:'Ankit Goyal', start:'2026-10-16', end:'2026-10-31', days:16, videos:68, targetHrs:102, status:'Not Started', confidence:0, remarks:''},
-  {id:9, name:'DIGITAL ELECTRONICS', faculty:'Sujay', start:'2026-11-01', end:'2026-11-10', days:10, videos:16, targetHrs:32, status:'Not Started', confidence:0, remarks:''},
-  {id:10, name:'ANALOG ELECTRONICS', faculty:'Ankit Goyal', start:'2026-11-11', end:'2026-11-30', days:20, videos:61, targetHrs:110, status:'Not Started', confidence:0, remarks:''},
-  {id:11, name:'APTITUDE + MATHEMATICS', faculty:'Himanshu Agarwal', start:'2026-09-30', end:'2026-10-30', days:31, videos:72, targetHrs:215, status:'Not Started', confidence:0, remarks:'Pulled forward — 2027-scope subject'},
+  {id:1, name:'NETWORK ANALYSIS', faculty:'Ankit Goyal', start:'2026-06-22', end:'2026-07-07', days:16, videos:33, targetHrs:70, status:'Completed', confidence:10, remarks:'', phase:2027},
+  {id:2, name:'SIGNALS & SYSTEMS', faculty:'Ankit Goyal', start:'2026-07-08', end:'2026-07-25', days:18, videos:49, targetHrs:80, status:'Completed', confidence:5, remarks:'', phase:2027},
+  {id:3, name:'CONTROL SYSTEMS', faculty:'Ankit Goyal', start:'2026-07-26', end:'2026-08-10', days:16, videos:59, targetHrs:70, status:'Completed', confidence:5, remarks:'', phase:2027},
+  {id:4, name:'MEASUREMENTS', faculty:'Ankit Goyal', start:'2026-08-11', end:'2026-08-16', days:6, videos:6, targetHrs:15, status:'Completed', confidence:4, remarks:'', phase:2027},
+  {id:5, name:'EMFT', faculty:'Vishal Soni', start:'2026-08-17', end:'2026-08-26', days:10, videos:20, targetHrs:20, status:'Completed', confidence:3, remarks:'', phase:2027},
+  {id:6, name:'ELECTRICAL MACHINES', faculty:'Ankit Goyal', start:'2027-03-01', end:'2027-03-24', days:24, videos:24, targetHrs:48, status:'Not Started', confidence:0, remarks:'Full-length playlist (was crash course) — 2028 attempt', phase:2028},
+  {id:7, name:'POWER SYSTEM', faculty:'Ankit Goyal', start:'2027-03-25', end:'2027-04-08', days:15, videos:77, targetHrs:50, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
+  {id:8, name:'POWER ELECTRONICS', faculty:'Ankit Goyal', start:'2027-04-09', end:'2027-04-24', days:16, videos:68, targetHrs:102, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
+  {id:9, name:'DIGITAL ELECTRONICS', faculty:'Sujay', start:'2027-04-25', end:'2027-05-04', days:10, videos:16, targetHrs:32, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
+  {id:10, name:'ANALOG ELECTRONICS', faculty:'Ankit Goyal', start:'2027-05-05', end:'2027-05-24', days:20, videos:61, targetHrs:110, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
+  {id:11, name:'APTITUDE + MATHEMATICS', faculty:'Himanshu Agarwal', start:'2026-09-30', end:'2026-10-30', days:31, videos:72, targetHrs:215, status:'Not Started', confidence:0, remarks:'Pulled forward — 2027-scope subject', phase:2027},
 ];
 
 const SUBJECT_LINKS={
@@ -2448,7 +2448,7 @@ function loadAll(){
   // Always sync static fields from SEED_SUBJECTS to fix stale localStorage values
   SEED_SUBJECTS.forEach(seed=>{
     const s=subjects.find(x=>x.id===seed.id);
-    if(s){s.name=seed.name;s.faculty=seed.faculty;s.videos=seed.videos;s.targetHrs=seed.targetHrs;s.start=seed.start;s.end=seed.end;s.days=seed.days;}
+    if(s){s.name=seed.name;s.faculty=seed.faculty;s.videos=seed.videos;s.targetHrs=seed.targetHrs;s.start=seed.start;s.end=seed.end;s.days=seed.days;s.phase=seed.phase;}
     else{subjects.push(JSON.parse(JSON.stringify(seed)));}
   });
   subjects.sort((a,b)=>a.id-b.id);
@@ -2851,13 +2851,16 @@ function saveEntryField(field,val){
 function toggleHabit(key){const dd=JSON.parse(JSON.stringify(daily[entryDate]||{}));if(!dd.habits)dd.habits={};dd.habits[key]=!dd.habits[key];saveDay(entryDate,dd);renderEntry();renderProgress();checkMilestones();}
 function renderSubjects(){
   const tbody=$('sub-tbody');if(!tbody)return;
+  const firstIdx2028=subjects.findIndex(s=>s.phase===2028);
   tbody.innerHTML=subjects.map((s,i)=>{
     const pct=s.videos?Math.round(getActualVids(s)/s.videos*100):0;
     const col=pct>=100?'var(--green)':pct>=50?'var(--acc)':'var(--amber)';
     const isActive=TODAY>=s.start&&TODAY<=s.end;
     const sp={Completed:'pill-done','In Progress':'pill-prog','Not Started':'pill-pend',Skipped:'pill-skip'}[s.status]||'pill-pend';
-    const breakRow=s.id===6?`<tr style="pointer-events:none"><td colspan="8"><div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:rgba(251,191,36,.04);border-top:1px dashed #fbbf2444;border-bottom:1px dashed #fbbf2444;"><span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fbbf24;">☕ Break</span><span style="font-size:11px;color:var(--muted);">Aug 27 – Sep 6 · 11 days · Restart Sep 7</span></div></td></tr>`:'';
-    return breakRow+`<tr class="sub-expand${s.open?' open':''}" onclick="toggleSubRow(${i})">
+    const phaseRow=i===0?`<tr style="pointer-events:none"><td colspan="8"><div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:rgba(0,212,255,.05);border-bottom:1px solid #00d4ff33;"><span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--acc);">🎯 2027 Attempt</span><span style="font-size:11px;color:var(--muted);">NA · S&S · CS · Measurements · EMFT · Aptitude+Maths</span></div></td></tr>`
+      :i===firstIdx2028?`<tr style="pointer-events:none"><td colspan="8"><div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:rgba(251,191,36,.05);border-top:1px dashed #fbbf2444;border-bottom:1px solid #fbbf2444;"><span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fbbf24;">🗓️ 2028 Attempt — Deferred</span><span style="font-size:11px;color:var(--muted);">Machines · Power System · Power Electronics · Digital · Analog — starts Mar 2027</span></div></td></tr>`
+      :'';
+    return phaseRow+`<tr class="sub-expand${s.open?' open':''}" onclick="toggleSubRow(${i})">
       <td><span style="font-size:11px;color:var(--faint);">${s.id}</span></td>
       <td><strong>${esc(s.name)}</strong>${isActive?` <span style="font-size:10px;background:#001e2e;color:var(--acc);padding:1px 6px;border-radius:8px;margin-left:6px;">ACTIVE</span>`:''}</td>
       <td style="font-size:12px;color:var(--muted);">${esc(s.faculty)}</td>
@@ -2927,11 +2930,11 @@ const REV1_SCHEDULE={
   3:{start:'2026-10-05',end:'2026-10-11',days:7, perDay:203}, /* 1421p/ 7d  = 203 */
   4:{start:'2026-10-12',end:'2026-10-13',days:2, perDay:381}, /* 761p / 2d  = 381 */
   5:{start:'2026-10-14',end:'2026-10-15',days:2, perDay:161}, /* 322p / 2d  = 161 */
-  6:{start:'2026-10-16',end:'2026-10-29',days:14,perDay:69},  /* 963p / 14d = 69  */
-  7:{start:'2026-10-30',end:'2026-11-12',days:14,perDay:97},  /* 1364p/ 14d = 97  */
-  8:{start:'2026-11-13',end:'2026-11-22',days:10,perDay:134}, /* 1344p/ 10d = 134 */
-  9:{start:'2026-11-23',end:'2026-11-28',days:6, perDay:189}, /* 1134p/ 6d  = 189 */
-  10:{start:'2026-11-29',end:'2026-12-06',days:8, perDay:248},/* 1982p/ 8d  = 248 */
+  6:{start:'2027-05-25',end:'2027-06-07',days:14,perDay:69},  /* 963p / 14d = 69 — 2028 attempt */
+  7:{start:'2027-06-08',end:'2027-06-21',days:14,perDay:97},  /* 1364p/ 14d = 97 — 2028 attempt */
+  8:{start:'2027-06-22',end:'2027-07-01',days:10,perDay:134}, /* 1344p/ 10d = 134 — 2028 attempt */
+  9:{start:'2027-07-02',end:'2027-07-07',days:6, perDay:189}, /* 1134p/ 6d  = 189 — 2028 attempt */
+  10:{start:'2027-07-08',end:'2027-07-15',days:8, perDay:248},/* 1982p/ 8d  = 248 — 2028 attempt */
   11:{start:'2026-10-31',end:'2026-11-24',days:25,perDay:97}, /* 2423p/ 25d = 97 — shifted to follow pulled-forward video schedule */
 };
 function subPages(id){return(REV1_NOTES[id]||[]).reduce((t,p)=>t+p.pages,0);}
@@ -2945,7 +2948,7 @@ function setRev1Note(id,val){rev1Notes[id]=val;clearTimeout(saveTimers['rn']);sa
 function setRev1LogDate(d){rev1LogDate=d;renderRevision1();}
 function navRev1Date(delta){setRev1LogDate(addDays(rev1LogDate,delta));}
 function pageTarget(id,slot){const total=subPages(id);if(!total)return 0;const left=Math.max(0,total-pagesDone(id));let dl;if(TODAY<slot.start)dl=slot.days;else if(TODAY>slot.end)dl=1;else dl=Math.max(1,diffDays(TODAY,slot.end)+1);return Math.ceil(left/dl);}
-function rev1Status(sub,slot){if(rev1Done[sub.id])return'done';if(slot.overflow)return'overflow';if(sub.status!=='Completed')return'locked';if(TODAY>=slot.start&&TODAY<=slot.end)return'active';if(TODAY>slot.end)return'overdue';return'ready';}
+function rev1Status(sub,slot){if(rev1Done[sub.id])return'done';if(sub.status!=='Completed')return'locked';if(slot.overflow)return'overflow';if(TODAY>=slot.start&&TODAY<=slot.end)return'active';if(TODAY>slot.end)return'overdue';return'ready';}
 const REV1_TAG={done:['#003d1f','#4ade80','Revised ✓'],active:['#001e2e','#00d4ff','In progress'],ready:['#1a0d2e','#c084fc','Ready'],overdue:['#2d1900','#fbbf24','Overdue'],locked:['#0d1b2a','#4a7a9b','Locked'],overflow:['#1a0800','#ef4444','→ Rev 2']};
 function rev1Toggle(id){
   var el=document.getElementById('rev1-exp-'+id);
@@ -3315,8 +3318,21 @@ function isWeekendDate(dateStr){
   var dow = new Date(dateStr+'T00:00:00').getDay();
   return dow===0 || dow===6;
 }
+/* ── Phase 2: once Aptitude+Maths videos finish (2026-10-30), the 6–9 AM
+   slot has no new videos left until the 2028 subjects start (Mar 2027).
+   Repurposed to Problem Practice on NA/S&S/CS/Measurements/EMFT —
+   same 'vidclass' key so streaks/discipline history carry over unbroken. */
+var PHASE2_START='2026-10-31';
 function getDailySchedule(dateStr){
-  return isWeekendDate(dateStr) ? WEEKEND_SCHEDULE : WEEKDAY_SCHEDULE;
+  var base = isWeekendDate(dateStr) ? WEEKEND_SCHEDULE : WEEKDAY_SCHEDULE;
+  if(dateStr>=PHASE2_START){
+    return base.map(function(b){
+      return b.key==='vidclass'
+        ? Object.assign({},b,{label:'Problem Practice (NA·S&S·CS·Meas·EMFT)'})
+        : b;
+    });
+  }
+  return base;
 }
 
 /* ── score computation — 6-signal / 100-pt ── */
@@ -3327,7 +3343,9 @@ function calcDiscScore(date){
   var result = { total:0, signals:[] };
 
   var vcDone = !!(log['sched_vidclass']);
-  result.signals.push({ name:'Video Classes', note:'6:00 AM – 9:00 AM', pts:20, earned:vcDone?20:0, schedKey:'vidclass' });
+  var vcBlock = DAILY_SCHEDULE.find(function(b){return b.key==='vidclass';});
+  var vcName = vcBlock ? vcBlock.label : 'Video Classes';
+  result.signals.push({ name:vcName, note:'6:00 AM – 9:00 AM', pts:20, earned:vcDone?20:0, schedKey:'vidclass' });
   result.total += vcDone?20:0;
 
   var r1Done = !!(log['sched_rev1notes']);
@@ -3815,6 +3833,7 @@ function renderDiscCard(){
 
   var ICONS = {
     'Video Classes':'&#x1F3AC;',
+    'Problem Practice (NA·S&S·CS·Meas·EMFT)':'&#x1F9E9;',
     'Revision 1':'&#x1F4D6;',
     'Short Notes':'&#x1F4DD;',
     'PYQ Practice':'&#x1F3AF;',
