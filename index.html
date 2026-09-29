@@ -601,12 +601,12 @@ const SEED_SUBJECTS=[
   {id:3, name:'CONTROL SYSTEMS', faculty:'Ankit Goyal', start:'2026-07-26', end:'2026-08-10', days:16, videos:59, targetHrs:70, status:'Completed', confidence:5, remarks:''},
   {id:4, name:'MEASUREMENTS', faculty:'Ankit Goyal', start:'2026-08-11', end:'2026-08-16', days:6, videos:6, targetHrs:15, status:'Completed', confidence:4, remarks:''},
   {id:5, name:'EMFT', faculty:'Vishal Soni', start:'2026-08-17', end:'2026-08-26', days:10, videos:20, targetHrs:20, status:'Completed', confidence:3, remarks:''},
-  {id:6, name:'ELECTRICAL MACHINES', faculty:'Ankit Goyal', start:'2026-09-07', end:'2026-09-30', days:24, videos:24, targetHrs:48, status:'In Progress', confidence:10, remarks:''},
+  {id:6, name:'ELECTRICAL MACHINES', faculty:'Ankit Goyal', start:'2026-09-07', end:'2026-09-29', days:23, videos:24, targetHrs:48, status:'Skipped', confidence:10, remarks:'Deferred to 2028 — switched to full-length playlist, resume fresh'},
   {id:7, name:'POWER SYSTEM', faculty:'Ankit Goyal', start:'2026-10-01', end:'2026-10-15', days:15, videos:77, targetHrs:50, status:'Not Started', confidence:0, remarks:''},
   {id:8, name:'POWER ELECTRONICS', faculty:'Ankit Goyal', start:'2026-10-16', end:'2026-10-31', days:16, videos:68, targetHrs:102, status:'Not Started', confidence:0, remarks:''},
   {id:9, name:'DIGITAL ELECTRONICS', faculty:'Sujay', start:'2026-11-01', end:'2026-11-10', days:10, videos:16, targetHrs:32, status:'Not Started', confidence:0, remarks:''},
   {id:10, name:'ANALOG ELECTRONICS', faculty:'Ankit Goyal', start:'2026-11-11', end:'2026-11-30', days:20, videos:61, targetHrs:110, status:'Not Started', confidence:0, remarks:''},
-  {id:11, name:'APTITUDE + MATHEMATICS', faculty:'Himanshu Agarwal', start:'2026-12-01', end:'2026-12-31', days:31, videos:72, targetHrs:215, status:'Not Started', confidence:0, remarks:''},
+  {id:11, name:'APTITUDE + MATHEMATICS', faculty:'Himanshu Agarwal', start:'2026-09-30', end:'2026-10-30', days:31, videos:72, targetHrs:215, status:'Not Started', confidence:0, remarks:'Pulled forward — 2027-scope subject'},
 ];
 
 const SUBJECT_LINKS={
@@ -615,7 +615,7 @@ const SUBJECT_LINKS={
   3:{yt:'https://www.youtube.com/playlist?list=PLm_MSClsnwm9zEHROFMSQtcf2YLTcJSSq'},
   4:{yt:'https://www.youtube.com/playlist?list=PLs5_Rtf2P2r6rQ5-DSe-MSDBlrpz8fSz_'},
   5:{yt:'https://www.youtube.com/playlist?list=PLs5_Rtf2P2r5_0pNT0vc2UV3jgcvek8sl'},
-  6:{yt:'https://www.youtube.com/playlist?list=PLs5_Rtf2P2r71GKGBlEiNh0l7paphzX2D'},
+  6:{yt:'https://youtube.com/playlist?list=PLs5_Rtf2P2r5YY5b23uDGrtpo42ezMmGp&si=c_ROO95ScZQLk-Nz'}, // full-length (was crash course) — for 2028 resume
   7:{yt:'https://www.youtube.com/playlist?list=PLs5_Rtf2P2r6Mlz9ObmcKx-SfNbIFfyVh'},
   8:{yt:'https://www.youtube.com/playlist?list=PLs5_Rtf2P2r5KREX_ijxw2Sz-ISNhAgH4'},
   9:{yt:'https://www.youtube.com/playlist?list=PLgzsL8klq6DKnltogpZsroj0yG-MlFLNL'},
@@ -2116,6 +2116,11 @@ const PYQ_PLAN = (function(){
       {ti:0,name:'Electrostatics',                             qs:65},
       {ti:1,name:'Magnetostatics',                             qs:40},
     ], rev1End:'2026-10-25'},
+  ];
+  /* ══ DEFERRED TO 2028 (Machines, Power System, Power Electronics, Digital+Analog) ══
+     Kept here for data safety — not included in 2027 slot generation below.
+     Re-merge into subTopics above when these subjects resume in 2028. */
+  const DEFERRED_SUBTOPICS_2028 = [
     {subId:6, topics:[
       {ti:0,name:'Magnetic Circuits',                          qs:17},
       {ti:1,name:'Transformers',                               qs:102},
@@ -2123,7 +2128,7 @@ const PYQ_PLAN = (function(){
       {ti:3,name:'Three Phase Induction Machines',             qs:90},
       {ti:4,name:'Synchronous Machines',                       qs:79},
       {ti:5,name:'Miscellaneous Topics',                       qs:25},
-    ], rev1End:'2026-11-15'},
+    ], rev1End:'2028-TBD'},
     {subId:7, topics:[
       {ti:0,name:'Basics of Power System',                     qs:24},
       {ti:1,name:'Distribution Systems, HVDC, Sag & Corona',  qs:9},
@@ -2136,7 +2141,7 @@ const PYQ_PLAN = (function(){
       {ti:8,name:'Power Factor Improvement & Voltage Control', qs:21},
       {ti:9,name:'Economic Load Dispatch',                     qs:12},
       {ti:10,name:'Overhead Transmission Lines & UG Cable',    qs:13},
-    ], rev1End:'2026-11-29'},
+    ], rev1End:'2028-TBD'},
     {subId:8, topics:[
       {ti:0,name:'Power Semiconductor Devices',                qs:27},
       {ti:1,name:'AC to DC Converters (Rectifiers)',           qs:63},
@@ -2144,7 +2149,7 @@ const PYQ_PLAN = (function(){
       {ti:3,name:'DC to AC Inverters',                         qs:48},
       {ti:4,name:'AC to AC Converters',                        qs:18},
       {ti:5,name:'AC Voltage Controllers',                     qs:18},
-    ], rev1End:'2026-12-13'},
+    ], rev1End:'2028-TBD'},
     {subId:9, topics:[
       {ti:0,name:'Number Systems & Boolean Algebra',           qs:13},
       {ti:1,name:'Logic Gates & Combinational Circuits',       qs:49},
@@ -2152,14 +2157,14 @@ const PYQ_PLAN = (function(){
       {ti:3,name:'A/D & D/A Converters',                       qs:22},
       {ti:4,name:'Microprocessors',                            qs:20},
       {ti:5,name:'Logic Families & Semiconductor Memories',    qs:8},
-    ], rev1End:'2026-12-22'},
+    ], rev1End:'2028-TBD'},
     {subId:10, topics:[
       {ti:0,name:'Diode Circuits and Applications',            qs:39},
       {ti:1,name:'MOSFETs',                                    qs:15},
       {ti:2,name:'Operational Amplifier',                      qs:81},
       {ti:3,name:'BJTs',                                       qs:28},
       {ti:4,name:'Miscellaneous Topics',                       qs:1},
-    ], rev1End:'2026-12-31'},
+    ], rev1End:'2028-TBD'},
   ];
   const DAILY_MAX=25;
   // Analog Electronics (subId 10) rev1 ends 12/31, so its PYQ naturally starts 1/1/2027.
@@ -2927,7 +2932,7 @@ const REV1_SCHEDULE={
   8:{start:'2026-11-13',end:'2026-11-22',days:10,perDay:134}, /* 1344p/ 10d = 134 */
   9:{start:'2026-11-23',end:'2026-11-28',days:6, perDay:189}, /* 1134p/ 6d  = 189 */
   10:{start:'2026-11-29',end:'2026-12-06',days:8, perDay:248},/* 1982p/ 8d  = 248 */
-  11:{start:'2026-12-07',end:'2026-12-31',days:25,perDay:97}, /* 2423p/ 25d = 97  */
+  11:{start:'2026-10-31',end:'2026-11-24',days:25,perDay:97}, /* 2423p/ 25d = 97 — shifted to follow pulled-forward video schedule */
 };
 function subPages(id){return(REV1_NOTES[id]||[]).reduce((t,p)=>t+p.pages,0);}
 function allPages(){return subjects.reduce((t,s)=>t+subPages(s.id),0);}
