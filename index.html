@@ -400,6 +400,28 @@ select.inp-sm{cursor:pointer;}
 .me-btn-skip{padding:9px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--font);transition:all .15s;}
 .me-btn-skip:hover{border-color:var(--faint);color:var(--text);}
 
+/* ── 2027/2028 journey + today plan ── */
+.journey-phase-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;}
+.journey-phase-title{font-size:15px;font-weight:800;color:var(--text);margin-bottom:3px;}
+.journey-phase-sub{font-size:11px;color:var(--muted);margin-bottom:12px;}
+.journey-phase-stats{display:flex;gap:18px;flex-wrap:wrap;}
+.journey-phase-stat .v{font-size:22px;font-weight:800;line-height:1.1;}
+.journey-phase-stat .l{font-size:9px;color:var(--faint);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-top:2px;}
+.conf-gauge{position:relative;width:96px;height:96px;display:flex;align-items:center;justify-content:center;}
+.conf-gauge svg{position:absolute;inset:0;transform:rotate(-90deg);}
+.conf-gauge-val{font-size:19px;font-weight:800;line-height:1;text-align:center;}
+.conf-gauge-lbl{font-size:8px;color:var(--faint);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-top:3px;text-align:center;}
+.today-plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:24px;}
+.today-plan-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:13px 15px;min-height:92px;}
+.today-plan-label{font-size:9px;color:var(--faint);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px;}
+.today-plan-title{font-size:13px;font-weight:800;color:var(--text);line-height:1.35;}
+.today-plan-sub{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.4;}
+.activity-banner{display:flex;align-items:center;gap:12px;width:100%;}
+.activity-icon{font-size:24px;flex-shrink:0;}
+.activity-title{font-size:13px;font-weight:800;color:var(--text);}
+.activity-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+@media(max-width:760px){.today-plan-grid{grid-template-columns:1fr}.journey-phase-card{grid-template-columns:1fr}.conf-gauge{margin:0 auto;}}
+
 </style>
 </head>
 <body>
@@ -471,20 +493,10 @@ select.inp-sm{cursor:pointer;}
     <div class="section">
       <div class="sec-hdr">
         <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;width:100%">
-          <div><h2>Journey Progress</h2><div class="sub" id="prog-sub"></div></div>
+          <div><h2>Journey Progress</h2><div class="sub" id="prog-sub">2027 and 2028 study plans · confidence target 85%</div></div>
         </div>
       </div>
-      <div class="g4" id="hero-cards"></div>
-      <div class="card" style="margin-top:12px;padding:14px 16px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <span style="font-size:12px;font-weight:700;color:var(--muted);">OVERALL JOURNEY</span>
-          <span id="journey-pct" style="font-size:12px;font-weight:700;color:var(--acc);"></span>
-        </div>
-        <div class="pbar-bg" style="height:8px;"><div class="pbar-fill" id="journey-bar"></div></div>
-        <div style="display:flex;justify-content:space-between;margin-top:5px;font-size:10px;color:var(--faint);">
-          <span id="journey-start"></span><span id="journey-end"></span>
-        </div>
-      </div>
+      <div class="g2" id="hero-cards"></div>
     </div>
     <div class="section">
       <div class="sec-hdr"><h2>Today's Entry</h2><div class="sub">Log your day — navigate dates with arrows</div></div>
@@ -500,18 +512,7 @@ select.inp-sm{cursor:pointer;}
         <div class="sub-strip" id="sub-strip"></div>
         <div class="target-grid" id="target-grid"></div>
         <div style="margin-top:16px;"><label class="lbl">Habits</label><div class="habit-row" id="habit-row"></div></div>
-        <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-          <div>
-            <label class="lbl">Subject being studied
-              <button id="sub-override-btn" onclick="enableSubOverride()" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--muted);padding:0 4px;">✏️</button>
-            </label>
-            <select class="inp-sm inp" id="entry-subject" onchange="onSubjectChange()" style="width:100%;"></select>
-          </div>
-          <div>
-            <label class="lbl">Videos watched today</label>
-            <input class="inp-sm inp" type="number" min="0" id="entry-vids" oninput="saveEntryField('videosToday',this.value)" style="width:100%;">
-          </div>
-        </div>
+        <div id="entry-dynamic-fields" style="margin-top:16px;"></div>
       </div>
     </div>
     <div class="section">
@@ -552,7 +553,7 @@ select.inp-sm{cursor:pointer;}
   <div class="section">
     <div class="sec-hdr">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;width:100%">
-        <div><h2>PYQ Practice</h2><div class="sub">Click any topic to expand · log sessions &amp; questions done in one place</div></div>
+        <div><h2>PYQ Practice</h2><div class="sub">Friday–Sunday practice only · click any topic to expand · log sessions &amp; questions done</div></div>
       </div>
     </div>
     <div id="pyq-summary-bar"></div>
@@ -582,18 +583,9 @@ function fmtFull(d){if(!d)return'—';const[y,m,dd]=d.split('-');return`${+dd} $
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function $(id){return document.getElementById(id);}
 
-/* ── SUBJECTS v9 ──
-   Updated from image + playlist fetches Aug 12 2026:
-   Network Analysis  : 17/08 – 30/08 (14 days)   → still Ankit Goyal
-   Signals & Systems : 31/08 – 13/09 (14 days)
-   Control Systems   : 14/09 – 27/09 (14 days)
-   Measurements      : 28/09 – 04/10 (7 days)  → Ankit Goyal, 6 vids, ~15h
-   EMFT              : 05/10 – 11/10 (7 days)  → Vishal Soni, 20 vids, ~20h
-   Electrical Machines: 12/10 – 01/11 (21 days)
-   Power System      : 02/11 – 22/11 (21 days)
-   Power Electronics : 23/11 – 13/12 (21 days)
-   Analog+Digital    : 14/12 – 03/01 (21 days)
-   Aptitude+Maths    : 28/12 – 03/01 (7 days — overlap intentional per image)
+/* ── SUBJECTS — revised Sep 29 2026 ──
+   2027 attempt: Network, Signals, Control, Measurements, EMFT, Aptitude + Mathematics
+   2028 attempt: Electrical Machines, Power Systems, Power Electronics, Analog, Digital
 */
 const SEED_SUBJECTS=[
   {id:1, name:'NETWORK ANALYSIS', faculty:'Ankit Goyal', start:'2026-06-22', end:'2026-07-07', days:16, videos:33, targetHrs:70, status:'Completed', confidence:10, remarks:'', phase:2027},
@@ -601,12 +593,12 @@ const SEED_SUBJECTS=[
   {id:3, name:'CONTROL SYSTEMS', faculty:'Ankit Goyal', start:'2026-07-26', end:'2026-08-10', days:16, videos:59, targetHrs:70, status:'Completed', confidence:5, remarks:'', phase:2027},
   {id:4, name:'MEASUREMENTS', faculty:'Ankit Goyal', start:'2026-08-11', end:'2026-08-16', days:6, videos:6, targetHrs:15, status:'Completed', confidence:4, remarks:'', phase:2027},
   {id:5, name:'EMFT', faculty:'Vishal Soni', start:'2026-08-17', end:'2026-08-26', days:10, videos:20, targetHrs:20, status:'Completed', confidence:3, remarks:'', phase:2027},
-  {id:6, name:'ELECTRICAL MACHINES', faculty:'Ankit Goyal', start:'2027-03-01', end:'2027-03-24', days:24, videos:24, targetHrs:48, status:'Not Started', confidence:0, remarks:'Full-length playlist (was crash course) — 2028 attempt', phase:2028},
-  {id:7, name:'POWER SYSTEM', faculty:'Ankit Goyal', start:'2027-03-25', end:'2027-04-08', days:15, videos:77, targetHrs:50, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
-  {id:8, name:'POWER ELECTRONICS', faculty:'Ankit Goyal', start:'2027-04-09', end:'2027-04-24', days:16, videos:68, targetHrs:102, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
-  {id:9, name:'DIGITAL ELECTRONICS', faculty:'Sujay', start:'2027-04-25', end:'2027-05-04', days:10, videos:16, targetHrs:32, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
-  {id:10, name:'ANALOG ELECTRONICS', faculty:'Ankit Goyal', start:'2027-05-05', end:'2027-05-24', days:20, videos:61, targetHrs:110, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
-  {id:11, name:'APTITUDE + MATHEMATICS', faculty:'Himanshu Agarwal', start:'2026-09-30', end:'2026-10-30', days:31, videos:72, targetHrs:215, status:'Not Started', confidence:0, remarks:'Pulled forward — 2027-scope subject', phase:2027},
+  {id:6, name:'ELECTRICAL MACHINES', faculty:'Ankit Goyal', start:'2027-03-01', end:'2027-05-22', days:83, videos:166, targetHrs:153, status:'Not Started', confidence:0, remarks:'Full-length Ankit Goyal playlist — 2028 attempt', phase:2028},
+  {id:7, name:'POWER SYSTEM', faculty:'Ankit Goyal', start:'2027-05-23', end:'2027-06-17', days:26, videos:77, targetHrs:50, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
+  {id:8, name:'POWER ELECTRONICS', faculty:'Ankit Goyal', start:'2027-06-18', end:'2027-07-21', days:34, videos:68, targetHrs:102, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
+  {id:9, name:'DIGITAL ELECTRONICS', faculty:'Sujay', start:'2027-09-23', end:'2027-10-08', days:16, videos:16, targetHrs:32, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
+  {id:10, name:'ANALOG ELECTRONICS', faculty:'Ankit Goyal', start:'2027-07-22', end:'2027-09-22', days:63, videos:61, targetHrs:110, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
+  {id:11, name:'APTITUDE + MATHEMATICS', faculty:'Himanshu Agarwal', start:'2026-09-30', end:'2026-12-29', days:91, videos:72, targetHrs:215, status:'Not Started', confidence:0, remarks:'2027-scope subject', phase:2027},
 ];
 
 const SUBJECT_LINKS={
@@ -615,13 +607,64 @@ const SUBJECT_LINKS={
   3:{yt:'https://www.youtube.com/playlist?list=PLm_MSClsnwm9zEHROFMSQtcf2YLTcJSSq'},
   4:{yt:'https://www.youtube.com/playlist?list=PLs5_Rtf2P2r6rQ5-DSe-MSDBlrpz8fSz_'},
   5:{yt:'https://www.youtube.com/playlist?list=PLs5_Rtf2P2r5_0pNT0vc2UV3jgcvek8sl'},
-  6:{yt:'https://youtube.com/playlist?list=PLs5_Rtf2P2r5YY5b23uDGrtpo42ezMmGp&si=c_ROO95ScZQLk-Nz'}, // full-length (was crash course) — for 2028 resume
+  6:{yt:'https://youtube.com/playlist?list=PLs5_Rtf2P2r5YY5b23uDGrtpo42ezMmGp&si=6aPD4CNUVbLDE7TV'}, // full-length (was crash course) — for 2028 resume
   7:{yt:'https://www.youtube.com/playlist?list=PLs5_Rtf2P2r6Mlz9ObmcKx-SfNbIFfyVh'},
   8:{yt:'https://www.youtube.com/playlist?list=PLs5_Rtf2P2r5KREX_ijxw2Sz-ISNhAgH4'},
   9:{yt:'https://www.youtube.com/playlist?list=PLgzsL8klq6DKnltogpZsroj0yG-MlFLNL'},
   10:{yt:'https://www.youtube.com/playlist?list=PLs5_Rtf2P2r5MplAOADz3fTWIyBZTkGbB'},
   11:{pf_m:'https://prepfusion.in/new-courses/98/content?activeTab=Content',pf_a:'https://prepfusion.in/new-courses/96/content?activeTab=Content',yt_a:'https://www.youtube.com/playlist?list=PLgF7lRh8Xb_WWuQ39i48DruAyzb_voYYD',yt_m:'https://www.youtube.com/playlist?list=PLgF7lRh8Xb_UmswOfvBO371uK1Sa7ZF5I'},
 };
+
+const SUBJECT_DISPLAY_ORDER=[1,2,3,4,5,11,6,7,8,10,9];
+function getDisplaySubjects(){return SUBJECT_DISPLAY_ORDER.map(id=>subjects.find(s=>s.id===id)).filter(Boolean);}
+
+/* ── Gap / special activity plan from Book1.xlsx ── */
+const SPECIAL_STUDY_PHASES=[
+  {start:'2026-08-27',end:'2026-09-29',type:'hours',icon:'⚡',title:'Electrical Machines Crash Course',sub:'Crash-course study period'},
+  {start:'2026-12-30',end:'2027-02-28',type:'hours',icon:'📘',title:'Revision 2 + Mock Tests',sub:'Short-notes revision · mock tests during January'},
+  {start:'2027-10-09',end:'2027-12-31',type:'questions',icon:'📚',title:'Paramount Question Book',sub:'Simple-question practice · complete by 31 Dec 2027',paramount:true},
+  {start:'2028-01-01',end:'2028-01-31',type:'hours',icon:'📝',title:'Mock Tests + Formula Notes',sub:'Full mocks and formula-notes making'},
+  {start:'2028-02-01',end:'9999-12-31',type:'hours',icon:'🧠',title:'Formula Notes Revision',sub:'Revise formula notes up to the exam'},
+];
+function getStudyActivity(date){
+  const sub=autoDetectSubject(date);
+  if(sub)return{type:'class',icon:'🎬',title:sub.name,sub:'Class / video study',subjectId:sub.id};
+  const ph=SPECIAL_STUDY_PHASES.find(x=>date>=x.start&&date<=x.end);
+  return ph||{type:'none',icon:'—',title:'N/A',sub:'No planned study activity'};
+}
+
+/* ── Paramount question-bank plan: 9 Oct – 31 Dec 2027 ── */
+const PARAMOUNT_START='2027-10-09', PARAMOUNT_END='2027-12-31';
+const PARAMOUNT_BOOKS=[
+  {subId:1,name:'Network Theory',pages:73,questions:100,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/1.%20Network%20Paramount%20(EC-EE)%20+%20Font.pdf'},
+  {subId:3,name:'Control System',pages:118,questions:125,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/2.%20Control%20System%20Paramount%20(EC-EE)%20+%20Front.pdf'},
+  {subId:7,name:'Power System Analysis (PSA)',pages:92,questions:136,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/3.%20PSA%20Paramount%20(EE)%20+%20Front.pdf'},
+  {subId:6,name:'Electrical Machines',pages:81,questions:150,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/4.%20Electrical%20machine%20Paramount%20(EE)%20+%20Front.pdf'},
+  {subId:2,name:'Signals & Systems',pages:62,questions:100,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/5.%20Signals%20_%20Systems%20Paramount%20(EE)%20+%20Front.pdf'},
+  {subId:8,name:'Power Electronics',pages:93,questions:125,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/6.%20Power%20Electronics%20Paramount%20(EE)%20+%20Front.pdf'},
+  {subId:10,name:'Analog Electronics',pages:75,questions:75,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/7.%20Analog%20Paramount%20(EE)%20+%20Front.pdf'},
+  {subId:9,name:'Digital Electronics',pages:66,questions:75,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/8.%20Digital%20Paramount%20(EE)%20+%20Front.pdf'},
+  {subId:11,name:'Engineering Mathematics',pages:35,questions:75,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/9.%20Mathematics%20Paramount%20(EC-EE)%20+%20Front.pdf'},
+  {subId:4,name:'Measurements',pages:28,questions:50,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/10.%20Measurement%20Paramount%20(EE)%20+%20Front.pdf'},
+  {subId:11,name:'Aptitude',pages:29,questions:75,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/11.%20Aptitude%20Paramount%20(EC-EE-ME-CE-CSE-IN)%20+%20Front.pdf'},
+  {subId:5,name:'Electromagnetic Theory (EMT)',pages:30,questions:50,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/12.%20EMT%20Final%20paramount%20(EE)%20+%20Front.pdf'},
+];
+const PARAMOUNT_TOTAL_PAGES=PARAMOUNT_BOOKS.reduce((t,b)=>t+b.pages,0);
+const PARAMOUNT_TOTAL_QS=PARAMOUNT_BOOKS.reduce((t,b)=>t+b.questions,0);
+const PARAMOUNT_BASE_PAGES_DAY=Math.ceil(PARAMOUNT_TOTAL_PAGES/(diffDays(PARAMOUNT_START,PARAMOUNT_END)+1));
+function getParamountPagesDone(){return Object.entries(daily).filter(([d])=>d>=PARAMOUNT_START&&d<=PARAMOUNT_END).reduce((t,[,v])=>t+(+v.paramountPagesToday||0),0);}
+function getParamountQuestionsDone(){return Object.entries(daily).filter(([d])=>d>=PARAMOUNT_START&&d<=PARAMOUNT_END).reduce((t,[,v])=>t+(+v.questionsToday||0),0);}
+function paramountPageTarget(date){
+  const done=getParamountPagesDone(), left=Math.max(0,PARAMOUNT_TOTAL_PAGES-done);
+  const daysLeft=date>PARAMOUNT_END?1:Math.max(1,diffDays(date,PARAMOUNT_END)+1);
+  return Math.max(0,Math.ceil(left/daysLeft));
+}
+function getParamountCurrentBook(){
+  let done=getParamountPagesDone();
+  for(const b of PARAMOUNT_BOOKS){if(done<b.pages)return Object.assign({},b,{pageInBook:done});done-=b.pages;}
+  return null;
+}
+
 
 /* ── DAILY SEED — exact from backup gate2027-backup-2026-08-12.json ── */
 const DAILY_SEED={
@@ -1587,6 +1630,17 @@ const PYQ_SUBJECTS=[
     {name:'Electrostatics',                              qs:65},
     {name:'Magnetostatics',                              qs:40},
   ]},
+  {id:11,name:'Engineering Mathematics',short:'MATHS',url:'https://hub.prepfusion.in/subject/maths',total:1723,pyqMonth:'',
+   topics:[
+     {name:'Linear Algebra',                              qs:336},
+     {name:'Calculus',                                   qs:314},
+     {name:'Vector Calculus',                            qs:145},
+     {name:'Differential Equations',                     qs:252},
+     {name:'Numerical Methods',                          qs:109},
+     {name:'Transform Theory',                           qs:45},
+     {name:'Complex Variable Analysis',                  qs:151},
+     {name:'Probability and Statistics',                 qs:371},
+  ]},
   {id:6, name:'Electrical Machines',  short:'EM',   url:'https://hub.prepfusion.in/subject/power_x?path=Electrical+Machines%2CEE',   total:388, pyqMonth:'Nov',
    topics:[
     {name:'Magnetic Circuits',                           qs:17},
@@ -1720,7 +1774,7 @@ function renderPyqSubTabs(){
   el.innerHTML=PYQ_SUBJECTS.map(s=>{
     const tot=getPyqSubTotals(s.id);
     const col=tot.pct===null?'':(tot.pct>=75?' style="border-color:#4ade8066;color:#4ade80"':tot.pct>=50?' style="border-color:#fbbf2466;color:#fbbf24"':' style="border-color:#ef444466;color:#ef4444"');
-    return`<button class="pyq-sub-tab${s.id===pyqActiveSubId?' active':''}"${col} onclick="pyqSelectSub(${s.id})">${s.short}${tot.pct!==null?' '+tot.pct+'%':''}${s.pyqMonth?'<span style="font-size:9px;opacity:.6;margin-left:3px;">'+ s.pyqMonth+'</span>':''}</button>`;
+    return`<button class="pyq-sub-tab${s.id===pyqActiveSubId?' active':''}"${col} onclick="pyqSelectSub(${s.id})">${s.short}${tot.pct!==null?' '+tot.pct+'%':''}</button>`;
   }).join('');
 }
 
@@ -1745,7 +1799,7 @@ function renderPyqTopics(){
   let html=`<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
     <div style="display:flex;align-items:center;gap:8px;">
       <div style="font-size:15px;font-weight:700;">${esc(sub.name)}</div>
-      ${sub.pyqMonth?`<span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:10px;background:#001e2e;color:#00d4ff;border:1px solid #00d4ff44;">🎯 ${sub.pyqMonth}</span>`:''}
+      <span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:10px;background:#001e2e;color:#00d4ff;border:1px solid #00d4ff44;">🎯 Fri–Sun only</span>
     </div>
     <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
       <div style="text-align:right;">
@@ -2071,120 +2125,35 @@ function renderPyqQuizCard(sub){
    PYQ_PLAN: static array of scheduled slots (computed)
    ══════════════════════════════════════════════════ */
 
-// Auto-plan: 1hr/day · max 20q/session · closes 17 Dec 2026 (14 days before deadline)
+// Auto-plan: PYQ work is scheduled ONLY on Friday, Saturday and Sunday.
+// Subjects are sequenced after their Revision-1 availability date; max 25 questions/session.
 const PYQ_PLAN = (function(){
-  const slots = [];
-  const subTopics = [
-    {subId:1, topics:[
-      {ti:0,name:'Basic Concepts of Networks',                 qs:42},
-      {ti:1,name:'Transient Analysis',                         qs:50},
-      {ti:2,name:'Network Theorems For DC & Misc Topics',      qs:36},
-      {ti:3,name:'2nd Order Dynamics and Complex Impedance',   qs:7},
-      {ti:4,name:'AC Circuit Analysis',                        qs:41},
-      {ti:5,name:'Resonance',                                  qs:18},
-      {ti:6,name:'Complex Power',                              qs:20},
-      {ti:7,name:'Two Port Parameters',                        qs:19},
-    ], rev1End:'2026-09-27'},
-    {subId:2, topics:[
-      {ti:0,name:'Basics of Signals',                          qs:28},
-      {ti:1,name:'Basics of Systems',                          qs:44},
-      {ti:2,name:'Continuous Time Fourier Series',             qs:20},
-      {ti:3,name:'Continuous Time Fourier Transform',          qs:32},
-      {ti:4,name:'Laplace Transform',                          qs:22},
-      {ti:5,name:'Z Transform, DTFS and DTFT',                 qs:24},
-    ], rev1End:'2026-10-07'},
-    {subId:3, topics:[
-      {ti:0,name:'Basics of Control Systems',                  qs:12},
-      {ti:1,name:'Block Diagram and Signal Flow Graph',        qs:18},
-      {ti:2,name:'Time Response Analysis',                     qs:34},
-      {ti:3,name:"Routh's Stability Criterion",                qs:34},
-      {ti:4,name:'Root Locus',                                 qs:22},
-      {ti:5,name:'Polar Plot and Freq Response (2nd Order)',   qs:25},
-      {ti:6,name:'Nyquist Plot',                               qs:17},
-      {ti:7,name:'Bode Plot',                                  qs:19},
-      {ti:8,name:'State Space Analysis',                       qs:47},
-      {ti:9,name:'Controllers and Compensators',               qs:18},
-    ], rev1End:'2026-10-17'},
-    {subId:4, topics:[
-      {ti:0,name:'Error Analysis',                             qs:13},
-      {ti:1,name:'Analog Measuring Instruments',               qs:65},
-      {ti:2,name:'DC And AC Bridges',                          qs:13},
-      {ti:3,name:'Measurement of Resistance',                  qs:5},
-      {ti:4,name:'Electronic Measurement and Instrument Transformer', qs:32},
-    ], rev1End:'2026-10-21'},
-    {subId:5, topics:[
-      {ti:0,name:'Electrostatics',                             qs:65},
-      {ti:1,name:'Magnetostatics',                             qs:40},
-    ], rev1End:'2026-10-25'},
-  ];
-  /* ══ DEFERRED TO 2028 (Machines, Power System, Power Electronics, Digital+Analog) ══
-     Kept here for data safety — not included in 2027 slot generation below.
-     Re-merge into subTopics above when these subjects resume in 2028. */
-  const DEFERRED_SUBTOPICS_2028 = [
-    {subId:6, topics:[
-      {ti:0,name:'Magnetic Circuits',                          qs:17},
-      {ti:1,name:'Transformers',                               qs:102},
-      {ti:2,name:'DC Machines',                                qs:75},
-      {ti:3,name:'Three Phase Induction Machines',             qs:90},
-      {ti:4,name:'Synchronous Machines',                       qs:79},
-      {ti:5,name:'Miscellaneous Topics',                       qs:25},
-    ], rev1End:'2028-TBD'},
-    {subId:7, topics:[
-      {ti:0,name:'Basics of Power System',                     qs:24},
-      {ti:1,name:'Distribution Systems, HVDC, Sag & Corona',  qs:9},
-      {ti:2,name:'Relays Circuit Breakers',                    qs:28},
-      {ti:3,name:'Power System Faults',                        qs:44},
-      {ti:4,name:'Power System Stability',                     qs:28},
-      {ti:5,name:'Power System Matrices and Load Flow',        qs:42},
-      {ti:6,name:'Performance & Models of Transmission Lines', qs:22},
-      {ti:7,name:'Parameters of Transmission Lines',           qs:15},
-      {ti:8,name:'Power Factor Improvement & Voltage Control', qs:21},
-      {ti:9,name:'Economic Load Dispatch',                     qs:12},
-      {ti:10,name:'Overhead Transmission Lines & UG Cable',    qs:13},
-    ], rev1End:'2028-TBD'},
-    {subId:8, topics:[
-      {ti:0,name:'Power Semiconductor Devices',                qs:27},
-      {ti:1,name:'AC to DC Converters (Rectifiers)',           qs:63},
-      {ti:2,name:'DC to DC Converters (Choppers)',             qs:48},
-      {ti:3,name:'DC to AC Inverters',                         qs:48},
-      {ti:4,name:'AC to AC Converters',                        qs:18},
-      {ti:5,name:'AC Voltage Controllers',                     qs:18},
-    ], rev1End:'2028-TBD'},
-    {subId:9, topics:[
-      {ti:0,name:'Number Systems & Boolean Algebra',           qs:13},
-      {ti:1,name:'Logic Gates & Combinational Circuits',       qs:49},
-      {ti:2,name:'Sequential Circuits',                        qs:38},
-      {ti:3,name:'A/D & D/A Converters',                       qs:22},
-      {ti:4,name:'Microprocessors',                            qs:20},
-      {ti:5,name:'Logic Families & Semiconductor Memories',    qs:8},
-    ], rev1End:'2028-TBD'},
-    {subId:10, topics:[
-      {ti:0,name:'Diode Circuits and Applications',            qs:39},
-      {ti:1,name:'MOSFETs',                                    qs:15},
-      {ti:2,name:'Operational Amplifier',                      qs:81},
-      {ti:3,name:'BJTs',                                       qs:28},
-      {ti:4,name:'Miscellaneous Topics',                       qs:1},
-    ], rev1End:'2028-TBD'},
-  ];
+  const slots=[];
+  const ORDER=[1,2,3,4,5,11,6,7,8,10,9];
+  const AVAILABLE_AFTER={
+    1:'2026-10-19',2:'2026-11-10',3:'2026-12-04',4:'2026-12-17',5:'2026-12-23',
+    11:'2027-04-10',6:'2027-06-08',7:'2027-07-10',8:'2027-08-13',10:'2027-10-26',9:'2027-11-14'
+  };
   const DAILY_MAX=25;
-  // Analog Electronics (subId 10) rev1 ends 12/31, so its PYQ naturally starts 1/1/2027.
-  // Bump its per-session cap so all 164 questions fit inside the first week of Jan (7 days).
-  const SUBJECT_MAX_OVERRIDE={10:40};
-  function addDaysLocal(d,n){const dt=new Date(d+'T00:00:00');dt.setDate(dt.getDate()+n);return`${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;}
-  subTopics.forEach(function(sub){
-    let cursor=addDaysLocal(sub.rev1End,1);
-    const subMax=SUBJECT_MAX_OVERRIDE[sub.subId]||DAILY_MAX;
-    sub.topics.forEach(function(t){
-      const sessions=Math.max(1,Math.ceil(t.qs/subMax));
+  function isPyqDay(d){const w=dayOfWeek(d);return w===5||w===6||w===0;}
+  function nextPyqDay(d){let x=d;while(!isPyqDay(x))x=addDays(x,1);return x;}
+  function later(a,b){return a>b?a:b;}
+  let globalCursor='2026-09-30';
+  ORDER.forEach(function(subId){
+    const sub=PYQ_SUBJECTS.find(s=>s.id===subId);if(!sub)return;
+    let cursor=nextPyqDay(later(globalCursor,addDays(AVAILABLE_AFTER[subId],1)));
+    sub.topics.forEach(function(t,ti){
+      const sessions=Math.max(1,Math.ceil(t.qs/DAILY_MAX));
       const perSession=Math.ceil(t.qs/sessions);
       let remaining=t.qs;
-      for(let d=0;d<sessions;d++){
+      for(let part=1;part<=sessions;part++){
         const target=Math.min(perSession,remaining);
-        slots.push({date:cursor,subId:sub.subId,ti:t.ti,name:t.name,qs:t.qs,totalDays:sessions,part:d+1,target:target});
+        slots.push({date:cursor,subId:subId,ti:ti,name:t.name,qs:t.qs,totalDays:sessions,part:part,target:target});
         remaining-=target;
-        cursor=addDaysLocal(cursor,1);
+        cursor=nextPyqDay(addDays(cursor,1));
       }
     });
+    globalCursor=cursor;
   });
   return slots;
 })();
@@ -2226,8 +2195,8 @@ function pyqSetView(v){
   renderPyqPlan();
 }
 
-const SUB_COLORS={1:'#00d4ff',2:'#a78bfa',3:'#34d399',4:'#fbbf24',5:'#f472b6',6:'#fb923c',7:'#60a5fa',8:'#4ade80',9:'#e879f9',10:'#f87171'};
-const SUB_NAMES={1:'Network Theory',2:'Signals & Systems',3:'Control Systems',4:'Measurements',5:'EMFT',6:'Machines',7:'Power Systems',8:'Power Electronics',9:'Digital Electronics',10:'Analog Electronics'};
+const SUB_COLORS={1:'#00d4ff',2:'#a78bfa',3:'#34d399',4:'#fbbf24',5:'#f472b6',11:'#22d3ee',6:'#fb923c',7:'#60a5fa',8:'#4ade80',9:'#e879f9',10:'#f87171'};
+const SUB_NAMES={1:'Network Theory',2:'Signals & Systems',3:'Control Systems',4:'Measurements',5:'EMFT',11:'Engineering Mathematics',6:'Machines',7:'Power Systems',8:'Power Electronics',9:'Digital Electronics',10:'Analog Electronics'};
 
 function pyqPlanTopicKey(subId,ti){return 'ptp|'+subId+'|'+ti;}
 function getPyqPlanTopicDone(subId,ti){return+(pyqPlanData[pyqPlanTopicKey(subId,ti)]||0);}
@@ -2323,7 +2292,7 @@ function renderPyq(){
   renderPyqChart();
   renderPyqTopics();
 }
-const REV1_START='2026-09-09';
+const REV1_START='2026-09-30';
 function applyTabLock(wrapId,isLocked,startLabel){
   const wrap=$(wrapId);if(!wrap)return;
   // remove existing banner if any
@@ -2738,19 +2707,34 @@ function stopConfetti(){if(confAnim)cancelAnimationFrame(confAnim);const cv=$('c
 
 /* ══ STUDY TAB ══ */
 function renderProgress(){
-  const dayN=Math.min(diffDays(START,TODAY)+1,193),daysLeft=Math.max(0,diffDays(TODAY,EXAM));
-  const totHrs=getTotalStudyHrs(),totVids=getTotalVideosWatched(),totalVids=getTotalVideos();
-  const streak=calcStreak('gate'),doneSubs=subjects.filter(s=>s.status==='Completed').length;
-  const logged=Object.keys(daily).length;
-  $('prog-sub').textContent=`${fmtFull(TODAY)} · Day ${dayN} of 193 · ${daysLeft} days to GATE`;
-  $('hero-cards').innerHTML=`
-    <div class="hcard"><div class="hlbl">Day</div><div class="hval" style="color:var(--acc)">${dayN}<span style="font-size:14px;color:var(--faint);font-weight:400">/193</span></div><div class="hsub">${daysLeft} days left</div><div class="pbar-bg"><div class="pbar-fill" style="width:${Math.min(100,dayN/193*100).toFixed(1)}%"></div></div></div>
-    <div class="hcard" style="border:1px solid #fbbf2433"><div class="hlbl">Study Hours</div><div class="hval" style="color:var(--amber)">${totHrs.toFixed(1)}</div><div class="hsub">avg ${logged?(totHrs/logged).toFixed(1):0} hrs/day</div></div>
-    <div class="hcard" style="border:1px solid #4ade8033"><div class="hlbl">Videos</div><div class="hval" style="color:var(--green)">${totVids}<span style="font-size:14px;color:var(--faint);font-weight:400">/${totalVids}</span></div><div class="hsub">${Math.round(totVids/Math.max(1,totalVids)*100)}% of all videos</div></div>
-    <div class="hcard" style="border:1px solid #fbbf2433"><div class="hlbl">GATE Streak</div><div class="hval" style="color:var(--amber)">🔥${streak}</div><div class="hsub">${doneSubs}/11 subjects done</div></div>`;
-  const pct=Math.min(100,dayN/193*100);
-  $('journey-pct').textContent=pct.toFixed(0)+'%';$('journey-bar').style.width=pct.toFixed(1)+'%';
-  $('journey-start').textContent=fmtFull(START);$('journey-end').textContent=fmtFull(EXAM);
+  const TARGET=85;
+  function phaseCard(phase,label,accent){
+    const arr=subjects.filter(s=>s.phase===phase);
+    const done=arr.filter(s=>s.status==='Completed').length;
+    const avg=arr.length?Math.round(arr.reduce((t,s)=>t+(+s.confidence||0),0)/arr.length):0;
+    const col=avg>=TARGET?'#4ade80':avg>=60?'#fbbf24':'#ef4444';
+    const size=96,sw=8,r=(size-sw)/2,circ=2*Math.PI*r,dash=Math.min(100,avg)/100*circ,targetDash=TARGET/100*circ;
+    const names=arr.map(s=>s.name.replace('APTITUDE + MATHEMATICS','APTITUDE + MATHS')).join(' · ');
+    return`<div class="journey-phase-card">
+      <div><div class="journey-phase-title">🎯 ${label}</div><div class="journey-phase-sub">${names}</div>
+        <div class="journey-phase-stats">
+          <div class="journey-phase-stat"><div class="v" style="color:${accent}">${arr.length}</div><div class="l">Target Subjects</div></div>
+          <div class="journey-phase-stat"><div class="v" style="color:#4ade80">${done}</div><div class="l">Completed</div></div>
+          <div class="journey-phase-stat"><div class="v" style="color:${col}">${avg}%</div><div class="l">Avg Confidence</div></div>
+        </div>
+      </div>
+      <div class="conf-gauge" title="Confidence target ${TARGET}%">
+        <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+          <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--border)" stroke-width="${sw}"/>
+          <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${col}" stroke-width="${sw}" stroke-linecap="round" stroke-dasharray="${dash} ${circ}"/>
+          <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#00d4ff" stroke-width="2" stroke-dasharray="2 ${circ}" stroke-dashoffset="-${targetDash}" opacity=".9"/>
+        </svg>
+        <div><div class="conf-gauge-val" style="color:${col}">${avg}%</div><div class="conf-gauge-lbl">Target 85%</div></div>
+      </div>
+    </div>`;
+  }
+  $('prog-sub').textContent='2027 and 2028 study plans · confidence target 85%';
+  $('hero-cards').innerHTML=phaseCard(2027,'2027 Attempt','var(--acc)')+phaseCard(2028,'2028 Attempt','#fbbf24');
 }
 function renderMilestones(){
   $('ms-sub').textContent=`${earnedMilestones.size} of ${MILESTONE_DEFS.length} earned`;
@@ -2765,30 +2749,22 @@ function renderEntry(){
   else if(entryDate===TODAY){ind.className='date-nav-indicator date-today';ind.textContent='Today';}
   else{ind.className='date-nav-indicator date-future';ind.textContent='Future';}
   const dd=daily[entryDate]||{};
-  const autoSub=autoDetectSubject(entryDate);
-  if(!subjectOverrideEnabled){if(autoSub&&!dd.subjectId)dd.subjectId=autoSub.id;}
+  const activity=getStudyActivity(entryDate);
+  const autoSub=activity.type==='class'?subjects.find(s=>s.id===activity.subjectId):null;
+  if(!subjectOverrideEnabled&&autoSub&&!dd.subjectId)dd.subjectId=autoSub.id;
   const selSubId=dd.subjectId||(autoSub?autoSub.id:null);
-  const sel=$('entry-subject');
-  sel.innerHTML='<option value="">— select —</option>'+subjects.map(s=>`<option value="${s.id}" ${s.id===selSubId?'selected':''}>${s.name}</option>`).join('');
-  if(!subjectOverrideEnabled)sel.disabled=!!autoSub;else sel.disabled=false;
-  $('entry-vids').value=dd.videosToday||0;
   if($('entry-note'))$('entry-note').value=dd.note||'';
   const HABITS=[{key:'gate',label:'📚 GATE Study'},{key:'exercise',label:'🏃 Exercise'},{key:'chess',label:'♟ Chess'},{key:'perfect',label:'⭐ Perfect Day'}];
   $('habit-row').innerHTML=HABITS.map(h=>`<button class="habit-btn ${dd.habits?.[h.key]?'active':''}" onclick="toggleHabit('${h.key}')">${h.label}</button>`).join('');
-  /* ── Break period: Aug 27 – Sep 6 ── */
-  const BREAK_START='2026-08-27', BREAK_END='2026-09-06';
-  if(entryDate>=BREAK_START && entryDate<=BREAK_END){
-    const strip=$('sub-strip'), tg=$('target-grid');
-    if(strip) strip.innerHTML='<div style="display:flex;align-items:center;gap:14px;width:100%;flex-wrap:wrap;">'
-      +'<span style="font-size:22px;">☕</span>'
-      +'<div>'
-        +'<div style="font-size:13px;font-weight:800;color:#fbbf24;">Break Time</div>'
-        +'<div style="font-size:12px;color:var(--muted);margin-top:2px;">No subject scheduled &middot; EMFT completed &middot; Electrical Machines restarts <strong style="color:var(--acc);">Sep 7, 2026</strong></div>'
-      +'</div>'
-    +'</div>';
-    if(tg) tg.innerHTML='';
-    $('entry-subject').value=''; $('entry-subject').disabled=true;
-    return;
+
+  const dyn=$('entry-dynamic-fields');
+  if(activity.type==='class'){
+    dyn.innerHTML=`<label class="lbl">Subject being studied <button id="sub-override-btn" onclick="enableSubOverride()" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--muted);padding:0 4px;">✏️</button></label><select class="inp-sm inp" id="entry-subject" onchange="onSubjectChange()" style="width:100%;"></select>`;
+    const sel=$('entry-subject');
+    sel.innerHTML='<option value="">— select —</option>'+getDisplaySubjects().map(s=>`<option value="${s.id}" ${s.id===selSubId?'selected':''}>${s.name}</option>`).join('');
+    if(!subjectOverrideEnabled)sel.disabled=!!autoSub;else sel.disabled=false;
+  }else{
+    dyn.innerHTML=`<div class="activity-banner"><div class="activity-icon">${activity.icon||'📌'}</div><div><div class="activity-title">${esc(activity.title)}</div><div class="activity-sub">${esc(activity.sub||'')}</div></div></div>`;
   }
   renderSubjectStrip(selSubId);renderTargetGrid(selSubId);
 }
@@ -2796,6 +2772,20 @@ function enableSubOverride(){subjectOverrideEnabled=true;$('entry-subject').disa
 function onSubjectChange(){const newId=+$('entry-subject').value||null;if(newId){const dd=JSON.parse(JSON.stringify(daily[entryDate]||{}));dd.subjectId=newId;saveDay(entryDate,dd);}renderSubjectStrip(newId);renderTargetGrid(newId);}
 function renderSubjectStrip(selSubId){
   const strip=$('sub-strip');if(!strip)return;
+  const activity=getStudyActivity(entryDate);
+  if(activity.type!=='class'){
+    if(activity.paramount){
+      const done=getParamountPagesDone(), qDone=getParamountQuestionsDone(), book=getParamountCurrentBook();
+      strip.innerHTML=`<div class="sub-strip-item"><div class="sub-strip-label">Activity</div><div class="sub-strip-val" style="font-size:12px;color:var(--text);">Paramount Questions</div></div>
+        <div class="sub-strip-item"><div class="sub-strip-label">Pages Done</div><div class="sub-strip-val">${done}/${PARAMOUNT_TOTAL_PAGES}</div></div>
+        <div class="sub-strip-item"><div class="sub-strip-label">Questions Done</div><div class="sub-strip-val">${qDone}/${PARAMOUNT_TOTAL_QS}</div></div>
+        <div class="sub-strip-item"><div class="sub-strip-label">Daily Pages</div><div class="sub-strip-val">${paramountPageTarget(entryDate)||0}</div></div>
+        <div class="sub-strip-item"><div class="sub-strip-label">Current Book</div><div class="sub-strip-val" style="font-size:11px;color:var(--text);">${book?esc(book.name):'Complete ✓'}</div></div>`;
+    }else{
+      strip.innerHTML=`<div class="activity-banner"><div class="activity-icon">${activity.icon||'📌'}</div><div><div class="activity-title">${esc(activity.title)}</div><div class="activity-sub">${esc(activity.sub||'')}</div></div></div>`;
+    }
+    return;
+  }
   const sub=subjects.find(s=>s.id===+selSubId);
   if(!sub){strip.innerHTML='<span style="font-size:12px;color:var(--faint);">Select a subject to see progress</span>';return;}
   const hDone=parseFloat(getActualHrs(sub)),hLeft=Math.max(0,sub.targetHrs-hDone).toFixed(1);
@@ -2813,84 +2803,72 @@ function renderSubjectStrip(selSubId){
     <div class="sub-strip-item"><div class="sub-strip-label">Vids %</div><div class="sub-strip-val">${vPct}%</div></div>`;
 }
 function renderTargetGrid(selSubId){
-  const dd=daily[entryDate]||{};const sub=subjects.find(s=>s.id===+selSubId);
-  const vDone=dd.videosToday||0;
+  const dd=daily[entryDate]||{};const activity=getStudyActivity(entryDate);
+  const sub=subjects.find(s=>s.id===+selSubId);
   const hToday=parseFloat(dd.studyHrs)||0;
-  let hTgt=settings.dailyHrsTarget||5.5;
-  let vTgt=settings.dailyVidsTarget||3;
-  if(sub){
-    const dLeft=Math.max(1,diffDays(entryDate,sub.end)+1);
-    const hLeft=Math.max(0,sub.targetHrs-parseFloat(getActualHrs(sub)));
-    hTgt=Math.max(1,Math.ceil(hLeft/dLeft*10)/10);
-    const vLeft=Math.max(0,sub.videos-getActualVids(sub));
-    vTgt=Math.max(1,Math.ceil(vLeft/dLeft));
+  if(activity.type==='class'){
+    const vDone=dd.videosToday||0;
+    let hTgt=settings.dailyHrsTarget||5.5,vTgt=settings.dailyVidsTarget||3;
+    if(sub){
+      const dLeft=Math.max(1,diffDays(entryDate,sub.end)+1);
+      const hLeft=Math.max(0,sub.targetHrs-parseFloat(getActualHrs(sub)));hTgt=Math.max(1,Math.ceil(hLeft/dLeft*10)/10);
+      const vLeft=Math.max(0,sub.videos-getActualVids(sub));vTgt=Math.max(1,Math.ceil(vLeft/dLeft));
+    }
+    const vDelta=vDone-vTgt,hDelta=hToday-hTgt;
+    function dH(d){if(d>0.05)return`<span class="stepper-delta delta-plus">+${d.toFixed(1)}</span>`;if(d<-0.05)return`<span class="stepper-delta delta-minus">${d.toFixed(1)}</span>`;return`<span class="stepper-delta delta-zero">On target</span>`;}
+    function dI(d){if(d>0)return`<span class="stepper-delta delta-plus">+${d}</span>`;if(d<0)return`<span class="stepper-delta delta-minus">${d}</span>`;return`<span class="stepper-delta delta-zero">On target</span>`;}
+    $('target-grid').innerHTML=`<div class="target-card"><div class="target-label">📚 Study Hours</div><div class="stepper-row"><button class="stepper-btn minus" onclick="stepField('studyHrs',-0.5)">−</button><div class="stepper-val">${hToday.toFixed(1)}</div><button class="stepper-btn" onclick="stepField('studyHrs',0.5)">+</button>${dH(hDelta)}</div><div class="vs-target">Target: ${hTgt.toFixed(1)} hrs${sub?' (dynamic)':''}</div></div>
+      <div class="target-card"><div class="target-label">🎬 Videos</div><div class="stepper-row"><button class="stepper-btn minus" onclick="stepVids(-1)">−</button><div class="stepper-val">${vDone}</div><button class="stepper-btn" onclick="stepVids(1)">+</button>${dI(vDelta)}</div><div class="vs-target">Target: ${vTgt} videos/day${sub?' (dynamic)':''}</div></div>`;
+    return;
   }
-  const vDelta=vDone-vTgt;
-  const hDelta=hToday-hTgt;
-  function dH(d){if(d>0.05)return`<span class="stepper-delta delta-plus">+${d.toFixed(1)}</span>`;if(d<-0.05)return`<span class="stepper-delta delta-minus">${d.toFixed(1)}</span>`;return`<span class="stepper-delta delta-zero">On target</span>`;}
-  function dI(d){if(d>0)return`<span class="stepper-delta delta-plus">+${d}</span>`;if(d<0)return`<span class="stepper-delta delta-minus">${d}</span>`;return`<span class="stepper-delta delta-zero">On target</span>`;}
-  $('target-grid').innerHTML=`
-    <div class="target-card"><div class="target-label">📚 Study Hours</div>
-      <div class="stepper-row"><button class="stepper-btn minus" onclick="stepField('studyHrs',-0.5)">−</button><div class="stepper-val">${hToday.toFixed(1)}</div><button class="stepper-btn" onclick="stepField('studyHrs',0.5)">+</button>${dH(hDelta)}</div>
-      <div class="vs-target">Target: ${hTgt.toFixed(1)} hrs${sub?' (dynamic)':''}</div></div>
-    <div class="target-card"><div class="target-label">🎬 Videos</div>
-      <div class="stepper-row"><button class="stepper-btn minus" onclick="stepVids(-1)">−</button><div class="stepper-val">${vDone}</div><button class="stepper-btn" onclick="stepVids(1)">+</button>${dI(vDelta)}</div>
-      <div class="vs-target">Target: ${vTgt} videos/day${sub?' (dynamic)':''}</div></div>`;
+  if(activity.type==='questions'){
+    const q=+dd.questionsToday||0,p=+dd.paramountPagesToday||0,pt=activity.paramount?paramountPageTarget(entryDate):0;
+    $('target-grid').innerHTML=`<div class="target-card"><div class="target-label">🎯 Questions Done</div><div class="stepper-row"><button class="stepper-btn minus" onclick="stepQuestionField(-5)">−5</button><div class="stepper-val">${q}</div><button class="stepper-btn" onclick="stepQuestionField(5)">+5</button></div><div class="vs-target">Log questions solved today</div></div>`+
+      (activity.paramount?`<div class="target-card"><div class="target-label">📄 Paramount Pages</div><div class="stepper-row"><button class="stepper-btn minus" onclick="stepParamountPages(-1)">−</button><div class="stepper-val">${p}</div><button class="stepper-btn" onclick="stepParamountPages(1)">+</button><span class="stepper-delta ${p>=pt?'delta-plus':'delta-minus'}">${p>=pt?'On target':'Need '+Math.max(0,pt-p)}</span></div><div class="vs-target">Dynamic target: ${pt} pages/day · base plan ${PARAMOUNT_BASE_PAGES_DAY}/day</div></div>`:'');
+    return;
+  }
+  if(activity.type==='hours'){
+    $('target-grid').innerHTML=`<div class="target-card"><div class="target-label">⏱ Hours Spent</div><div class="stepper-row"><button class="stepper-btn minus" onclick="stepField('studyHrs',-0.5)">−</button><div class="stepper-val">${hToday.toFixed(1)}</div><button class="stepper-btn" onclick="stepField('studyHrs',0.5)">+</button></div><div class="vs-target">${esc(activity.title)}</div></div>`;
+    return;
+  }
+  $('target-grid').innerHTML='<div class="target-card"><div class="target-label">Today</div><div class="stepper-val" style="text-align:left;color:var(--muted);">N/A</div><div class="vs-target">No activity scheduled</div></div>';
 }
 function navDate(delta){changeEntryDate(addDays(entryDate,delta));}
 function changeEntryDate(d){entryDate=d;subjectOverrideEnabled=false;renderEntry();}
 function stepField(field,delta){const dd=daily[entryDate]||{};const nv=Math.max(0,Math.round(((parseFloat(dd[field])||0)+delta)*10)/10);saveEntryField(field,nv);}
-function stepVids(delta){const dd=daily[entryDate]||{};const nv=Math.max(0,(parseInt(dd.videosToday)||0)+delta);$('entry-vids').value=nv;saveEntryField('videosToday',nv);}
+function stepVids(delta){const dd=daily[entryDate]||{};const nv=Math.max(0,(parseInt(dd.videosToday)||0)+delta);saveEntryField('videosToday',nv);}
+function stepQuestionField(delta){const dd=daily[entryDate]||{};saveEntryField('questionsToday',Math.max(0,(parseInt(dd.questionsToday)||0)+delta));}
+function stepParamountPages(delta){const dd=daily[entryDate]||{};saveEntryField('paramountPagesToday',Math.max(0,(parseInt(dd.paramountPagesToday)||0)+delta));}
 function saveEntryField(field,val){
   const dd=JSON.parse(JSON.stringify(daily[entryDate]||{}));
   if(field==='studyHrs')dd.studyHrs=Math.max(0,parseFloat(val)||0);
   else if(field==='videosToday')dd.videosToday=Math.max(0,parseInt(val)||0);
-  const sid=+$('entry-subject')?.value||dd.subjectId||null;if(sid)dd.subjectId=sid;
+  else if(field==='questionsToday')dd.questionsToday=Math.max(0,parseInt(val)||0);
+  else if(field==='paramountPagesToday')dd.paramountPagesToday=Math.max(0,parseInt(val)||0);
+  const subEl=$('entry-subject');const sid=+(subEl&&subEl.value)||dd.subjectId||null;if(sid)dd.subjectId=sid;
   saveDay(entryDate,dd);renderTargetGrid(sid);renderSubjectStrip(sid);renderProgress();checkMilestones();renderSubjects();
 }
 function toggleHabit(key){const dd=JSON.parse(JSON.stringify(daily[entryDate]||{}));if(!dd.habits)dd.habits={};dd.habits[key]=!dd.habits[key];saveDay(entryDate,dd);renderEntry();renderProgress();checkMilestones();}
 function renderSubjects(){
   const tbody=$('sub-tbody');if(!tbody)return;
-  const firstIdx2028=subjects.findIndex(s=>s.phase===2028);
-  tbody.innerHTML=subjects.map((s,i)=>{
+  const display=getDisplaySubjects();
+  tbody.innerHTML=display.map((s,i)=>{
     const pct=s.videos?Math.round(getActualVids(s)/s.videos*100):0;
     const col=pct>=100?'var(--green)':pct>=50?'var(--acc)':'var(--amber)';
     const isActive=TODAY>=s.start&&TODAY<=s.end;
     const sp={Completed:'pill-done','In Progress':'pill-prog','Not Started':'pill-pend',Skipped:'pill-skip'}[s.status]||'pill-pend';
-    const phaseRow=i===0?`<tr style="pointer-events:none"><td colspan="8"><div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:rgba(0,212,255,.05);border-bottom:1px solid #00d4ff33;"><span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--acc);">🎯 2027 Attempt</span><span style="font-size:11px;color:var(--muted);">NA · S&S · CS · Measurements · EMFT · Aptitude+Maths</span></div></td></tr>`
-      :i===firstIdx2028?`<tr style="pointer-events:none"><td colspan="8"><div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:rgba(251,191,36,.05);border-top:1px dashed #fbbf2444;border-bottom:1px solid #fbbf2444;"><span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#fbbf24;">🗓️ 2028 Attempt — Deferred</span><span style="font-size:11px;color:var(--muted);">Machines · Power System · Power Electronics · Digital · Analog — starts Mar 2027</span></div></td></tr>`
-      :'';
-    return phaseRow+`<tr class="sub-expand${s.open?' open':''}" onclick="toggleSubRow(${i})">
-      <td><span style="font-size:11px;color:var(--faint);">${s.id}</span></td>
-      <td><strong>${esc(s.name)}</strong>${isActive?` <span style="font-size:10px;background:#001e2e;color:var(--acc);padding:1px 6px;border-radius:8px;margin-left:6px;">ACTIVE</span>`:''}</td>
-      <td style="font-size:12px;color:var(--muted);">${esc(s.faculty)}</td>
-      <td style="font-size:12px;color:var(--faint);">${fmt(s.start)}–${fmt(s.end)}</td>
-      <td><span class="pill ${sp}">${s.status}</span></td>
-      <td style="font-size:12px;">${getActualVids(s)}/${s.videos}</td>
-      <td style="min-width:120px;"><div class="prog-wrap"><div class="prog-bar"><div class="prog-bar-inner" style="width:${pct}%;background:${col};"></div></div><span class="prog-pct">${pct}%</span></div></td>
-      <td style="font-size:12px;color:var(--acc);">${s.confidence}%</td>
-    </tr>
-    <tr class="sub-detail${s.open?' open':''}"><td colspan="8">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
-        <div><label class="lbl">Status</label>
-          <select class="inp-sm" onchange="updateSubject(${i},'status',this.value)" onclick="event.stopPropagation()">
-            ${['Not Started','In Progress','Completed','Skipped'].map(o=>`<option ${s.status===o?'selected':''}>${o}</option>`).join('')}
-          </select></div>
-        <div><label class="lbl">Confidence (${s.confidence}%)</label>
-          <div class="range-wrap"><input type="range" min="0" max="100" value="${s.confidence}" oninput="updateSubject(${i},'confidence',+this.value)" onclick="event.stopPropagation()"><span style="font-size:12px;color:var(--acc);min-width:36px;">${s.confidence}%</span></div></div>
-        <div><label class="lbl">Hours: ${getActualHrs(s)} / ${s.targetHrs}</label>
-          <div style="font-size:12px;color:var(--muted);">${Math.round(parseFloat(getActualHrs(s))/s.targetHrs*100)}% done</div></div>
-      </div>
-      <div style="margin-top:12px;"><label class="lbl">Notes</label>
-        <textarea class="inp" rows="2" onclick="event.stopPropagation()" oninput="updateSubject(${i},'notes',this.value)" placeholder="Key formulas, weak topics…">${esc(s.notes||s.remarks||'')}</textarea></div>
-    </td></tr>`;
+    const prev=i>0?display[i-1]:null;
+    const phaseRow=(!prev||prev.phase!==s.phase)?`<tr style="pointer-events:none"><td colspan="8"><div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:${s.phase===2027?'rgba(0,212,255,.05)':'rgba(251,191,36,.05)'};border-bottom:1px solid ${s.phase===2027?'#00d4ff33':'#fbbf2444'};"><span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:${s.phase===2027?'var(--acc)':'#fbbf24'};">${s.phase===2027?'🎯 2027 Attempt':'🗓️ 2028 Attempt'}</span></div></td></tr>`:'';
+    const realIdx=subjects.findIndex(x=>x.id===s.id);
+    return phaseRow+`<tr class="sub-expand${s.open?' open':''}" onclick="toggleSubRow(${realIdx})"><td><span style="font-size:11px;color:var(--faint);">${s.id}</span></td><td><strong>${esc(s.name)}</strong>${isActive?` <span style="font-size:10px;background:#001e2e;color:var(--acc);padding:1px 6px;border-radius:8px;margin-left:6px;">ACTIVE</span>`:''}</td><td style="font-size:12px;color:var(--muted);">${esc(s.faculty)}</td><td style="font-size:12px;color:var(--faint);">${fmt(s.start)}–${fmt(s.end)}</td><td><span class="pill ${sp}">${s.status}</span></td><td style="font-size:12px;">${getActualVids(s)}/${s.videos}</td><td style="min-width:120px;"><div class="prog-wrap"><div class="prog-bar"><div class="prog-bar-inner" style="width:${pct}%;background:${col};"></div></div><span class="prog-pct">${pct}%</span></div></td><td style="font-size:12px;color:var(--acc);">${s.confidence}%</td></tr>
+      <tr class="sub-detail${s.open?' open':''}"><td colspan="8"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;"><div><label class="lbl">Status</label><select class="inp-sm" onchange="updateSubject(${realIdx},'status',this.value)" onclick="event.stopPropagation()">${['Not Started','In Progress','Completed','Skipped'].map(o=>`<option ${s.status===o?'selected':''}>${o}</option>`).join('')}</select></div><div><label class="lbl">Confidence (${s.confidence}%)</label><div class="range-wrap"><input type="range" min="0" max="100" value="${s.confidence}" oninput="updateSubject(${realIdx},'confidence',+this.value)" onclick="event.stopPropagation()"><span style="font-size:12px;color:var(--acc);min-width:36px;">${s.confidence}%</span></div></div><div><label class="lbl">Hours: ${getActualHrs(s)} / ${s.targetHrs}</label><div style="font-size:12px;color:var(--muted);">${Math.round(parseFloat(getActualHrs(s))/s.targetHrs*100)}% done</div></div></div><div style="margin-top:12px;"><label class="lbl">Notes</label><textarea class="inp" rows="2" onclick="event.stopPropagation()" oninput="updateSubject(${realIdx},'notes',this.value)" placeholder="Key formulas, weak topics…">${esc(s.notes||s.remarks||'')}</textarea></div></td></tr>`;
   }).join('');
 }
 function toggleSubRow(i){subjects[i].open=!subjects[i].open;renderSubjects();}
 function updateSubject(i,field,val){subjects[i][field]=val;saveSubjects();renderSubjects();renderProgress();checkMilestones();}
 function renderLearningPath(){
   const grid=$('lp-grid');if(!grid)return;
-  grid.innerHTML=subjects.map(s=>{
+  grid.innerHTML=getDisplaySubjects().map(s=>{
     const lk=SUBJECT_LINKS[s.id]||{},isActive=TODAY>=s.start&&TODAY<=s.end;
     let links='';
     if(lk.yt)links+=`<a href="${lk.yt}" target="_blank" class="lp-link-y">▶ YouTube</a>`;
@@ -2900,42 +2878,41 @@ function renderLearningPath(){
     if(lk.pf)links+=`<a href="${lk.pf}" target="_blank" class="lp-link-c">🎓 PrepFusion</a>`;
     if(lk.pf_m)links+=`<a href="${lk.pf_m}" target="_blank" class="lp-link-c">🎓 Maths</a>`;
     if(lk.pf_a)links+=`<a href="${lk.pf_a}" target="_blank" class="lp-link-c">🎓 Aptitude</a>`;
-    return`<div class="lp-card ${isActive?'active-sub':''}">
-      <div class="lp-name">${esc(s.name)}${isActive?' <span style="font-size:10px;color:var(--acc);">● ACTIVE</span>':''}</div>
-      <div class="lp-faculty">${esc(s.faculty)} · ${fmt(s.start)}–${fmt(s.end)}</div>
-      <div style="margin-bottom:8px;font-size:11px;color:var(--muted);">Videos: <strong style="color:var(--acc);">${s.videos}</strong> &nbsp;·&nbsp; Target: <strong style="color:var(--amber);">${s.targetHrs}h</strong></div>
-      <div class="lp-links">${links||'<span style="font-size:12px;color:var(--faint);">No links</span>'}</div>
-    </div>`;
+    const pb=PARAMOUNT_BOOKS.filter(b=>b.subId===s.id);
+    pb.forEach(b=>{links+=`<a href="${b.url}" target="_blank" class="lp-link-c" title="${esc(b.name)} · ${b.pages} pages · ${b.questions} questions">📘 ${s.id===11?esc(b.name):'Paramount Questions'}</a>`;});
+    return`<div class="lp-card ${isActive?'active-sub':''}"><div class="lp-name">${esc(s.name)}${isActive?' <span style="font-size:10px;color:var(--acc);">● ACTIVE</span>':''}</div><div class="lp-faculty">${esc(s.faculty)} · ${fmt(s.start)}–${fmt(s.end)}</div><div style="margin-bottom:8px;font-size:11px;color:var(--muted);">Videos: <strong style="color:var(--acc);">${s.videos}</strong> &nbsp;·&nbsp; Target: <strong style="color:var(--amber);">${s.targetHrs}h</strong></div><div class="lp-links">${links||'<span style="font-size:12px;color:var(--faint);">No links</span>'}</div></div>`;
   }).join('');
 }
 
 /* ══ REVISION 1 ── NEW SCHEDULE FROM IMAGE ══ */
 const REV1_NOTES={
-  1:[{file:'Network Analysis.pdf',pages:1196}],
-  2:[{file:'Signal & Systems .pdf',pages:1275}],
-  3:[{file:'Control Systems .pdf',pages:1421}],
-  4:[{file:'Electrical and Electronics Measurements .pdf',pages:761}],
-  5:[{file:'Electromagnetic Fields(EMFT_EMT).pdf',pages:322}],
-  6:[{file:'Electrical Machines .pdf',pages:963}],
-  7:[{file:'Power System .pdf',pages:1364}],
-  8:[{file:'Power Electronics .pdf',pages:1344}],
-  9:[{file:'Digital Electronics .pdf',pages:1134}],
-  10:[{file:'Analog Electronics .pdf',pages:1982}],
-  11:[{file:'Engineering Mathematics .pdf',pages:2423}]
+  1:[{file:'01.Network_Analysis_Complete_Notes.pdf',pages:1196,url:'https://drive.google.com/file/d/1o7fFX4Zmkk5ngxWxvW-Hf3jyHEdGCXI0/view?usp=sharing'}],
+  2:[{file:'02.Signal_Systems_Complete_Notes.pdf',pages:1275,url:'https://drive.google.com/file/d/19_sdtrMrPe1FNNW33GJr4wDpBn0JFLJN/view?usp=sharing'}],
+  3:[{file:'03.Control_Systems_Complete_Notes.pdf',pages:1421,url:'https://drive.google.com/file/d/1sy7PiatRZnCU9h7tivF2QR3P-kn-vzYC/view?usp=sharing'}],
+  4:[{file:'04.Measurements_Complete_Notes.pdf',pages:761,url:'https://drive.google.com/file/d/1kcQC81YXveCDkAnWx7syn3SiX7yuAZ0x/view?usp=sharing'}],
+  5:[{file:'05.EMFT_Complete_Notes.pdf',pages:322,url:'https://drive.google.com/file/d/1PN1vIMuTM87BmfX7Gi99Tz2400hHCseI/view?usp=sharing'}],
+  6:[{file:'06.Electrical_Machines_Complete_Notes.pdf',pages:963,url:'https://drive.google.com/file/d/1NrSItWd0t8DmmzXZqiRa5JzDm6pFXEWa/view?usp=sharing'}],
+  7:[{file:'07.Power_Systems_Complete_Notes.pdf',pages:1364,url:'https://drive.google.com/file/d/1TZ0WOZJWmmhqRqy7F7ga18c8Zxl1UseA/view?usp=sharing'}],
+  8:[{file:'08.Power_Electronics_Complete_Notes.pdf',pages:1344,url:'https://drive.google.com/file/d/1p8uHboEWQnBHFPUtM92OER-U4oWRLKm3/view?usp=sharing'}],
+  9:[{file:'09.Digital_Electronics_Complete_Notes.pdf',pages:1134,url:'https://drive.google.com/file/d/1FAsHE2PfGGMvq7PxV2ZwCggl9fjlL7bU/view?usp=sharing'}],
+  10:[{file:'10.Analog_Electronics_Complete_Notes.pdf',pages:1982,url:'https://drive.google.com/file/d/1-7KUTqNmcDGpKpkdyGukYI_hFEvHvh-h/view?usp=sharing'}],
+  11:[{file:'Engineering Mathematics .pdf',pages:2423,url:'https://drive.google.com/file/d/1eDa50THB2M4cpUerP0REuRyPWl3AsDtd/view?usp=sharing'}]
 };
-/* REV1 SCHEDULE — updated Sep 8 2026 */
+/* REV1 SCHEDULE — ~60 pages/day; starts only after subject classes are complete.
+   Completed 2027 subjects are cleared sequentially from Sep 30, 2026.
+   Mathematics is revised during the Electrical Machines study window; Aptitude has no notes. */
 const REV1_SCHEDULE={
-  1:{start:'2026-09-14',end:'2026-09-20',days:7, perDay:171}, /* 1196p/ 7d  = 171 */
-  2:{start:'2026-09-28',end:'2026-10-04',days:7, perDay:182}, /* 1275p/ 7d  = 182 */
-  3:{start:'2026-10-05',end:'2026-10-11',days:7, perDay:203}, /* 1421p/ 7d  = 203 */
-  4:{start:'2026-10-12',end:'2026-10-13',days:2, perDay:381}, /* 761p / 2d  = 381 */
-  5:{start:'2026-10-14',end:'2026-10-15',days:2, perDay:161}, /* 322p / 2d  = 161 */
-  6:{start:'2027-05-25',end:'2027-06-07',days:14,perDay:69},  /* 963p / 14d = 69 — 2028 attempt */
-  7:{start:'2027-06-08',end:'2027-06-21',days:14,perDay:97},  /* 1364p/ 14d = 97 — 2028 attempt */
-  8:{start:'2027-06-22',end:'2027-07-01',days:10,perDay:134}, /* 1344p/ 10d = 134 — 2028 attempt */
-  9:{start:'2027-07-02',end:'2027-07-07',days:6, perDay:189}, /* 1134p/ 6d  = 189 — 2028 attempt */
-  10:{start:'2027-07-08',end:'2027-07-15',days:8, perDay:248},/* 1982p/ 8d  = 248 — 2028 attempt */
-  11:{start:'2026-10-31',end:'2026-11-24',days:25,perDay:97}, /* 2423p/ 25d = 97 — shifted to follow pulled-forward video schedule */
+  1:{start:'2026-09-30',end:'2026-10-19',days:20,perDay:60},
+  2:{start:'2026-10-20',end:'2026-11-10',days:22,perDay:60},
+  3:{start:'2026-11-11',end:'2026-12-04',days:24,perDay:60},
+  4:{start:'2026-12-05',end:'2026-12-17',days:13,perDay:60},
+  5:{start:'2026-12-18',end:'2026-12-23',days:6, perDay:60},
+  11:{start:'2027-03-01',end:'2027-04-10',days:41,perDay:60},
+  6:{start:'2027-05-23',end:'2027-06-08',days:17,perDay:60},
+  7:{start:'2027-06-18',end:'2027-07-10',days:23,perDay:60},
+  8:{start:'2027-07-22',end:'2027-08-13',days:23,perDay:60},
+  10:{start:'2027-09-23',end:'2027-10-26',days:34,perDay:60},
+  9:{start:'2027-10-27',end:'2027-11-14',days:19,perDay:60}
 };
 function subPages(id){return(REV1_NOTES[id]||[]).reduce((t,p)=>t+p.pages,0);}
 function allPages(){return subjects.reduce((t,s)=>t+subPages(s.id),0);}
@@ -2961,7 +2938,7 @@ function rev1Toggle(id){
 function renderRevision1(){
   loadRev1();
   var sched={};
-  subjects.forEach(function(s){var sl=REV1_SCHEDULE[s.id];sched[s.id]=sl?Object.assign({},sl,{overflow:sl.end>'2027-01-03'}):{start:'',end:'',days:0,perDay:0,overflow:false};});
+  subjects.forEach(function(s){var sl=REV1_SCHEDULE[s.id];sched[s.id]=sl?Object.assign({},sl,{overflow:false}):{start:'',end:'',days:0,perDay:0,overflow:false};});
   var rev1Subs=subjects.filter(function(s){return REV1_SCHEDULE[s.id]&&REV1_SCHEDULE[s.id].days>0;});
   var doneCount=rev1Subs.filter(function(s){return rev1Done[s.id];}).length;
   var totalPages=allPages();
@@ -2973,7 +2950,6 @@ function renderRevision1(){
   var snToday=subjects.reduce(function(t,s){return t+snPagesOn(s.id,rev1LogDate);},0);
   var activeSubs=subjects.filter(function(s){return['active','ready','overdue'].includes(rev1Status(s,sched[s.id]));});
   var todayTarget=activeSubs.reduce(function(t,s){return t+pageTarget(s.id,sched[s.id]);},0);
-  var OD_PATH='C:\\Users\\AswithGiduturi\\OneDrive - DESRI\\Documents\\G2027_2028\\Video Notes';
   var rows='';
   subjects.forEach(function(sub){
     var slot=sched[sub.id];var st=rev1Status(sub,slot);var tagArr=REV1_TAG[st];var bg=tagArr[0],col=tagArr[1],label=tagArr[2];
@@ -3018,7 +2994,7 @@ function renderRevision1(){
       +'<div style="padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;" onclick="rev1Toggle('+sub.id+')">'
         +'<div style="flex:1;min-width:180px;">'
           +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:3px;"><span style="font-size:11px;font-weight:700;color:var(--faint);">#'+sub.id+'</span><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;background:'+bg+';color:'+col+';border:1px solid '+col+'44;">'+label+'</span>'+(rev1Done[sub.id]?'<span style="font-size:10px;color:#4ade80;font-weight:700;">\u2713 Revised</span>':'')+'</div>'
-          +'<div style="font-size:13px;font-weight:700;color:var(--text);">'+esc(sub.name)+'</div>'
+          +'<div style="font-size:13px;font-weight:700;color:var(--text);">'+esc(sub.id===11?'ENGINEERING MATHEMATICS':sub.name)+'</div>'
           +'<div style="font-size:10px;color:var(--faint);margin-top:2px;">'+esc(sub.faculty)+' \u00b7 '+fmt(slot.start)+' \u2013 '+fmt(slot.end)+' ('+slot.days+'d)</div>'
         +'</div>'
         +'<div style="display:flex;gap:14px;align-items:center;flex-shrink:0;flex-wrap:wrap;">'
@@ -3028,10 +3004,7 @@ function renderRevision1(){
         +'</div>'
       +'</div>'
       +'<div id="rev1-exp-'+sub.id+'" style="display:none;border-top:1px solid var(--border);padding:14px 16px;">'
-        +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#0d1b2a;border:1px solid #1e3a5a;border-radius:7px;padding:8px 12px;margin-bottom:14px;">'
-          +'<span style="font-size:11px;color:var(--muted);">\ud83d\udcc2 Notes:</span><code style="font-size:10px;color:#7dd3fc;word-break:break-all;">'+OD_PATH+'</code>'
-          +'<button onclick="navigator.clipboard.writeText(\''+OD_PATH+'\').then(function(){this.textContent=\'\u2713 Copied\';setTimeout(function(){document.querySelectorAll(\'.od-copy-btn\').forEach(function(b){b.textContent=\'Copy\';});},1500);}).call(this);" class="od-copy-btn" style="background:#0f2d4a;border:1px solid #1e3a5a;color:#7dd3fc;border-radius:5px;padding:3px 9px;font-size:10px;cursor:pointer;white-space:nowrap;flex-shrink:0;">Copy</button>'
-        +'</div>'
+        +(function(){var nu=(REV1_NOTES[sub.id]&&REV1_NOTES[sub.id][0]&&REV1_NOTES[sub.id][0].url)||'';return '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#0d1b2a;border:1px solid #1e3a5a;border-radius:7px;padding:9px 12px;margin-bottom:14px;"><span style="font-size:11px;color:var(--muted);">📂 Notes:</span>'+(nu?'<a href="'+nu+'" target="_blank" class="lp-link-c">🔗 Open Notes</a>':'<span style="font-size:11px;color:var(--faint);">No notes link</span>')+(sub.id===11?'<span style="font-size:10px;color:#fbbf24;">Mathematics notes only · Aptitude has no notes</span>':'')+'</div>';})()
         +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">'+r1Tracker+snTracker+'</div>'
         +'<div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;">'
           +'<div><label class="lbl">Revision remarks</label><textarea class="inp" rows="2" style="font-size:12px;margin-top:4px;" placeholder="Weak topics, formulas to recheck\u2026" oninput="setRev1Note('+sub.id+',this.value);">'+esc(rev1Notes[sub.id]||'')+'</textarea></div>'
@@ -3040,7 +3013,7 @@ function renderRevision1(){
       +'</div>'
     +'</div>';
   });
-  var html='<div class="section"><div class="sec-hdr"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;width:100%"><div><h2>Revision 1</h2><div class="sub">14 Sep 2026 \u2013 6 Dec 2026 \u00b7 Click a subject to expand</div></div></div></div>'
+  var html='<div class="section"><div class="sec-hdr"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;width:100%"><div><h2>Revision 1</h2><div class="sub">~60 pages/day · starts after subject classes · click a subject to expand</div></div></div></div>'
     +'<div class="g4" style="margin-bottom:16px;">'
       +'<div class="hcard" style="border:1px solid #00d4ff22"><div class="hlbl">Pages Revised</div><div class="hval" style="color:#00d4ff">'+rev1DonePages+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+totalPages+'</span></div><div class="pbar-bg"><div class="pbar-fill" style="width:'+rev1Pct+'%;background:#00d4ff;"></div></div></div>'
       +'<div class="hcard" style="border:1px solid #a78bfa22"><div class="hlbl">SN Pages</div><div class="hval" style="color:#a78bfa">'+snDonePages+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+totalPages+'</span></div><div class="pbar-bg"><div class="pbar-fill" style="width:'+snPct+'%;background:#a78bfa;"></div></div></div>'
@@ -3141,6 +3114,34 @@ function renderSampleMocks(){
 }
 
 
+function dashboardTodayPlanHtml(){
+  const activity=getStudyActivity(TODAY);
+  let studyTitle='N/A',studySub='No planned activity';
+  if(activity.type==='class'){
+    const sub=subjects.find(s=>s.id===activity.subjectId);
+    const dLeft=sub?Math.max(1,diffDays(TODAY,sub.end)+1):1;
+    const vLeft=sub?Math.max(0,sub.videos-getActualVids(sub)):0;
+    const vTgt=sub?Math.max(1,Math.ceil(vLeft/dLeft)):0;
+    studyTitle=sub?sub.name:activity.title;studySub=`Class / videos · target ${vTgt} video${vTgt===1?'':'s'} today`;
+  }else if(activity.paramount){
+    const book=getParamountCurrentBook(),pt=paramountPageTarget(TODAY);
+    studyTitle=book?book.name:'Paramount Complete ✓';studySub=book?`Paramount Questions · ${pt} pages today · finish by 31 Dec`:'All 782 pages completed';
+  }else if(activity.type!=='none'){studyTitle=activity.title;studySub=activity.sub||'Log hours spent';}
+
+  const r1=subjects.find(s=>{const sl=REV1_SCHEDULE[s.id];return sl&&TODAY>=sl.start&&TODAY<=sl.end&&!rev1Done[s.id];});
+  const r1Title=r1?(r1.id===11?'ENGINEERING MATHEMATICS':r1.name):'N/A';
+  const r1Sub=r1?`Revision 1 · ${pageTarget(r1.id,REV1_SCHEDULE[r1.id])} pages today`:'No Revision 1 activity scheduled';
+
+  const pslots=PYQ_PLAN.filter(x=>x.date===TODAY);
+  const pqTitle=pslots.length?SUB_NAMES[pslots[0].subId]:'N/A';
+  const pqSub=pslots.length?pslots.map(x=>`${x.name} · ${x.target}q`).join(' | '):'PYQ is scheduled only on Friday, Saturday and Sunday';
+  return `<div class="db-section-hdr" style="margin-bottom:10px;">✅ What needs to be done today</div><div class="today-plan-grid">
+    <div class="today-plan-card"><div class="today-plan-label">📚 Study</div><div class="today-plan-title">${esc(studyTitle)}</div><div class="today-plan-sub">${esc(studySub)}</div></div>
+    <div class="today-plan-card"><div class="today-plan-label">📖 Revision 1</div><div class="today-plan-title">${esc(r1Title)}</div><div class="today-plan-sub">${esc(r1Sub)}</div></div>
+    <div class="today-plan-card"><div class="today-plan-label">🎯 PYQ</div><div class="today-plan-title">${esc(pqTitle)}</div><div class="today-plan-sub">${esc(pqSub)}</div></div>
+  </div>`;
+}
+
 function renderDashboard(){
   const el=$('db-root');if(!el)return;
   loadMocks();loadPyq();
@@ -3203,19 +3204,10 @@ function renderDashboard(){
     pyqMonthSubs.forEach(ps=>{Object.values(pyqData[ps.id]||{}).forEach(arr=>arr.forEach(s=>{if(s.date&&s.date.slice(0,7)===TODAY.slice(0,7)){pyqMonthC+=s.correct||0;pyqMonthW+=s.wrong||0;}}));});
     const pyqMonthAcc=pyqMonthC+pyqMonthW>0?Math.round(pyqMonthC/(pyqMonthC+pyqMonthW)*100):null;
     const pyqMonthCol=pyqMonthAcc===null?'var(--muted)':pyqMonthAcc>=75?'#4ade80':pyqMonthAcc>=50?'#fbbf24':'#ef4444';
-    /* subjects completed but with zero PYQ sessions at all */
-    const curMonth=TODAY.slice(0,7);
-    /* map month name -> YYYY-MM for comparison */
-    const monthMap={'Jan':'01','Feb':'02','Mar':'03','Apr':'04','May':'05','Jun':'06','Jul':'07','Aug':'08','Sep':'09','Oct':'10','Nov':'11','Dec':'12'};
-    const curYear=TODAY.slice(0,4);
+    /* Subjects whose scheduled PYQ window has already started and still has pending planned questions */
     const pyqPendingNames=PYQ_SUBJECTS.filter(ps=>{
-      const s=subjects.find(sub=>sub.id===ps.id); if(!s||s.status!=='Completed') return false;
-      /* check pyqMonth target <= current month */
-      const mo=monthMap[ps.pyqMonth]; if(!mo) return false;
-      const targetYM=curYear+'-'+mo;
-      if(targetYM>curMonth) return false;
-      const total=ps.topics.reduce((t,_,ti)=>{return t+(pyqData[ps.id]&&pyqData[ps.id][ti]?pyqData[ps.id][ti].length:0);},0);
-      return total===0;
+      const due=PYQ_PLAN.some(x=>x.subId===ps.id&&x.date<=TODAY);if(!due)return false;
+      return ps.topics.some((t,ti)=>getPyqPlanTopicDone(ps.id,ti)<t.qs);
     }).map(ps=>ps.short);
 
     activeSubCard=dbThreeCards(
@@ -3225,17 +3217,14 @@ function renderDashboard(){
     );
   }
 
-  const todayCard=`<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:24px;">
-    <div style="font-size:12px;font-weight:700;color:var(--acc);margin-bottom:14px;">📅 TODAY — ${fmtFull(TODAY)}${gateHabit?' &nbsp;🔥 Streak: '+streak:' &nbsp;· No study logged yet'}</div>
+  const todayCard=`<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;margin-bottom:18px;">
+    <div style="font-size:12px;font-weight:700;color:var(--acc);margin-bottom:14px;">📅 TODAY — ${fmtFull(TODAY)}</div>
     <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end;">
-      <div class="db-today-item"><div class="db-today-lbl">Hours Today</div><div class="db-today-val" style="color:${todayHrsCol}">${hToday.toFixed(1)}</div></div>
-      <div class="db-today-item"><div class="db-today-lbl">Videos Today</div><div class="db-today-val" style="color:var(--acc)">${vToday}</div></div>
-      <div class="db-today-item"><div class="db-today-lbl">Streak</div><div class="db-today-val" style="color:var(--amber)">🔥${streak}</div></div>
-      <div class="db-today-item"><div class="db-today-lbl">Milestones</div><div class="db-today-val" style="color:var(--purple)">${earnedMilestones.size}<span style="font-size:12px;color:var(--faint);font-weight:400">/${MILESTONE_DEFS.length}</span></div></div>
+      <div class="db-today-item"><div class="db-today-lbl">Hours Studied Today</div><div class="db-today-val" style="color:${todayHrsCol}">${hToday.toFixed(1)}</div></div>
       <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
         <button class="db-go-btn" onclick="switchMainTab('study')">📚 Study log →</button>
         <button class="db-go-btn" style="background:transparent;border-color:#c084fc;color:#c084fc;" onclick="switchMainTab('rev1')">📖 Rev 1 log →</button>
-        ${TODAY>='2026-09-01'?`<button class="db-go-btn" style="background:transparent;border-color:#fbbf24;color:#fbbf24;" onclick="switchMainTab('pyq')">🎯 PYQ log →</button>`:''}
+        <button class="db-go-btn" style="background:transparent;border-color:#fbbf24;color:#fbbf24;" onclick="switchMainTab('pyq')">🎯 PYQ log →</button>
         <button class="db-go-btn" style="background:transparent;border-color:#4ade80;color:#4ade80;" onclick="switchMainTab('rev2')">🚀 Rev 2 & Mocks →</button>
       </div>
     </div>
@@ -3255,6 +3244,7 @@ function renderDashboard(){
       </div>
     </div>
     ${todayCard}
+    ${dashboardTodayPlanHtml()}
     ${activeSubCard}
     <div class="db-section-hdr" style="margin-bottom:10px;">🎯 Discipline Score</div>
     <div id="disc-card-root"></div>
@@ -3282,97 +3272,60 @@ function switchMainTab(id){
    Structure: { plans: { "YYYY-MM-DD": { wakeTime, blocks:[{time,desc,status}] } },
                 logs:  { "YYYY-MM-DD": { noSocial, scores:{...} } } }
 ════════════════════════════════════════════ */
-var DISC_START='2026-09-28';
+var DISC_START='2026-09-30';
 var discData = { plans:{}, logs:{} };
 function loadDisc(){ var d=lsGet('gate-discipline'); if(d){ discData.plans=d.plans||{}; discData.logs=d.logs||{}; } }
 function saveDisc(){ lsSet('gate-discipline', discData); }
 
 /* ── DAILY SCHEDULE SLOTS (weekday vs weekend) ── */
 var WEEKDAY_SCHEDULE = [
-  { key:'sleep',      color:'#6366f1', from:'00:00', to:'05:00', label:'Sleep' },
-  { key:'freshup',    color:'#a78bfa', from:'05:00', to:'06:00', label:'Fresh up' },
-  { key:'vidclass',   color:'#00d4ff', from:'06:00', to:'09:00', label:'Video Classes' },
-  { key:'breakfast',  color:'#fbbf24', from:'09:00', to:'10:00', label:'Breakfast + Walking' },
-  { key:'rev1notes',  color:'#c084fc', from:'10:00', to:'13:00', label:'Revision 1' },
-  { key:'travel1',    color:'#4a6a80', from:'13:00', to:'14:00', label:'Travel to Office' },
-  { key:'office1',    color:'#64748b', from:'14:00', to:'18:00', label:'Work' },
-  { key:'snacks',     color:'#fbbf24', from:'18:00', to:'19:00', label:'Break + TT' },
-  { key:'office2',    color:'#64748b', from:'19:00', to:'22:00', label:'Work' },
-  { key:'travel2',    color:'#4a6a80', from:'22:00', to:'23:00', label:'Travel to Room' },
-  { key:'shortnotes', color:'#4ade80', from:'23:00', to:'24:00', label:'Short Notes' },
+  {key:'sleep',       color:'#6366f1',from:'00:00',to:'06:00',label:'Sleep'},
+  {key:'exercise',    color:'#4ade80',from:'06:00',to:'06:30',label:'Exercise'},
+  {key:'freshup',     color:'#a78bfa',from:'06:30',to:'07:00',label:'Fresh up'},
+  {key:'study_am',    color:'#00d4ff',from:'07:00',to:'09:00',label:'Study'},
+  {key:'breakfast',   color:'#fbbf24',from:'09:00',to:'09:30',label:'Breakfast'},
+  {key:'walking',     color:'#38bdf8',from:'09:30',to:'10:00',label:'Walking'},
+  {key:'study_mid',   color:'#c084fc',from:'10:00',to:'12:00',label:'Study'},
+  {key:'travel1',     color:'#4a6a80',from:'12:00',to:'13:00',label:'Travel'},
+  {key:'lunch',       color:'#fbbf24',from:'13:00',to:'14:00',label:'Lunch'},
+  {key:'office1',     color:'#64748b',from:'14:00',to:'18:00',label:'Office work'},
+  {key:'snacks',      color:'#fbbf24',from:'18:00',to:'19:00',label:'Snacks'},
+  {key:'office2',     color:'#64748b',from:'19:00',to:'22:00',label:'Office work'},
+  {key:'travel2',     color:'#4a6a80',from:'22:00',to:'23:00',label:'Travel'},
+  {key:'study_night', color:'#4ade80',from:'23:00',to:'24:00',label:'Study'},
 ];
 var WEEKEND_SCHEDULE = [
-  { key:'sleep',      color:'#6366f1', from:'00:00', to:'05:00', label:'Sleep' },
-  { key:'freshup',    color:'#a78bfa', from:'05:00', to:'06:00', label:'Fresh up' },
-  { key:'vidclass',   color:'#00d4ff', from:'06:00', to:'09:00', label:'Video Classes' },
-  { key:'breakfast',  color:'#fbbf24', from:'09:00', to:'10:00', label:'Breakfast + Walking' },
-  { key:'rev1notes',  color:'#c084fc', from:'10:00', to:'13:00', label:'Revision 1' },
-  { key:'travel1',    color:'#4a6a80', from:'13:00', to:'14:00', label:'Travel to Office' },
-  { key:'lunch',      color:'#fbbf24', from:'14:00', to:'15:00', label:'Lunch' },
-  { key:'mocktest',   color:'#f472b6', from:'15:00', to:'18:00', label:'Mock Test' },
-  { key:'freetime',   color:'#38bdf8', from:'18:00', to:'22:00', label:'Free Time' },
-  { key:'dinner',     color:'#fbbf24', from:'22:00', to:'23:00', label:'Dinner' },
-  { key:'shortnotes', color:'#4ade80', from:'23:00', to:'24:00', label:'Short Notes' },
+  {key:'sleep',       color:'#6366f1',from:'00:00',to:'06:00',label:'Sleep'},
+  {key:'exercise',    color:'#4ade80',from:'06:00',to:'06:30',label:'Exercise'},
+  {key:'freshup',     color:'#a78bfa',from:'06:30',to:'07:00',label:'Fresh up'},
+  {key:'study_am',    color:'#00d4ff',from:'07:00',to:'09:00',label:'Study'},
+  {key:'breakfast',   color:'#fbbf24',from:'09:00',to:'09:30',label:'Breakfast'},
+  {key:'walking',     color:'#38bdf8',from:'09:30',to:'10:00',label:'Walking'},
+  {key:'study_mid',   color:'#c084fc',from:'10:00',to:'12:00',label:'Study'},
+  {key:'travel1',     color:'#4a6a80',from:'12:00',to:'13:00',label:'Travel'},
+  {key:'lunch',       color:'#fbbf24',from:'13:00',to:'14:00',label:'Lunch'},
+  {key:'study_pm',    color:'#f472b6',from:'14:00',to:'16:00',label:'Study'},
+  {key:'office1',     color:'#64748b',from:'16:00',to:'20:00',label:'Office work'},
+  {key:'dinner',      color:'#fbbf24',from:'20:00',to:'21:00',label:'Dinner'},
+  {key:'office2',     color:'#64748b',from:'21:00',to:'23:00',label:'Office work'},
+  {key:'study_night', color:'#4ade80',from:'23:00',to:'24:00',label:'Study'},
 ];
-function isWeekendDate(dateStr){
-  var dow = new Date(dateStr+'T00:00:00').getDay();
-  return dow===0 || dow===6;
+function isFriSatSun(dateStr){
+  var dow=new Date(dateStr+'T00:00:00').getDay();return dow===5||dow===6||dow===0;
 }
-/* ── Phase 2: once Aptitude+Maths videos finish (2026-10-30), the 6–9 AM
-   slot has no new videos left until the 2028 subjects start (Mar 2027).
-   Repurposed to Problem Practice on NA/S&S/CS/Measurements/EMFT —
-   same 'vidclass' key so streaks/discipline history carry over unbroken. */
-var PHASE2_START='2026-10-31';
-function getDailySchedule(dateStr){
-  var base = isWeekendDate(dateStr) ? WEEKEND_SCHEDULE : WEEKDAY_SCHEDULE;
-  if(dateStr>=PHASE2_START){
-    return base.map(function(b){
-      return b.key==='vidclass'
-        ? Object.assign({},b,{label:'Problem Practice (NA·S&S·CS·Meas·EMFT)'})
-        : b;
-    });
-  }
-  return base;
-}
-
-/* ── score computation — 6-signal / 100-pt ── */
+function getDailySchedule(dateStr){return isFriSatSun(dateStr)?WEEKEND_SCHEDULE:WEEKDAY_SCHEDULE;}/* ── score computation — 6-signal / 100-pt ── */
 function calcDiscScore(date){
   loadDisc();
-  var log = discData.logs[date]||{};
-  var DAILY_SCHEDULE = getDailySchedule(date);
-  var result = { total:0, signals:[] };
-
-  var vcDone = !!(log['sched_vidclass']);
-  var vcBlock = DAILY_SCHEDULE.find(function(b){return b.key==='vidclass';});
-  var vcName = vcBlock ? vcBlock.label : 'Video Classes';
-  result.signals.push({ name:vcName, note:'6:00 AM – 9:00 AM', pts:20, earned:vcDone?20:0, schedKey:'vidclass' });
-  result.total += vcDone?20:0;
-
-  var r1Done = !!(log['sched_rev1notes']);
-  result.signals.push({ name:'Revision 1', note:'10:00 AM – 12:00 PM', pts:20, earned:r1Done?20:0, schedKey:'rev1notes' });
-  result.total += r1Done?20:0;
-
-  var snDone = !!(log['sched_shortnotes']);
-  result.signals.push({ name:'Short Notes', note:'11:00 PM – 12:00 AM', pts:20, earned:snDone?20:0, schedKey:'shortnotes' });
-  result.total += snDone?20:0;
-
-  var pyqDone = !!(log['fb_pyq']);
-  result.signals.push({ name:'PYQ Practice', note:'Mark when done', pts:20, earned:pyqDone?20:0, fixedKey:'fb_pyq' });
-  result.total += pyqDone?20:0;
-
-  var scEarned=0, scNote='Mark below';
-  if(log.selfControl===true){ scEarned=10; scNote='Maintained ✓'; }
-  else if(log.selfControl===false){ scNote='Broken today'; }
-  result.signals.push({ name:'Self Control', note:scNote, pts:10, earned:scEarned, isSelfCtrl:true });
-  result.total += scEarned;
-
-  var sdone=DAILY_SCHEDULE.filter(function(s){ return !!(log['sched_'+s.key]); }).length;
-  var schedEarned=sdone===DAILY_SCHEDULE.length?10:0;
-  result.signals.push({ name:'As Per Schedule', note:sdone+'/'+DAILY_SCHEDULE.length+' slots', pts:10, earned:schedEarned, isSchedAll:true });
-  result.total += schedEarned;
-
-  result.total = Math.min(100, result.total);
-  return result;
+  var log=discData.logs[date]||{};var DAILY_SCHEDULE=getDailySchedule(date);var result={total:0,signals:[]};
+  var am=!!log['sched_study_am'];result.signals.push({name:'Morning Study',note:'7:00 AM – 9:00 AM',pts:20,earned:am?20:0,schedKey:'study_am'});result.total+=am?20:0;
+  var mid=!!log['sched_study_mid'];result.signals.push({name:'Midday Study',note:'10:00 AM – 12:00 PM',pts:20,earned:mid?20:0,schedKey:'study_mid'});result.total+=mid?20:0;
+  var night=!!log['sched_study_night'];result.signals.push({name:'Night Study',note:'11:00 PM – 12:00 AM',pts:20,earned:night?20:0,schedKey:'study_night'});result.total+=night?20:0;
+  var pyqDone=!!log['fb_pyq'];result.signals.push({name:'PYQ Practice',note:'Friday–Sunday planned practice',pts:20,earned:pyqDone?20:0,fixedKey:'fb_pyq'});result.total+=pyqDone?20:0;
+  var scEarned=0,scNote='Mark below';if(log.selfControl===true){scEarned=10;scNote='Maintained ✓';}else if(log.selfControl===false){scNote='Broken today';}
+  result.signals.push({name:'Self Control',note:scNote,pts:10,earned:scEarned,isSelfCtrl:true});result.total+=scEarned;
+  var sdone=DAILY_SCHEDULE.filter(s=>!!log['sched_'+s.key]).length;var schedEarned=sdone===DAILY_SCHEDULE.length?10:0;
+  result.signals.push({name:'As Per Schedule',note:sdone+'/'+DAILY_SCHEDULE.length+' slots',pts:10,earned:schedEarned,isSchedAll:true});result.total+=schedEarned;
+  result.total=Math.min(100,result.total);return result;
 }
 
 /* ── discipline streak ≥ 90 ── */
@@ -3417,9 +3370,9 @@ function calcPyqStreak(){
   }
   return streak;
 }
-function calcRev1Streak(){ return calcSchedSlotStreak('rev1notes'); }
-function calcNotesStreak(){ return calcSchedSlotStreak('shortnotes'); }
-function calcVidStreak(){ return calcSchedSlotStreak('vidclass'); }
+function calcRev1Streak(){ return calcSchedSlotStreak('study_mid'); }
+function calcNotesStreak(){ return calcSchedSlotStreak('study_night'); }
+function calcVidStreak(){ return calcSchedSlotStreak('study_am'); }
 function calcWakeStreak(){
   var streak=0; var d=addDays(TODAY,0);
   for(var i=0;i<193;i++){
@@ -3497,7 +3450,7 @@ function discGetPyqUrl(subId){
 var _GDRIVE_LINKS={'Analog Electronics .pdf':'https://drive.google.com/file/d/1-7KUTqNmcDGpKpkdyGukYI_hFEvHvh-h/view?usp=sharing','Aptitude Simplified .pdf':'https://drive.google.com/file/d/1gQSbvLW5tzLaDE4608j_1PN4klae-kTt/view?usp=sharing','Control Systems .pdf':'https://drive.google.com/file/d/1sy7PiatRZnCU9h7tivF2QR3P-kn-vzYC/view?usp=sharing','Digital Electronics .pdf':'https://drive.google.com/file/d/1FAsHE2PfGGMvq7PxV2ZwCggl9fjlL7bU/view?usp=sharing','Electrical and Electronics Measurements .pdf':'https://drive.google.com/file/d/1kcQC81YXveCDkAnWx7syn3SiX7yuAZ0x/view?usp=sharing','Electrical Machines .pdf':'https://drive.google.com/file/d/1NrSItWd0t8DmmzXZqiRa5JzDm6pFXEWa/view?usp=sharing','Electromagnetic Fields(EMFT_EMT).pdf':'https://drive.google.com/file/d/1PN1vIMuTM87BmfX7Gi99Tz2400hHCseI/view?usp=sharing','Engineering Mathematics .pdf':'https://drive.google.com/file/d/1eDa50THB2M4cpUerP0REuRyPWl3AsDtd/view?usp=sharing','Network Analysis.pdf':'https://drive.google.com/file/d/1o7fFX4Zmkk5ngxWxvW-Hf3jyHEdGCXI0/view?usp=sharing','Power Electronics .pdf':'https://drive.google.com/file/d/1p8uHboEWQnBHFPUtM92OER-U4oWRLKm3/view?usp=sharing','Power System .pdf':'https://drive.google.com/file/d/1TZ0WOZJWmmhqRqy7F7ga18c8Zxl1UseA/view?usp=sharing','Signal & Systems .pdf':'https://drive.google.com/file/d/19_sdtrMrPe1FNNW33GJr4wDpBn0JFLJN/view?usp=sharing'};
 function discGetNotesPath(subId){
   var pdfs=REV1_NOTES[subId];
-  if(pdfs&&pdfs.length>0) return _GDRIVE_LINKS[pdfs[0].file]||'';
+  if(pdfs&&pdfs.length>0) return pdfs[0].url||'';
   return '';
 }
 /* helper: calc duration string from start/end HH:MM */
@@ -3813,7 +3766,7 @@ function renderDiscCard(){
   if(preStart){
     var daysTo = diffDays(TODAY, DISC_START);
     previewBanner = '<div style="text-align:center;padding:10px 14px;margin-bottom:14px;border:1px dashed var(--acc);border-radius:10px;background:rgba(0,212,255,0.06);">'
-      +'<span style="font-size:12px;font-weight:800;color:var(--acc);">&#x1F3AF; Preview &mdash; Discipline Tracking Starts Sep 28, 2026</span>'
+      +'<span style="font-size:12px;font-weight:800;color:var(--acc);">&#x1F3AF; Preview &mdash; Discipline Tracking Starts Sep 30, 2026</span>'
       +'<div style="font-size:11px;color:var(--muted);margin-top:3px;">'+daysTo+' day'+(daysTo===1?'':'s')+' to go &middot; scores below are for preview only</div>'
       +'</div>';
   }
@@ -3832,10 +3785,9 @@ function renderDiscCard(){
   var DAILY_SCHEDULE = getDailySchedule(TODAY);
 
   var ICONS = {
-    'Video Classes':'&#x1F3AC;',
-    'Problem Practice (NA·S&S·CS·Meas·EMFT)':'&#x1F9E9;',
-    'Revision 1':'&#x1F4D6;',
-    'Short Notes':'&#x1F4DD;',
+    'Morning Study':'&#x1F305;',
+    'Midday Study':'&#x1F4D6;',
+    'Night Study':'&#x1F319;',
     'PYQ Practice':'&#x1F3AF;',
     'Self Control':'&#x1F9E0;',
     'As Per Schedule':'&#x1F5D3;&#xFE0F;'
@@ -3910,9 +3862,9 @@ function renderDiscCard(){
       +'</div>'
       +'<div class="disc-stats">'
         +'<div class="disc-streaks-row">'
-          +'<div class="disc-streak-chip" title="Video Classes streak"><span class="dsc-fire">&#x1F3AC;</span><span class="dsc-num" style="color:'+(vidS>=7?'#4ade80':vidS>=3?'#fbbf24':'var(--acc)')+'">'+vidS+'</span><span class="dsc-lbl">Video</span></div>'
-          +'<div class="disc-streak-chip" title="Revision 1 streak"><span class="dsc-fire">&#x1F4D6;</span><span class="dsc-num" style="color:'+(rev1S>=7?'#4ade80':rev1S>=3?'#fbbf24':'var(--acc)')+'">'+rev1S+'</span><span class="dsc-lbl">Rev1</span></div>'
-          +'<div class="disc-streak-chip" title="Short Notes streak"><span class="dsc-fire">&#x1F4DD;</span><span class="dsc-num" style="color:'+(notesS>=7?'#4ade80':notesS>=3?'#fbbf24':'var(--acc)')+'">'+notesS+'</span><span class="dsc-lbl">Notes</span></div>'
+          +'<div class="disc-streak-chip" title="Morning study streak"><span class="dsc-fire">&#x1F3AC;</span><span class="dsc-num" style="color:'+(vidS>=7?'#4ade80':vidS>=3?'#fbbf24':'var(--acc)')+'">'+vidS+'</span><span class="dsc-lbl">AM Study</span></div>'
+          +'<div class="disc-streak-chip" title="Midday study streak"><span class="dsc-fire">&#x1F4D6;</span><span class="dsc-num" style="color:'+(rev1S>=7?'#4ade80':rev1S>=3?'#fbbf24':'var(--acc)')+'">'+rev1S+'</span><span class="dsc-lbl">Mid Study</span></div>'
+          +'<div class="disc-streak-chip" title="Night study streak"><span class="dsc-fire">&#x1F4DD;</span><span class="dsc-num" style="color:'+(notesS>=7?'#4ade80':notesS>=3?'#fbbf24':'var(--acc)')+'">'+notesS+'</span><span class="dsc-lbl">Night</span></div>'
           +'<div class="disc-streak-chip" title="PYQ streak"><span class="dsc-fire">&#x1F3AF;</span><span class="dsc-num" style="color:'+(pyqS>=7?'#4ade80':pyqS>=3?'#fbbf24':'var(--acc)')+'">'+pyqS+'</span><span class="dsc-lbl">PYQ</span></div>'
           +'<div class="disc-streak-chip" title="Self Control streak"><span class="dsc-fire">&#x1F9E0;</span><span class="dsc-num" style="color:'+(scS>=7?'#4ade80':scS>=3?'#fbbf24':'var(--acc)')+'">'+scS+'</span><span class="dsc-lbl">Control</span></div>'
           +'<div class="disc-streak-divider"></div>'
@@ -3936,7 +3888,7 @@ function renderDiscCard(){
       +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;border-top:1px solid var(--border);padding-top:14px;">&#x1F4CA; Score Breakdown &mdash; Today</div>'
       +'<div class="disc-signals">'+sigHtml+'</div>'
       +'<div class="disc-heatmap">'
-        +'<div class="disc-hm-title">Discipline Heatmap &middot; Sep 28 &ndash; Dec 31</div>'
+        +'<div class="disc-hm-title">Discipline Heatmap &middot; Sep 30 &ndash; Dec 31</div>'
         +'<div style="display:flex;gap:8px;font-size:9px;color:var(--faint);margin-bottom:6px;">'
           +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#4ade80;border-radius:2px;"></span>&ge;90</span>'
           +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#fbbf24;border-radius:2px;"></span>70&ndash;89</span>'
@@ -4002,16 +3954,6 @@ var _mePendingVals = {};     /* {key: value} edits staged in modal before save *
 function checkMissedEntry(){
   /* only check if within the disc tracking window */
   if(TODAY < DISC_START) return;
-  /* skip weekends — Sat(6) and Sun(0) are unplanned */
-  var _todayDow = new Date(TODAY+'T00:00:00').getDay();
-  if(_todayDow===0||_todayDow===6) return;
-  /* skip if yesterday was a weekend */
-  var _yesterdayDow = new Date(addDays(TODAY,-1)+'T00:00:00').getDay();
-  var yesterday = addDays(TODAY, -1);
-  if(yesterday < DISC_START) return;
-  /* don't prompt for a weekend yesterday */
-  var _ydow = new Date(yesterday+'T00:00:00').getDay();
-  if(_ydow===0||_ydow===6) return;
 
   /* have we already prompted for yesterday this session? */
   var seenKey = 'gate-me-seen-' + yesterday;
@@ -4055,9 +3997,9 @@ function meProjectedScore(date){
   var DAILY_SCHEDULE = getDailySchedule(date);
   Object.keys(_mePendingVals).forEach(function(k){ log[k]=_mePendingVals[k]; });
   var total=0;
-  if(log['sched_vidclass'])   total+=20;
-  if(log['sched_rev1notes'])  total+=20;
-  if(log['sched_shortnotes']) total+=20;
+  if(log['sched_study_am'])    total+=20;
+  if(log['sched_study_mid'])   total+=20;
+  if(log['sched_study_night']) total+=20;
   if(log['fb_pyq'])           total+=20;
   if(log.selfControl===true)  total+=10;
   var sd=DAILY_SCHEDULE.filter(function(s){ return !!(log['sched_'+s.key]); }).length;
