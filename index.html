@@ -401,8 +401,22 @@ select.inp-sm{cursor:pointer;}
 .me-btn-skip:hover{border-color:var(--faint);color:var(--text);}
 
 /* ── 2027/2028 journey + today plan ── */
-.journey-phase-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;}
-.journey-phase-title{font-size:15px;font-weight:800;color:var(--text);margin-bottom:3px;}
+.journey-phase-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;cursor:pointer;transition:border-color .2s,box-shadow .2s;}
+.journey-phase-card:hover{border-color:var(--acc);box-shadow:0 0 16px rgba(0,212,255,.08);}
+.journey-phase-card.open{border-color:var(--acc);}
+.journey-phase-title{font-size:15px;font-weight:800;color:var(--text);margin-bottom:3px;display:flex;align-items:center;gap:8px;}
+.journey-expand-hint{font-size:10px;color:var(--faint);font-weight:600;margin-left:auto;}
+.journey-phase-detail{grid-column:1/-1;display:none;border-top:1px solid var(--border);padding-top:12px;margin-top:2px;}
+.journey-phase-card.open .journey-phase-detail{display:block;}
+.journey-conf-row{display:grid;grid-template-columns:minmax(150px,1fr) 90px 1fr;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);}
+.journey-conf-row:last-child{border-bottom:none;}
+.journey-conf-name{font-size:11px;font-weight:700;color:var(--text);}
+.journey-conf-status{font-size:9px;color:var(--muted);margin-top:2px;}
+.journey-conf-val{font-size:13px;font-weight:800;text-align:right;}
+.journey-conf-bar{height:5px;background:var(--navy);border-radius:3px;overflow:hidden;}
+.journey-conf-fill{height:100%;border-radius:3px;}
+.local-file-btn{font-family:var(--font);cursor:pointer;}
+.local-link-note{font-size:10px;color:var(--faint);margin-top:5px;line-height:1.35;}
 .journey-phase-sub{font-size:11px;color:var(--muted);margin-bottom:12px;}
 .journey-phase-stats{display:flex;gap:18px;flex-wrap:wrap;}
 .journey-phase-stat .v{font-size:22px;font-weight:800;line-height:1.1;}
@@ -525,7 +539,7 @@ select.inp-sm{cursor:pointer;}
       </div>
     </div>
     <div class="section">
-      <div class="sec-hdr"><h2>Learning Path</h2><div class="sub">Direct links to playlists &amp; courses</div></div>
+      <div class="sec-hdr"><h2>Learning Path</h2><div class="sub">Direct links to playlists, courses &amp; Paramount books · local OneDrive PDFs open directly when this HTML is opened locally</div></div>
       <div class="lp-grid" id="lp-grid"></div>
     </div>
   </div>
@@ -581,6 +595,26 @@ const DAYS_FULL=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Sa
 function fmt(d){if(!d)return'—';const[y,m,dd]=d.split('-');return`${+dd} ${MOS[+m-1]}`;}
 function fmtFull(d){if(!d)return'—';const[y,m,dd]=d.split('-');return`${+dd} ${MOS[+m-1]} ${y}`;}
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function fileUrlToWindowsPath(url){
+  try{var p=decodeURIComponent(String(url||'').replace(/^file:\/\/\//i,''));if(/^\/[A-Za-z]:/.test(p))p=p.slice(1);return p.replace(/\//g,'\\');}catch(e){return String(url||'');}
+}
+function openStudyFile(url,name){
+  if(!url)return;
+  if(/^https?:/i.test(url)){window.open(url,'_blank','noopener');return;}
+  if(/^file:/i.test(url)){
+    if(window.location.protocol==='file:'){
+      /* Same-tab navigation avoids popup restrictions on local PDFs. */
+      window.location.href=url;return;
+    }
+    var p=fileUrlToWindowsPath(url);
+    var msg='This PDF is stored in your local OneDrive. Browsers do not allow a hosted web page to open a local file directly.';
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(p).then(function(){alert(msg+'\n\nThe Windows path has been copied. Paste it into File Explorer to open '+(name||'the PDF')+'.');}).catch(function(){prompt(msg+'\n\nCopy this path into File Explorer:',p);});
+    }else{prompt(msg+'\n\nCopy this path into File Explorer:',p);}
+    return;
+  }
+  window.open(url,'_blank','noopener');
+}
 function $(id){return document.getElementById(id);}
 
 /* ── SUBJECTS — revised Sep 29 2026 ──
@@ -636,18 +670,18 @@ function getStudyActivity(date){
 /* ── Paramount question-bank plan: 9 Oct – 31 Dec 2027 ── */
 const PARAMOUNT_START='2027-10-09', PARAMOUNT_END='2027-12-31';
 const PARAMOUNT_BOOKS=[
-  {subId:1,name:'Network Theory',pages:73,questions:100,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/1.%20Network%20Paramount%20(EC-EE)%20+%20Font.pdf'},
-  {subId:3,name:'Control System',pages:118,questions:125,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/2.%20Control%20System%20Paramount%20(EC-EE)%20+%20Front.pdf'},
-  {subId:7,name:'Power System Analysis (PSA)',pages:92,questions:136,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/3.%20PSA%20Paramount%20(EE)%20+%20Front.pdf'},
-  {subId:6,name:'Electrical Machines',pages:81,questions:150,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/4.%20Electrical%20machine%20Paramount%20(EE)%20+%20Front.pdf'},
-  {subId:2,name:'Signals & Systems',pages:62,questions:100,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/5.%20Signals%20_%20Systems%20Paramount%20(EE)%20+%20Front.pdf'},
-  {subId:8,name:'Power Electronics',pages:93,questions:125,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/6.%20Power%20Electronics%20Paramount%20(EE)%20+%20Front.pdf'},
-  {subId:10,name:'Analog Electronics',pages:75,questions:75,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/7.%20Analog%20Paramount%20(EE)%20+%20Front.pdf'},
-  {subId:9,name:'Digital Electronics',pages:66,questions:75,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/8.%20Digital%20Paramount%20(EE)%20+%20Front.pdf'},
-  {subId:11,name:'Engineering Mathematics',pages:35,questions:75,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/9.%20Mathematics%20Paramount%20(EC-EE)%20+%20Front.pdf'},
-  {subId:4,name:'Measurements',pages:28,questions:50,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/10.%20Measurement%20Paramount%20(EE)%20+%20Front.pdf'},
-  {subId:11,name:'Aptitude',pages:29,questions:75,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/11.%20Aptitude%20Paramount%20(EC-EE-ME-CE-CSE-IN)%20+%20Front.pdf'},
-  {subId:5,name:'Electromagnetic Theory (EMT)',pages:30,questions:50,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/12.%20EMT%20Final%20paramount%20(EE)%20+%20Front.pdf'},
+  {subId:1,name:"Network Theory",pages:73,questions:100,url:"file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/1.%20Network%20Paramount%20(EC-EE)%20+%20Font.pdf"},
+  {subId:3,name:"Control System",pages:118,questions:125,url:"file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/2.%20Control%20System%20Paramount%20(EC-EE)%20+%20Front.pdf"},
+  {subId:7,name:"Power System Analysis (PSA)",pages:92,questions:136,url:"file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/3.%20PSA%20Paramount%20(EE)%20+%20Front.pdf"},
+  {subId:6,name:"Electrical Machines",pages:81,questions:150,url:"file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/4.%20Electrical%20machine%20Paramount%20(EE)%20+%20Front.pdf"},
+  {subId:2,name:"Signals & Systems",pages:62,questions:100,url:"file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/5.%20Signals%20_%20Systems%20Paramount%20(EE)%20+%20Front.pdf"},
+  {subId:8,name:"Power Electronics",pages:93,questions:125,url:"file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/6.%20Power%20Electronics%20Paramount%20(EE)%20+%20Front.pdf"},
+  {subId:10,name:"Analog Electronics",pages:75,questions:75,url:"file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/7.%20Analog%20Paramount%20(EE)%20+%20Front.pdf"},
+  {subId:9,name:"Digital Electronics",pages:66,questions:75,url:"file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/8.%20Digital%20Paramount%20(EE)%20+%20Front.pdf"},
+  {subId:11,name:"Engineering Mathematics",pages:35,questions:75,url:"file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/9.%20Mathematics%20Paramount%20(EC-EE)%20+%20Front.pdf"},
+  {subId:4,name:"Measurements",pages:28,questions:50,url:"file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/10.%20Measurement%20Paramount%20(EE)%20+%20Front.pdf"},
+  {subId:11,name:"Aptitude",pages:29,questions:75,url:"file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/11.%20Aptitude%20Paramount%20(EC-EE-ME-CE-CSE-IN)%20+%20Front.pdf"},
+  {subId:5,name:"Electromagnetic Theory (EMT)",pages:30,questions:50,url:"file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Question%20Bank/12.%20EMT%20Final%20paramount%20(EE)%20+%20Front.pdf"},
 ];
 const PARAMOUNT_TOTAL_PAGES=PARAMOUNT_BOOKS.reduce((t,b)=>t+b.pages,0);
 const PARAMOUNT_TOTAL_QS=PARAMOUNT_BOOKS.reduce((t,b)=>t+b.questions,0);
@@ -1795,11 +1829,13 @@ function renderPyqTopics(){
   const sub=PYQ_SUBJECTS.find(s=>s.id===pyqActiveSubId);if(!sub){el.innerHTML='';return;}
   const subTot=getPyqSubTotals(sub.id);
   const subPctCol=subTot.pct===null?'var(--acc)':subTot.pct>=75?'#4ade80':subTot.pct>=50?'#fbbf24':'#ef4444';
+  const planRange=getPyqPlanRange(sub.id),deadline=getPyqDeadline(sub.id);
 
   let html=`<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
-    <div style="display:flex;align-items:center;gap:8px;">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
       <div style="font-size:15px;font-weight:700;">${esc(sub.name)}</div>
       <span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:10px;background:#001e2e;color:#00d4ff;border:1px solid #00d4ff44;">🎯 Fri–Sun only</span>
+      ${planRange?`<span style="font-size:10px;color:var(--muted);">📅 ${fmt(planRange.start)}–${fmt(planRange.end)} · finish by ${fmtFull(deadline)}</span>`:''}
     </div>
     <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
       <div style="text-align:right;">
@@ -2126,37 +2162,53 @@ function renderPyqQuizCard(sub){
    ══════════════════════════════════════════════════ */
 
 // Auto-plan: PYQ work is scheduled ONLY on Friday, Saturday and Sunday.
-// Subjects are sequenced after their Revision-1 availability date; max 25 questions/session.
+// 2026 cohort: Network, Signals, Control, Measurements and EMFT must finish by 31 Dec 2026.
+// 2027 cohort: Maths, Machines, Power Systems, Power Electronics, Analog and Digital must finish by 31 Dec 2027.
+const PYQ_DEADLINES={1:'2026-12-31',2:'2026-12-31',3:'2026-12-31',4:'2026-12-31',5:'2026-12-31',11:'2027-12-31',6:'2027-12-31',7:'2027-12-31',8:'2027-12-31',10:'2027-12-31',9:'2027-12-31'};
+const PYQ_AVAILABLE={
+  1:'2026-09-30',2:'2026-09-30',3:'2026-09-30',4:'2026-09-30',5:'2026-09-30',
+  11:'2027-01-01',6:'2027-05-23',7:'2027-06-18',8:'2027-07-22',10:'2027-09-23',9:'2027-10-09'
+};
+const PYQ_COHORTS=[
+  {ids:[1,2,3,4,5],start:'2026-09-30',end:'2026-12-31',dailyMax:25},
+  {ids:[11,6,7,8,10,9],start:'2027-01-01',end:'2027-12-31',dailyMax:25}
+];
+function getPyqDeadline(subId){return PYQ_DEADLINES[subId]||'';}
 const PYQ_PLAN = (function(){
   const slots=[];
-  const ORDER=[1,2,3,4,5,11,6,7,8,10,9];
-  const AVAILABLE_AFTER={
-    1:'2026-10-19',2:'2026-11-10',3:'2026-12-04',4:'2026-12-17',5:'2026-12-23',
-    11:'2027-04-10',6:'2027-06-08',7:'2027-07-10',8:'2027-08-13',10:'2027-10-26',9:'2027-11-14'
-  };
-  const DAILY_MAX=25;
   function isPyqDay(d){const w=dayOfWeek(d);return w===5||w===6||w===0;}
   function nextPyqDay(d){let x=d;while(!isPyqDay(x))x=addDays(x,1);return x;}
   function later(a,b){return a>b?a:b;}
-  let globalCursor='2026-09-30';
-  ORDER.forEach(function(subId){
-    const sub=PYQ_SUBJECTS.find(s=>s.id===subId);if(!sub)return;
-    let cursor=nextPyqDay(later(globalCursor,addDays(AVAILABLE_AFTER[subId],1)));
-    sub.topics.forEach(function(t,ti){
-      const sessions=Math.max(1,Math.ceil(t.qs/DAILY_MAX));
-      const perSession=Math.ceil(t.qs/sessions);
-      let remaining=t.qs;
-      for(let part=1;part<=sessions;part++){
-        const target=Math.min(perSession,remaining);
-        slots.push({date:cursor,subId:subId,ti:ti,name:t.name,qs:t.qs,totalDays:sessions,part:part,target:target});
-        remaining-=target;
-        cursor=nextPyqDay(addDays(cursor,1));
-      }
+  PYQ_COHORTS.forEach(function(cfg){
+    let cursor=nextPyqDay(cfg.start);
+    cfg.ids.forEach(function(subId){
+      const sub=PYQ_SUBJECTS.find(s=>s.id===subId);if(!sub)return;
+      cursor=nextPyqDay(later(cursor,PYQ_AVAILABLE[subId]||cfg.start));
+      let usedToday=0;
+      sub.topics.forEach(function(t,ti){
+        let remaining=t.qs;
+        while(remaining>0){
+          if(cursor>cfg.end){console.warn('PYQ plan exceeded deadline for',sub.name);break;}
+          let cap=cfg.dailyMax-usedToday;
+          if(cap<=0){cursor=nextPyqDay(addDays(cursor,1));usedToday=0;cap=cfg.dailyMax;}
+          const target=Math.min(remaining,cap);
+          slots.push({date:cursor,subId:subId,ti:ti,name:t.name,qs:t.qs,target:target,deadline:cfg.end});
+          remaining-=target;usedToday+=target;
+          if(usedToday>=cfg.dailyMax){cursor=nextPyqDay(addDays(cursor,1));usedToday=0;}
+        }
+      });
+      /* Keep each PYQ day focused on one subject. */
+      if(usedToday>0){cursor=nextPyqDay(addDays(cursor,1));usedToday=0;}
     });
-    globalCursor=cursor;
   });
+  const grouped={};
+  slots.forEach(function(s){const k=s.subId+'|'+s.ti;if(!grouped[k])grouped[k]=[];grouped[k].push(s);});
+  Object.values(grouped).forEach(function(arr){arr.forEach(function(s,i){s.part=i+1;s.totalDays=arr.length;});});
   return slots;
 })();
+function getPyqPlanRange(subId){
+  const a=PYQ_PLAN.filter(x=>x.subId===subId);return a.length?{start:a[0].date,end:a[a.length-1].date}:null;
+}
 
 const PYQ_PLAN_TOPICS=(function(){
   var out=[];
@@ -2706,6 +2758,11 @@ function stopConfetti(){if(confAnim)cancelAnimationFrame(confAnim);const cv=$('c
 
 
 /* ══ STUDY TAB ══ */
+function toggleJourneyPhase(phase){
+  var el=document.getElementById('journey-phase-'+phase);if(!el)return;
+  el.classList.toggle('open');
+  var a=document.getElementById('journey-arr-'+phase);if(a)a.textContent=el.classList.contains('open')?'▲ Hide subjects':'▼ View subjects';
+}
 function renderProgress(){
   const TARGET=85;
   function phaseCard(phase,label,accent){
@@ -2715,8 +2772,13 @@ function renderProgress(){
     const col=avg>=TARGET?'#4ade80':avg>=60?'#fbbf24':'#ef4444';
     const size=96,sw=8,r=(size-sw)/2,circ=2*Math.PI*r,dash=Math.min(100,avg)/100*circ,targetDash=TARGET/100*circ;
     const names=arr.map(s=>s.name.replace('APTITUDE + MATHEMATICS','APTITUDE + MATHS')).join(' · ');
-    return`<div class="journey-phase-card">
-      <div><div class="journey-phase-title">🎯 ${label}</div><div class="journey-phase-sub">${names}</div>
+    const details=arr.map(s=>{
+      const c=Math.max(0,Math.min(100,+s.confidence||0));
+      const cc=c>=TARGET?'#4ade80':c>=60?'#fbbf24':'#ef4444';
+      return `<div class="journey-conf-row"><div><div class="journey-conf-name">${esc(s.name)}</div><div class="journey-conf-status">${esc(s.status)} · ${fmt(s.start)}–${fmt(s.end)}</div></div><div class="journey-conf-val" style="color:${cc}">${c}%</div><div class="journey-conf-bar"><div class="journey-conf-fill" style="width:${c}%;background:${cc}"></div></div></div>`;
+    }).join('');
+    return`<div class="journey-phase-card" id="journey-phase-${phase}" onclick="toggleJourneyPhase(${phase})">
+      <div><div class="journey-phase-title">🎯 ${label}<span class="journey-expand-hint" id="journey-arr-${phase}">▼ View subjects</span></div><div class="journey-phase-sub">${names}</div>
         <div class="journey-phase-stats">
           <div class="journey-phase-stat"><div class="v" style="color:${accent}">${arr.length}</div><div class="l">Target Subjects</div></div>
           <div class="journey-phase-stat"><div class="v" style="color:#4ade80">${done}</div><div class="l">Completed</div></div>
@@ -2731,9 +2793,10 @@ function renderProgress(){
         </svg>
         <div><div class="conf-gauge-val" style="color:${col}">${avg}%</div><div class="conf-gauge-lbl">Target 85%</div></div>
       </div>
+      <div class="journey-phase-detail" onclick="event.stopPropagation()">${details}</div>
     </div>`;
   }
-  $('prog-sub').textContent='2027 and 2028 study plans · confidence target 85%';
+  $('prog-sub').textContent='2027 and 2028 study plans · confidence target 85% · click a card for subject confidence';
   $('hero-cards').innerHTML=phaseCard(2027,'2027 Attempt','var(--acc)')+phaseCard(2028,'2028 Attempt','#fbbf24');
 }
 function renderMilestones(){
@@ -2879,23 +2942,23 @@ function renderLearningPath(){
     if(lk.pf_m)links+=`<a href="${lk.pf_m}" target="_blank" class="lp-link-c">🎓 Maths</a>`;
     if(lk.pf_a)links+=`<a href="${lk.pf_a}" target="_blank" class="lp-link-c">🎓 Aptitude</a>`;
     const pb=PARAMOUNT_BOOKS.filter(b=>b.subId===s.id);
-    pb.forEach(b=>{links+=`<a href="${b.url}" target="_blank" class="lp-link-c" title="${esc(b.name)} · ${b.pages} pages · ${b.questions} questions">📘 ${s.id===11?esc(b.name):'Paramount Questions'}</a>`;});
+    pb.forEach(b=>{links+=`<button type="button" class="lp-link-c local-file-btn" onclick="openStudyFile('${b.url.replace(/'/g,"\\'")}','${esc(b.name).replace(/'/g,"\\'")}')" title="${esc(b.name)} · ${b.pages} pages · ${b.questions} questions">📘 ${s.id===11?esc(b.name):'Paramount Questions'}</button>`;});
     return`<div class="lp-card ${isActive?'active-sub':''}"><div class="lp-name">${esc(s.name)}${isActive?' <span style="font-size:10px;color:var(--acc);">● ACTIVE</span>':''}</div><div class="lp-faculty">${esc(s.faculty)} · ${fmt(s.start)}–${fmt(s.end)}</div><div style="margin-bottom:8px;font-size:11px;color:var(--muted);">Videos: <strong style="color:var(--acc);">${s.videos}</strong> &nbsp;·&nbsp; Target: <strong style="color:var(--amber);">${s.targetHrs}h</strong></div><div class="lp-links">${links||'<span style="font-size:12px;color:var(--faint);">No links</span>'}</div></div>`;
   }).join('');
 }
 
 /* ══ REVISION 1 ── NEW SCHEDULE FROM IMAGE ══ */
 const REV1_NOTES={
-  1:[{file:'01.Network_Analysis_Complete_Notes.pdf',pages:1196,url:'https://drive.google.com/file/d/1o7fFX4Zmkk5ngxWxvW-Hf3jyHEdGCXI0/view?usp=sharing'}],
-  2:[{file:'02.Signal_Systems_Complete_Notes.pdf',pages:1275,url:'https://drive.google.com/file/d/19_sdtrMrPe1FNNW33GJr4wDpBn0JFLJN/view?usp=sharing'}],
-  3:[{file:'03.Control_Systems_Complete_Notes.pdf',pages:1421,url:'https://drive.google.com/file/d/1sy7PiatRZnCU9h7tivF2QR3P-kn-vzYC/view?usp=sharing'}],
-  4:[{file:'04.Measurements_Complete_Notes.pdf',pages:761,url:'https://drive.google.com/file/d/1kcQC81YXveCDkAnWx7syn3SiX7yuAZ0x/view?usp=sharing'}],
-  5:[{file:'05.EMFT_Complete_Notes.pdf',pages:322,url:'https://drive.google.com/file/d/1PN1vIMuTM87BmfX7Gi99Tz2400hHCseI/view?usp=sharing'}],
-  6:[{file:'06.Electrical_Machines_Complete_Notes.pdf',pages:963,url:'https://drive.google.com/file/d/1NrSItWd0t8DmmzXZqiRa5JzDm6pFXEWa/view?usp=sharing'}],
-  7:[{file:'07.Power_Systems_Complete_Notes.pdf',pages:1364,url:'https://drive.google.com/file/d/1TZ0WOZJWmmhqRqy7F7ga18c8Zxl1UseA/view?usp=sharing'}],
-  8:[{file:'08.Power_Electronics_Complete_Notes.pdf',pages:1344,url:'https://drive.google.com/file/d/1p8uHboEWQnBHFPUtM92OER-U4oWRLKm3/view?usp=sharing'}],
-  9:[{file:'09.Digital_Electronics_Complete_Notes.pdf',pages:1134,url:'https://drive.google.com/file/d/1FAsHE2PfGGMvq7PxV2ZwCggl9fjlL7bU/view?usp=sharing'}],
-  10:[{file:'10.Analog_Electronics_Complete_Notes.pdf',pages:1982,url:'https://drive.google.com/file/d/1-7KUTqNmcDGpKpkdyGukYI_hFEvHvh-h/view?usp=sharing'}],
+  1:[{file:'01.Network_Analysis_Complete_Notes.pdf',pages:1196,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Video%20Notes/01.Network_Analysis_Complete_Notes.pdf'}],
+  2:[{file:'02.Signal_Systems_Complete_Notes.pdf',pages:1275,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Video%20Notes/02.Signal_Systems_Complete_Notes.pdf'}],
+  3:[{file:'03.Control_Systems_Complete_Notes.pdf',pages:1421,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Video%20Notes/03.Control_Systems_Complete_Notes.pdf'}],
+  4:[{file:'04.Measurements_Complete_Notes.pdf',pages:761,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Video%20Notes/04.Measurements_Complete_Notes.pdf'}],
+  5:[{file:'05.EMFT_Complete_Notes.pdf',pages:322,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Video%20Notes/05.EMFT_Complete_Notes.pdf'}],
+  6:[{file:'06.Electrical_Machines_Complete_Notes.pdf',pages:963,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Video%20Notes/06.Electrical_Machines_Complete_Notes.pdf'}],
+  7:[{file:'07.Power_Systems_Complete_Notes.pdf',pages:1364,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Video%20Notes/07.Power_Systems_Complete_Notes.pdf'}],
+  8:[{file:'08.Power_Electronics_Complete_Notes.pdf',pages:1344,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Video%20Notes/08.Power_Electronics_Complete_Notes.pdf'}],
+  9:[{file:'09.Digital_Electronics_Complete_Notes.pdf',pages:1134,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Video%20Notes/09.Digital_Electronics_Complete_Notes.pdf'}],
+  10:[{file:'10.Analog_Electronics_Complete_Notes.pdf',pages:1982,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Video%20Notes/10.Analog_Electronics_Complete_Notes.pdf'}],
   11:[{file:'Engineering Mathematics .pdf',pages:2423,url:'https://drive.google.com/file/d/1eDa50THB2M4cpUerP0REuRyPWl3AsDtd/view?usp=sharing'}]
 };
 /* REV1 SCHEDULE — ~60 pages/day; starts only after subject classes are complete.
@@ -3004,7 +3067,7 @@ function renderRevision1(){
         +'</div>'
       +'</div>'
       +'<div id="rev1-exp-'+sub.id+'" style="display:none;border-top:1px solid var(--border);padding:14px 16px;">'
-        +(function(){var nu=(REV1_NOTES[sub.id]&&REV1_NOTES[sub.id][0]&&REV1_NOTES[sub.id][0].url)||'';return '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#0d1b2a;border:1px solid #1e3a5a;border-radius:7px;padding:9px 12px;margin-bottom:14px;"><span style="font-size:11px;color:var(--muted);">📂 Notes:</span>'+(nu?'<a href="'+nu+'" target="_blank" class="lp-link-c">🔗 Open Notes</a>':'<span style="font-size:11px;color:var(--faint);">No notes link</span>')+(sub.id===11?'<span style="font-size:10px;color:#fbbf24;">Mathematics notes only · Aptitude has no notes</span>':'')+'</div>';})()
+        +(function(){var note=(REV1_NOTES[sub.id]&&REV1_NOTES[sub.id][0])||null;var nu=note&&note.url||'';var fn=note&&note.file||'Revision Notes';var btn=nu?('<button type="button" class="lp-link-c local-file-btn" onclick="openStudyFile('+JSON.stringify(nu)+','+JSON.stringify(fn)+')">🔗 Open Notes</button>'):'<span style="font-size:11px;color:var(--faint);">No notes link</span>';return '<div style="background:#0d1b2a;border:1px solid #1e3a5a;border-radius:7px;padding:9px 12px;margin-bottom:14px;"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;"><span style="font-size:11px;color:var(--muted);">📂 Notes:</span>'+btn+(sub.id===11?'<span style="font-size:10px;color:#fbbf24;">Mathematics notes only · Aptitude has no notes</span>':'')+'</div>'+(nu&&nu.indexOf('file:')===0?'<div class="local-link-note">Uses the local OneDrive link provided in Book1.xlsx.</div>':'')+'</div>';})()
         +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">'+r1Tracker+snTracker+'</div>'
         +'<div style="display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;">'
           +'<div><label class="lbl">Revision remarks</label><textarea class="inp" rows="2" style="font-size:12px;margin-top:4px;" placeholder="Weak topics, formulas to recheck\u2026" oninput="setRev1Note('+sub.id+',this.value);">'+esc(rev1Notes[sub.id]||'')+'</textarea></div>'
