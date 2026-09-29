@@ -617,7 +617,7 @@ function openStudyFile(url,name){
 }
 function $(id){return document.getElementById(id);}
 
-/* ── SUBJECTS — revised Sep 29 2026 ──
+/* ── SUBJECTS — revised Sep 30 2026 ──
    2027 attempt: Network, Signals, Control, Measurements, EMFT, Aptitude + Mathematics
    2028 attempt: Electrical Machines, Power Systems, Power Electronics, Analog, Digital
 */
@@ -632,7 +632,7 @@ const SEED_SUBJECTS=[
   {id:8, name:'POWER ELECTRONICS', faculty:'Ankit Goyal', start:'2027-06-18', end:'2027-07-21', days:34, videos:68, targetHrs:102, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
   {id:9, name:'DIGITAL ELECTRONICS', faculty:'Sujay', start:'2027-09-23', end:'2027-10-08', days:16, videos:16, targetHrs:32, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
   {id:10, name:'ANALOG ELECTRONICS', faculty:'Ankit Goyal', start:'2027-07-22', end:'2027-09-22', days:63, videos:61, targetHrs:110, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
-  {id:11, name:'APTITUDE + MATHEMATICS', faculty:'Himanshu Agarwal', start:'2026-09-30', end:'2026-12-29', days:91, videos:72, targetHrs:215, status:'Not Started', confidence:0, remarks:'2027-scope subject', phase:2027},
+  {id:11, name:'APTITUDE + MATHEMATICS', faculty:'Himanshu Agarwal', start:'2026-10-01', end:'2026-12-29', days:90, videos:91, targetHrs:237, status:'Not Started', confidence:0, remarks:'91-video YouTube plan · 172h Engineering Mathematics + 65h Aptitude', phase:2027},
 ];
 
 const SUBJECT_LINKS={
@@ -654,7 +654,7 @@ function getDisplaySubjects(){return SUBJECT_DISPLAY_ORDER.map(id=>subjects.find
 
 /* ── Gap / special activity plan from Book1.xlsx ── */
 const SPECIAL_STUDY_PHASES=[
-  {start:'2026-08-27',end:'2026-09-29',type:'hours',icon:'⚡',title:'Electrical Machines Crash Course',sub:'Crash-course study period'},
+  {start:'2026-08-27',end:'2026-09-30',type:'hours',icon:'⚡',title:'Electrical Machines Crash Course',sub:'Crash-course study period · continues through 30 Sep 2026'},
   {start:'2026-12-30',end:'2027-02-28',type:'hours',icon:'📘',title:'Revision 2 + Mock Tests',sub:'Short-notes revision · mock tests during January'},
   {start:'2027-10-09',end:'2027-12-31',type:'questions',icon:'📚',title:'Paramount Question Book',sub:'Simple-question practice · complete by 31 Dec 2027',paramount:true},
   {start:'2028-01-01',end:'2028-01-31',type:'hours',icon:'📝',title:'Mock Tests + Formula Notes',sub:'Full mocks and formula-notes making'},
@@ -3335,7 +3335,7 @@ function switchMainTab(id){
    Structure: { plans: { "YYYY-MM-DD": { wakeTime, blocks:[{time,desc,status}] } },
                 logs:  { "YYYY-MM-DD": { noSocial, scores:{...} } } }
 ════════════════════════════════════════════ */
-var DISC_START='2026-09-30';
+var DISC_START='2026-10-01';
 var discData = { plans:{}, logs:{} };
 function loadDisc(){ var d=lsGet('gate-discipline'); if(d){ discData.plans=d.plans||{}; discData.logs=d.logs||{}; } }
 function saveDisc(){ lsSet('gate-discipline', discData); }
@@ -3829,7 +3829,7 @@ function renderDiscCard(){
   if(preStart){
     var daysTo = diffDays(TODAY, DISC_START);
     previewBanner = '<div style="text-align:center;padding:10px 14px;margin-bottom:14px;border:1px dashed var(--acc);border-radius:10px;background:rgba(0,212,255,0.06);">'
-      +'<span style="font-size:12px;font-weight:800;color:var(--acc);">&#x1F3AF; Preview &mdash; Discipline Tracking Starts Sep 30, 2026</span>'
+      +'<span style="font-size:12px;font-weight:800;color:var(--acc);">&#x1F3AF; Preview &mdash; Discipline Tracking Starts Oct 1, 2026</span>'
       +'<div style="font-size:11px;color:var(--muted);margin-top:3px;">'+daysTo+' day'+(daysTo===1?'':'s')+' to go &middot; scores below are for preview only</div>'
       +'</div>';
   }
@@ -3951,7 +3951,7 @@ function renderDiscCard(){
       +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;border-top:1px solid var(--border);padding-top:14px;">&#x1F4CA; Score Breakdown &mdash; Today</div>'
       +'<div class="disc-signals">'+sigHtml+'</div>'
       +'<div class="disc-heatmap">'
-        +'<div class="disc-hm-title">Discipline Heatmap &middot; Sep 30 &ndash; Dec 31</div>'
+        +'<div class="disc-hm-title">Discipline Heatmap &middot; Oct 1 &ndash; Dec 31</div>'
         +'<div style="display:flex;gap:8px;font-size:9px;color:var(--faint);margin-bottom:6px;">'
           +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#4ade80;border-radius:2px;"></span>&ge;90</span>'
           +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#fbbf24;border-radius:2px;"></span>70&ndash;89</span>'
