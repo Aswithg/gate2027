@@ -401,7 +401,7 @@ select.inp-sm{cursor:pointer;}
 .me-btn-skip:hover{border-color:var(--faint);color:var(--text);}
 
 /* ── 2027/2028 journey + today plan ── */
-.journey-phase-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;cursor:pointer;transition:border-color .2s,box-shadow .2s;}
+.journey-phase-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;display:grid;grid-template-columns:1fr;gap:16px;align-items:center;cursor:pointer;transition:border-color .2s,box-shadow .2s;}
 .journey-phase-card:hover{border-color:var(--acc);box-shadow:0 0 16px rgba(0,212,255,.08);}
 .journey-phase-card.open{border-color:var(--acc);}
 .journey-phase-title{font-size:15px;font-weight:800;color:var(--text);margin-bottom:3px;display:flex;align-items:center;gap:8px;}
@@ -2770,7 +2770,8 @@ function renderProgress(){
     const done=arr.filter(s=>s.status==='Completed').length;
     const avg=arr.length?Math.round(arr.reduce((t,s)=>t+(+s.confidence||0),0)/arr.length):0;
     const col=avg>=TARGET?'#4ade80':avg>=60?'#fbbf24':'#ef4444';
-    const size=96,sw=8,r=(size-sw)/2,circ=2*Math.PI*r,dash=Math.min(100,avg)/100*circ,targetDash=TARGET/100*circ;
+    const doneCol=arr.length&&done===arr.length?'#4ade80':done>0?'#fbbf24':'var(--muted)';
+    const donePct=arr.length?Math.round(done/arr.length*100):0;
     const names=arr.map(s=>s.name.replace('APTITUDE + MATHEMATICS','APTITUDE + MATHS')).join(' · ');
     const details=arr.map(s=>{
       const c=Math.max(0,Math.min(100,+s.confidence||0));
@@ -2778,20 +2779,27 @@ function renderProgress(){
       return `<div class="journey-conf-row"><div><div class="journey-conf-name">${esc(s.name)}</div><div class="journey-conf-status">${esc(s.status)} · ${fmt(s.start)}–${fmt(s.end)}</div></div><div class="journey-conf-val" style="color:${cc}">${c}%</div><div class="journey-conf-bar"><div class="journey-conf-fill" style="width:${c}%;background:${cc}"></div></div></div>`;
     }).join('');
     return`<div class="journey-phase-card" id="journey-phase-${phase}" onclick="toggleJourneyPhase(${phase})">
-      <div><div class="journey-phase-title">🎯 ${label}<span class="journey-expand-hint" id="journey-arr-${phase}">▼ View subjects</span></div><div class="journey-phase-sub">${names}</div>
+      <div>
+        <div class="journey-phase-title">🎯 ${label}<span class="journey-expand-hint" id="journey-arr-${phase}">▼ View subjects</span></div>
+        <div class="journey-phase-sub">${names}</div>
         <div class="journey-phase-stats">
           <div class="journey-phase-stat"><div class="v" style="color:${accent}">${arr.length}</div><div class="l">Target Subjects</div></div>
           <div class="journey-phase-stat"><div class="v" style="color:#4ade80">${done}</div><div class="l">Completed</div></div>
           <div class="journey-phase-stat"><div class="v" style="color:${col}">${avg}%</div><div class="l">Avg Confidence</div></div>
         </div>
-      </div>
-      <div class="conf-gauge" title="Confidence target ${TARGET}%">
-        <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-          <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--border)" stroke-width="${sw}"/>
-          <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${col}" stroke-width="${sw}" stroke-linecap="round" stroke-dasharray="${dash} ${circ}"/>
-          <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#00d4ff" stroke-width="2" stroke-dasharray="2 ${circ}" stroke-dashoffset="-${targetDash}" opacity=".9"/>
-        </svg>
-        <div><div class="conf-gauge-val" style="color:${col}">${avg}%</div><div class="conf-gauge-lbl">Target 85%</div></div>
+        <div style="margin-top:14px;display:flex;flex-direction:column;gap:9px;">
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;"><span>Subjects Completed</span><span style="color:${doneCol}">${done}/${arr.length}</span></div>
+            <div class="journey-conf-bar" style="height:7px;"><div class="journey-conf-fill" style="width:${donePct}%;background:${doneCol}"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;"><span>Avg Confidence</span><span style="color:${col}">${avg}% <span style="color:var(--faint);font-weight:600;">/ target ${TARGET}%</span></span></div>
+            <div class="journey-conf-bar" style="height:7px;position:relative;">
+              <div class="journey-conf-fill" style="width:${Math.min(100,avg)}%;background:${col}"></div>
+              <div style="position:absolute;top:-2px;bottom:-2px;left:${TARGET}%;width:2px;background:#00d4ff;"></div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="journey-phase-detail" onclick="event.stopPropagation()">${details}</div>
     </div>`;
@@ -3177,32 +3185,38 @@ function renderSampleMocks(){
 }
 
 
-function dashboardTodayPlanHtml(){
-  const activity=getStudyActivity(TODAY);
+function dashboardPlanHtml(date,headerText,periodLabel){
+  const activity=getStudyActivity(date);
   let studyTitle='N/A',studySub='No planned activity';
   if(activity.type==='class'){
     const sub=subjects.find(s=>s.id===activity.subjectId);
-    const dLeft=sub?Math.max(1,diffDays(TODAY,sub.end)+1):1;
+    const dLeft=sub?Math.max(1,diffDays(date,sub.end)+1):1;
     const vLeft=sub?Math.max(0,sub.videos-getActualVids(sub)):0;
     const vTgt=sub?Math.max(1,Math.ceil(vLeft/dLeft)):0;
-    studyTitle=sub?sub.name:activity.title;studySub=`Class / videos · target ${vTgt} video${vTgt===1?'':'s'} today`;
+    studyTitle=sub?sub.name:activity.title;studySub=`Class / videos · target ${vTgt} video${vTgt===1?'':'s'} ${periodLabel}`;
   }else if(activity.paramount){
-    const book=getParamountCurrentBook(),pt=paramountPageTarget(TODAY);
-    studyTitle=book?book.name:'Paramount Complete ✓';studySub=book?`Paramount Questions · ${pt} pages today · finish by 31 Dec`:'All 782 pages completed';
+    const book=getParamountCurrentBook(),pt=paramountPageTarget(date);
+    studyTitle=book?book.name:'Paramount Complete ✓';studySub=book?`Paramount Questions · ${pt} pages ${periodLabel} · finish by 31 Dec`:'All 782 pages completed';
   }else if(activity.type!=='none'){studyTitle=activity.title;studySub=activity.sub||'Log hours spent';}
 
-  const r1=subjects.find(s=>{const sl=REV1_SCHEDULE[s.id];return sl&&TODAY>=sl.start&&TODAY<=sl.end&&!rev1Done[s.id];});
+  const r1=subjects.find(s=>{const sl=REV1_SCHEDULE[s.id];return sl&&date>=sl.start&&date<=sl.end&&!rev1Done[s.id];});
   const r1Title=r1?(r1.id===11?'ENGINEERING MATHEMATICS':r1.name):'N/A';
-  const r1Sub=r1?`Revision 1 · ${pageTarget(r1.id,REV1_SCHEDULE[r1.id])} pages today`:'No Revision 1 activity scheduled';
+  const r1Sub=r1?`Revision 1 · ${pageTarget(r1.id,REV1_SCHEDULE[r1.id])} pages ${periodLabel}`:'No Revision 1 activity scheduled';
 
-  const pslots=PYQ_PLAN.filter(x=>x.date===TODAY);
+  const pslots=PYQ_PLAN.filter(x=>x.date===date);
   const pqTitle=pslots.length?SUB_NAMES[pslots[0].subId]:'N/A';
   const pqSub=pslots.length?pslots.map(x=>`${x.name} · ${x.target}q`).join(' | '):'PYQ is scheduled only on Friday, Saturday and Sunday';
-  return `<div class="db-section-hdr" style="margin-bottom:10px;">✅ What needs to be done today</div><div class="today-plan-grid">
+  return `<div class="db-section-hdr" style="margin-bottom:10px;">${headerText}</div><div class="today-plan-grid">
     <div class="today-plan-card"><div class="today-plan-label">📚 Study</div><div class="today-plan-title">${esc(studyTitle)}</div><div class="today-plan-sub">${esc(studySub)}</div></div>
     <div class="today-plan-card"><div class="today-plan-label">📖 Revision 1</div><div class="today-plan-title">${esc(r1Title)}</div><div class="today-plan-sub">${esc(r1Sub)}</div></div>
     <div class="today-plan-card"><div class="today-plan-label">🎯 PYQ</div><div class="today-plan-title">${esc(pqTitle)}</div><div class="today-plan-sub">${esc(pqSub)}</div></div>
   </div>`;
+}
+function dashboardTodayPlanHtml(){
+  return dashboardPlanHtml(TODAY,'✅ What needs to be done today','today');
+}
+function dashboardTomorrowPlanHtml(){
+  return dashboardPlanHtml(addDays(TODAY,1),'🔜 What needs to be done tomorrow','tomorrow');
 }
 
 function renderDashboard(){
@@ -3308,12 +3322,10 @@ function renderDashboard(){
     </div>
     ${todayCard}
     ${dashboardTodayPlanHtml()}
+    ${dashboardTomorrowPlanHtml()}
     ${activeSubCard}
-    <div class="db-section-hdr" style="margin-bottom:10px;">🎯 Discipline Score</div>
-    <div id="disc-card-root"></div>
     <div class="db-section-hdr" style="margin-top:24px;margin-bottom:10px;">📝 Sample Mocks</div>
     <div id="sec-sample"></div>`;
-  renderDiscCard();
   renderSampleMocks();
 }
 
