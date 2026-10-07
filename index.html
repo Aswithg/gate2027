@@ -632,7 +632,7 @@ const SEED_SUBJECTS=[
   {id:8, name:'POWER ELECTRONICS', faculty:'Ankit Goyal', start:'2027-06-18', end:'2027-07-21', days:34, videos:68, targetHrs:102, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
   {id:9, name:'DIGITAL ELECTRONICS', faculty:'Sujay', start:'2027-09-23', end:'2027-10-08', days:16, videos:16, targetHrs:32, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
   {id:10, name:'ANALOG ELECTRONICS', faculty:'Ankit Goyal', start:'2027-07-22', end:'2027-09-22', days:63, videos:61, targetHrs:110, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
-  {id:11, name:'APTITUDE + MATHEMATICS', faculty:'Himanshu Agarwal', start:'2026-10-05', end:'2026-12-29', days:86, videos:91, targetHrs:237, status:'Not Started', confidence:0, remarks:'91-video YouTube plan · 172h Engineering Mathematics + 65h Aptitude', phase:2027},
+  {id:11, name:'APTITUDE + MATHEMATICS', faculty:'Himanshu Agarwal', start:'2026-10-08', end:'2026-12-29', days:83, videos:91, targetHrs:237, status:'Not Started', confidence:0, remarks:'91-video YouTube plan · 172h Engineering Mathematics + 65h Aptitude', phase:2027},
 ];
 
 const SUBJECT_LINKS={
@@ -646,7 +646,7 @@ const SUBJECT_LINKS={
   8:{yt:'https://www.youtube.com/playlist?list=PLs5_Rtf2P2r5KREX_ijxw2Sz-ISNhAgH4'},
   9:{yt:'https://www.youtube.com/playlist?list=PLgzsL8klq6DKnltogpZsroj0yG-MlFLNL'},
   10:{yt:'https://www.youtube.com/playlist?list=PLs5_Rtf2P2r5MplAOADz3fTWIyBZTkGbB'},
-  11:{pf_m:'https://prepfusion.in/new-courses/98/content?activeTab=Content',pf_a:'https://prepfusion.in/new-courses/96/content?activeTab=Content',yt_a:'https://www.youtube.com/playlist?list=PLgF7lRh8Xb_WWuQ39i48DruAyzb_voYYD',yt_m:'https://www.youtube.com/playlist?list=PLgF7lRh8Xb_UmswOfvBO371uK1Sa7ZF5I'},
+  11:{pf_m:'https://prepfusion.in/new-courses/98/content?activeTab=Content',pf_a:'https://prepfusion.in/new-courses/96/content?activeTab=Content',yt_a:'https://www.youtube.com/playlist?list=PLgF7lRh8Xb_WWuQ39i48DruAyzb_voYYD',yt_m:'https://youtube.com/playlist?list=PLs5_Rtf2P2r5UbxyGgiBIKgsddAzVHM7Q&si=VDBDCLHH-sfPxDAV'},
 };
 
 const SUBJECT_DISPLAY_ORDER=[1,2,3,4,5,11,6,7,8,10,9];
@@ -2166,11 +2166,11 @@ function renderPyqQuizCard(sub){
 // 2027 cohort: Maths, Machines, Power Systems, Power Electronics, Analog and Digital must finish by 31 Dec 2027.
 const PYQ_DEADLINES={1:'2026-12-31',2:'2026-12-31',3:'2026-12-31',4:'2026-12-31',5:'2026-12-31',11:'2027-12-31',6:'2027-12-31',7:'2027-12-31',8:'2027-12-31',10:'2027-12-31',9:'2027-12-31'};
 const PYQ_AVAILABLE={
-  1:'2026-10-09',2:'2026-10-09',3:'2026-10-09',4:'2026-10-09',5:'2026-10-09',
+  1:'2026-10-16',2:'2026-10-16',3:'2026-10-16',4:'2026-10-16',5:'2026-10-16',
   11:'2027-01-01',6:'2027-05-23',7:'2027-06-18',8:'2027-07-22',10:'2027-09-23',9:'2027-10-09'
 };
 const PYQ_COHORTS=[
-  {ids:[1,2,3,4,5],start:'2026-10-09',end:'2026-12-31',dailyMax:25},
+  {ids:[1,2,3,4,5],start:'2026-10-16',end:'2026-12-31',dailyMax:29},
   {ids:[11,6,7,8,10,9],start:'2027-01-01',end:'2027-12-31',dailyMax:25}
 ];
 function getPyqDeadline(subId){return PYQ_DEADLINES[subId]||'';}
@@ -2344,7 +2344,7 @@ function renderPyq(){
   renderPyqChart();
   renderPyqTopics();
 }
-const REV1_START='2026-10-05';
+const REV1_START='2026-10-08';
 function applyTabLock(wrapId,isLocked,startLabel){
   const wrap=$(wrapId);if(!wrap)return;
   // remove existing banner if any
@@ -2363,7 +2363,17 @@ function applyTabLock(wrapId,isLocked,startLabel){
 
 const MIGRATION_KEY='gate-v20-migrated';
 function runMigration(){
-  if(lsGet(MIGRATION_KEY))return;
+  if(lsGet(MIGRATION_KEY)){
+    if(!lsGet('gate-v21-s11-dates')){
+      var _subs=lsGet('gate-subjects');
+      if(_subs&&_subs.length){
+        _subs.forEach(function(s){if(s.id===11){s.start='2026-10-08';s.end='2026-12-29';s.days=83;}});
+        lsSet('gate-subjects',_subs);
+      }
+      lsSet('gate-v21-s11-dates','1');
+    }
+    return;
+  }
   lsSet('gate-subjects',JSON.parse(JSON.stringify(SEED_SUBJECTS)));
   lsSet('gate-daily',JSON.parse(JSON.stringify(DAILY_SEED)));
   lsSet('gate-settings',JSON.parse(JSON.stringify(SEED_SETTINGS)));
@@ -2397,7 +2407,7 @@ const FB_KEYS = [
   'gate-subjects','gate-daily','gate-settings','gate-milestones',
   'gate-sub-tests','gate-rev1-done','gate-rev1-notes','gate-rev1-pages',
   'gate-mocks','gate-pyq-data','gate-pyq-quiz','gate-discipline',
-  'gate-theme','gate-pyq-plan', 'gate-v20-migrated', 'gate-sn-pages', 'gate-sn-notes', 'gate-sample-mocks'
+  'gate-theme','gate-pyq-plan', 'gate-v20-migrated', 'gate-v21-s11-dates', 'gate-sn-pages', 'gate-sn-notes', 'gate-sample-mocks'
 ];
 
 function lsGet(k){
@@ -2970,14 +2980,14 @@ const REV1_NOTES={
   11:[{file:'Engineering Mathematics .pdf',pages:2423,url:'https://drive.google.com/file/d/1eDa50THB2M4cpUerP0REuRyPWl3AsDtd/view?usp=sharing'}]
 };
 /* REV1 SCHEDULE — ~60 pages/day; starts only after subject classes are complete.
-   Completed 2027 subjects are cleared sequentially from Oct 5, 2026.
+   Completed 2027 subjects are cleared sequentially from Oct 8 to Dec 31, 2026.
    Mathematics is revised during the Electrical Machines study window; Aptitude has no notes. */
 const REV1_SCHEDULE={
-  1:{start:'2026-10-05',end:'2026-10-24',days:20,perDay:60},
-  2:{start:'2026-10-25',end:'2026-11-15',days:22,perDay:60},
-  3:{start:'2026-11-16',end:'2026-12-09',days:24,perDay:60},
-  4:{start:'2026-12-10',end:'2026-12-22',days:13,perDay:60},
-  5:{start:'2026-12-23',end:'2026-12-28',days:6, perDay:60},
+  1:{start:'2026-10-08',end:'2026-10-27',days:20,perDay:60},
+  2:{start:'2026-10-28',end:'2026-11-18',days:22,perDay:60},
+  3:{start:'2026-11-19',end:'2026-12-12',days:24,perDay:60},
+  4:{start:'2026-12-13',end:'2026-12-25',days:13,perDay:60},
+  5:{start:'2026-12-26',end:'2026-12-31',days:6, perDay:60},
   11:{start:'2027-03-01',end:'2027-04-10',days:41,perDay:60},
   6:{start:'2027-05-23',end:'2027-06-08',days:17,perDay:60},
   7:{start:'2027-06-18',end:'2027-07-10',days:23,perDay:60},
