@@ -3225,9 +3225,6 @@ function dashboardPlanHtml(date,headerText,periodLabel){
 function dashboardTodayPlanHtml(){
   return dashboardPlanHtml(TODAY,'✅ What needs to be done today','today');
 }
-function dashboardTomorrowPlanHtml(){
-  return dashboardPlanHtml(addDays(TODAY,1),'🔜 What needs to be done tomorrow','tomorrow');
-}
 
 function renderDashboard(){
   const el=$('db-root');if(!el)return;
@@ -3266,7 +3263,7 @@ function renderDashboard(){
     const dLeft=Math.max(0,diffDays(TODAY,activeSub.end));
     const subCol=hPct>=100?'#4ade80':hPct>=60?'#fbbf24':'#ef4444';
     const asLk=SUBJECT_LINKS[activeSub.id]||{};
-    const asYtUrl=asLk.yt||asLk.yt_a||asLk.yt_d||asLk.yt_m||'';
+    const asYtUrl=asLk.yt||asLk.yt_m||asLk.yt_a||asLk.yt_d||'';
     const asYtBtn=asYtUrl?`<a href="${asYtUrl}" target="_blank" class="lp-link-y" style="font-size:12px;padding:6px 13px;">▶ YouTube</a>`:'';
     /* ── Rev1 mini card data ── */
     const r1ActiveSub=subjects.find(s=>{const sl=REV1_SCHEDULE[s.id];return sl&&TODAY>=sl.start&&TODAY<=sl.end&&!rev1Done[s.id];})
@@ -3331,11 +3328,12 @@ function renderDashboard(){
       </div>
     </div>
     ${todayCard}
-    ${dashboardTomorrowPlanHtml()}
+    <div id="disc-card-root"></div>
     ${activeSubCard}
     <div class="db-section-hdr" style="margin-top:24px;margin-bottom:10px;">📝 Sample Mocks</div>
     <div id="sec-sample"></div>`;
   renderSampleMocks();
+  loadDisc();renderDiscCard();
 }
 
 /* ══ TAB NAV ══ */
@@ -3356,7 +3354,7 @@ function switchMainTab(id){
    Structure: { plans: { "YYYY-MM-DD": { wakeTime, blocks:[{time,desc,status}] } },
                 logs:  { "YYYY-MM-DD": { noSocial, scores:{...} } } }
 ════════════════════════════════════════════ */
-var DISC_START='2026-10-05';
+var DISC_START='2026-10-08';
 var discData = { plans:{}, logs:{} };
 function loadDisc(){ var d=lsGet('gate-discipline'); if(d){ discData.plans=d.plans||{}; discData.logs=d.logs||{}; } }
 function saveDisc(){ lsSet('gate-discipline', discData); }
@@ -3457,6 +3455,7 @@ function calcPyqStreak(){
 function calcRev1Streak(){ return calcSchedSlotStreak('study_mid'); }
 function calcNotesStreak(){ return calcSchedSlotStreak('study_night'); }
 function calcVidStreak(){ return calcSchedSlotStreak('study_am'); }
+function calcExerciseStreak(){ return calcSchedSlotStreak('exercise'); }
 function calcWakeStreak(){
   var streak=0; var d=addDays(TODAY,0);
   for(var i=0;i<193;i++){
@@ -3523,7 +3522,7 @@ function discSetWake(date, t){ loadDisc(); if(!discData.plans[date])discData.pla
 /* helper: get YouTube link for a subject id */
 function discGetYt(subId){
   var lk=SUBJECT_LINKS[subId]||{};
-  return lk.yt||lk.yt_a||lk.yt_d||lk.yt_m||'';
+  return lk.yt||lk.yt_m||lk.yt_a||lk.yt_d||'';
 }
 /* helper: get PrepFusion PYQ link for a subject id */
 function discGetPyqUrl(subId){
@@ -3842,7 +3841,7 @@ function toggleSchedSlot(key, val){
 }
 
 function renderDiscCard(){
-  loadAll(); loadRev1(); loadPyq();
+  loadAll(); loadRev1(); loadPyq(); loadDisc();
   var el = document.getElementById('disc-card-root');
   if(!el) return;
   var preStart = TODAY < DISC_START;
@@ -3850,7 +3849,7 @@ function renderDiscCard(){
   if(preStart){
     var daysTo = diffDays(TODAY, DISC_START);
     previewBanner = '<div style="text-align:center;padding:10px 14px;margin-bottom:14px;border:1px dashed var(--acc);border-radius:10px;background:rgba(0,212,255,0.06);">'
-      +'<span style="font-size:12px;font-weight:800;color:var(--acc);">&#x1F3AF; Preview &mdash; Discipline Tracking Starts Oct 5, 2026</span>'
+      +'<span style="font-size:12px;font-weight:800;color:var(--acc);">&#x1F3AF; Preview &mdash; Discipline Tracking Starts Oct 8, 2026</span>'
       +'<div style="font-size:11px;color:var(--muted);margin-top:3px;">'+daysTo+' day'+(daysTo===1?'':'s')+' to go &middot; scores below are for preview only</div>'
       +'</div>';
   }
@@ -3865,6 +3864,7 @@ function renderDiscCard(){
   var notesS  = calcNotesStreak();
   var pyqS    = calcPyqStreak();
   var scS     = calcSelfCtrlStreak();
+  var exS     = calcExerciseStreak();
   var log     = discData.logs[TODAY]||{};
   var DAILY_SCHEDULE = getDailySchedule(TODAY);
 
@@ -3946,6 +3946,7 @@ function renderDiscCard(){
       +'</div>'
       +'<div class="disc-stats">'
         +'<div class="disc-streaks-row">'
+          +'<div class="disc-streak-chip" title="Exercise streak"><span class="dsc-fire">&#x1F3C3;</span><span class="dsc-num" style="color:'+(exS>=7?'#4ade80':exS>=3?'#fbbf24':'var(--acc)')+'">'+exS+'</span><span class="dsc-lbl">Exercise</span></div>'
           +'<div class="disc-streak-chip" title="Morning study streak"><span class="dsc-fire">&#x1F3AC;</span><span class="dsc-num" style="color:'+(vidS>=7?'#4ade80':vidS>=3?'#fbbf24':'var(--acc)')+'">'+vidS+'</span><span class="dsc-lbl">AM Study</span></div>'
           +'<div class="disc-streak-chip" title="Midday study streak"><span class="dsc-fire">&#x1F4D6;</span><span class="dsc-num" style="color:'+(rev1S>=7?'#4ade80':rev1S>=3?'#fbbf24':'var(--acc)')+'">'+rev1S+'</span><span class="dsc-lbl">Mid Study</span></div>'
           +'<div class="disc-streak-chip" title="Night study streak"><span class="dsc-fire">&#x1F4DD;</span><span class="dsc-num" style="color:'+(notesS>=7?'#4ade80':notesS>=3?'#fbbf24':'var(--acc)')+'">'+notesS+'</span><span class="dsc-lbl">Night</span></div>'
@@ -3972,7 +3973,7 @@ function renderDiscCard(){
       +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;border-top:1px solid var(--border);padding-top:14px;">&#x1F4CA; Score Breakdown &mdash; Today</div>'
       +'<div class="disc-signals">'+sigHtml+'</div>'
       +'<div class="disc-heatmap">'
-        +'<div class="disc-hm-title">Discipline Heatmap &middot; Oct 5 &ndash; Dec 31</div>'
+        +'<div class="disc-hm-title">Discipline Heatmap &middot; Oct 8 &ndash; Dec 31</div>'
         +'<div style="display:flex;gap:8px;font-size:9px;color:var(--faint);margin-bottom:6px;">'
           +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#4ade80;border-radius:2px;"></span>&ge;90</span>'
           +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#fbbf24;border-radius:2px;"></span>70&ndash;89</span>'
