@@ -631,7 +631,7 @@ const SEED_SUBJECTS=[
   {id:8, name:'POWER ELECTRONICS', faculty:'Ankit Goyal', start:'2027-06-18', end:'2027-07-21', days:34, videos:68, targetHrs:102, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
   {id:9, name:'DIGITAL ELECTRONICS', faculty:'Sujay', start:'2027-09-23', end:'2027-10-08', days:16, videos:16, targetHrs:32, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
   {id:10, name:'ANALOG ELECTRONICS', faculty:'Ankit Goyal', start:'2027-07-22', end:'2027-09-22', days:63, videos:61, targetHrs:110, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
-  {id:11, name:'APTITUDE + MATHEMATICS', faculty:'Himanshu Agarwal', start:'2026-10-08', end:'2026-12-29', days:83, videos:91, targetHrs:237, status:'Not Started', confidence:0, remarks:'91-video YouTube plan · 172h Engineering Mathematics + 65h Aptitude', phase:2027},
+  {id:11, name:'APTITUDE + MATHEMATICS', faculty:'Himanshu Agarwal', start:'2026-10-08', end:'2026-12-29', days:83, videos:118, targetHrs:312, status:'Not Started', confidence:0, remarks:'118 videos: 88 Maths (~1.5h each = 132h) + 30 Aptitude (~6h each = 180h) · 1 Maths video daily, +1 Aptitude video on Sat & Sun', phase:2027},
 ];
 
 const SUBJECT_LINKS={
@@ -2891,6 +2891,7 @@ function renderTargetGrid(selSubId){
       const dLeft=Math.max(1,diffDays(entryDate,sub.end)+1);
       const hLeft=Math.max(0,sub.targetHrs-parseFloat(getActualHrs(sub)));hTgt=Math.max(1,Math.ceil(hLeft/dLeft*10)/10);
       const vLeft=Math.max(0,sub.videos-getActualVids(sub));vTgt=Math.max(1,Math.ceil(vLeft/dLeft));
+      if(sub.id===11){var _dw=new Date(entryDate+'T00:00:00').getDay();vTgt=(_dw===0||_dw===6)?2:1;} /* Maths 1/day; +1 Aptitude on Sat & Sun */
     }
     const vDelta=vDone-vTgt,hDelta=hToday-hTgt;
     function dH(d){if(d>0.05)return`<span class="stepper-delta delta-plus">+${d.toFixed(1)}</span>`;if(d<-0.05)return`<span class="stepper-delta delta-minus">${d.toFixed(1)}</span>`;return`<span class="stepper-delta delta-zero">On target</span>`;}
@@ -3954,7 +3955,7 @@ function renderDiscCard(){
       var allDone=curDone===sdone;
       toggleHtml = '<div style="display:flex;align-items:center;gap:7px;margin-top:7px;">'
         +'<label class="sched-toggle"><input type="checkbox" '+(allDone?'checked':'')+' onchange="schedToggleAll(this.checked)"><span class="sched-toggle-slider"></span></label>'
-        +'<span style="font-size:10px;font-weight:700;color:'+(allDone?'#4ade80':'var(--faint)')+'">'+(allDone?'All done':'Mark all done')+'</span>'
+        +'<span style="font-size:10px;font-weight:700;color:'+(allDone?'#4ade80':'var(--faint)')+'">'+(allDone?'All done (incl. Chess + Control)':'Mark all done')+'</span>'
         +'</div>';
     }
 
@@ -4025,6 +4026,9 @@ function schedToggleAll(allOn){
     discData.logs[TODAY]['sched_'+sl.key] = allOn ? true : undefined;
     if(!allOn) delete discData.logs[TODAY]['sched_'+sl.key];
   });
+  /* Chess + Control follow the As Per Schedule toggle */
+  if(allOn){ discData.logs[TODAY]['chess']=true; discData.logs[TODAY]['selfControl']=true; }
+  else { delete discData.logs[TODAY]['chess']; delete discData.logs[TODAY]['selfControl']; }
   saveDisc(); renderDiscCard();
 }
 
@@ -4196,6 +4200,8 @@ function meMarkAllSched(val){
     if(val){ _mePendingVals['sched_'+sl.key] = true; }
     else { delete _mePendingVals['sched_'+sl.key]; }
   });
+  if(val){ _mePendingVals['chess']=true; _mePendingVals['selfControl']=true; }
+  else { delete _mePendingVals['chess']; delete _mePendingVals['selfControl']; }
   renderMeModal();
 }
 
