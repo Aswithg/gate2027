@@ -3400,10 +3400,8 @@ function discScoreFromLog(log,date){
   var sDone=studySlots.filter(function(s){return !!log['sched_'+s.key];}).length;
   var sEarned=sDone===studySlots.length?60:sDone*per;
   result.signals.push({name:'Study',note:sDone+'/'+studySlots.length+' study slots',pts:60,earned:sEarned,isStudy:true,slots:studySlots});result.total+=sEarned;
-  var ex=!!log['sched_exercise'];result.signals.push({name:'Exercise',note:'6:00 AM – 6:30 AM',pts:10,earned:ex?10:0,schedKey:'exercise'});result.total+=ex?10:0;
-  var ch=!!log['chess'];result.signals.push({name:'Chess',note:'Daily chess practice',pts:10,earned:ch?10:0,fixedKey:'chess'});result.total+=ch?10:0;
-  var scEarned=0,scNote='Mark below';if(log.selfControl===true){scEarned=10;scNote='Maintained ✓';}else if(log.selfControl===false){scNote='Broken today';}
-  result.signals.push({name:'Control',note:scNote,pts:10,earned:scEarned,isSelfCtrl:true});result.total+=scEarned;
+  var bItems=[!!log['sched_exercise'],!!log['chess'],log.selfControl===true];var bDone=bItems.filter(Boolean).length;
+  result.signals.push({name:'Body',note:bDone+'/3 body habits',pts:30,earned:bDone*10,isBody:true,items:bItems});result.total+=bDone*10;
   var sdone=SCHED.filter(function(s){return !!log['sched_'+s.key];}).length;var schedEarned=sdone===SCHED.length?10:0;
   result.signals.push({name:'As Per Schedule',note:sdone+'/'+SCHED.length+' slots',pts:10,earned:schedEarned,isSchedAll:true});result.total+=schedEarned;
   result.total=Math.min(100,result.total);return result;
@@ -3460,6 +3458,16 @@ function calcStudyStreak(){
   for(var i=0;i<193;i++){
     if(d<DISC_START) break;
     if(calcDiscScore(d).signals[0].earned>=60) streak++;
+    else break;
+    d=addDays(d,-1);
+  }
+  return streak;
+}
+function calcBodyStreak(){
+  var streak=0; var d=addDays(TODAY,0);
+  for(var i=0;i<193;i++){
+    if(d<DISC_START) break;
+    if(calcDiscScore(d).signals[1].earned>=30) streak++;
     else break;
     d=addDays(d,-1);
   }
@@ -3873,7 +3881,7 @@ function renderDiscCard(){
   var avg7    = calcDiscAvg7();
   var col     = discColor(sc.total);
   var stdS    = calcStudyStreak();
-  var chS     = calcChessStreak();
+  var bdS     = calcBodyStreak();
   var scS     = calcSelfCtrlStreak();
   var exS     = calcExerciseStreak();
   var log     = discData.logs[TODAY]||{};
@@ -3881,6 +3889,7 @@ function renderDiscCard(){
 
   var ICONS = {
     'Study':'&#x1F4DA;',
+    'Body':'&#x1F4AA;',
     'Exercise':'&#x1F3C3;',
     'Chess':'&#x265F;&#xFE0F;',
     'Control':'&#x1F9E0;',
@@ -3904,10 +3913,17 @@ function renderDiscCard(){
     if(sig.isStudy){
       toggleHtml = '<div style="display:flex;flex-direction:column;gap:5px;margin-top:7px;">'+sig.slots.map(function(sl){
         var d1=!!(log['sched_'+sl.key]);
-        var lbl=sl.key==='study_am'?'Morning':sl.key==='study_mid'?'Midday':sl.key==='study_pm'?'Afternoon':'Night';
+        var lbl=sl.key==='study_am'?'Video':sl.key==='study_mid'?'Notes':sl.key==='study_pm'?'PYQ':'SN';
         return '<div style="display:flex;align-items:center;gap:7px;">'
           +'<label class="sched-toggle"><input type="checkbox" '+(d1?'checked':'')+' data-sk="'+sl.key+'" onchange="toggleSchedSlot(this.dataset.sk,this.checked)"><span class="sched-toggle-slider"></span></label>'
           +'<span style="font-size:10px;font-weight:700;color:'+(d1?'#4ade80':'var(--faint)')+'">'+lbl+' &middot; '+sl.from+'&ndash;'+sl.to+'</span></div>';
+      }).join('')+'</div>';
+    } else if(sig.isBody){
+      var bRows=[['Exercise','sched_exercise',!!log['sched_exercise']],['Chess','chess',!!log['chess']],['Control','selfControl',log.selfControl===true]];
+      toggleHtml = '<div style="display:flex;flex-direction:column;gap:5px;margin-top:7px;">'+bRows.map(function(r){
+        return '<div style="display:flex;align-items:center;gap:7px;">'
+          +'<label class="sched-toggle"><input type="checkbox" '+(r[2]?'checked':'')+' data-k="'+r[1]+'" onchange="discToggleLog(TODAY,this.dataset.k,this.checked)"><span class="sched-toggle-slider"></span></label>'
+          +'<span style="font-size:10px;font-weight:700;color:'+(r[2]?'#4ade80':'var(--faint)')+'">'+r[0]+'</span></div>';
       }).join('')+'</div>';
     } else if(sig.schedKey){
       /* Finished / Pending toggle */
@@ -3965,11 +3981,9 @@ function renderDiscCard(){
       +'<div class="disc-stats">'
         +'<div class="disc-streaks-row">'
           +'<div class="disc-streak-chip" title="Study streak (all study slots)"><span class="dsc-fire">&#x1F4DA;</span><span class="dsc-num" style="color:'+(stdS>=7?'#4ade80':stdS>=3?'#fbbf24':'var(--acc)')+'">'+stdS+'</span><span class="dsc-lbl">Study</span></div>'
-          +'<div class="disc-streak-chip" title="Exercise streak"><span class="dsc-fire">&#x1F3C3;</span><span class="dsc-num" style="color:'+(exS>=7?'#4ade80':exS>=3?'#fbbf24':'var(--acc)')+'">'+exS+'</span><span class="dsc-lbl">Exercise</span></div>'
-          +'<div class="disc-streak-chip" title="Chess streak"><span class="dsc-fire">&#x265F;&#xFE0F;</span><span class="dsc-num" style="color:'+(chS>=7?'#4ade80':chS>=3?'#fbbf24':'var(--acc)')+'">'+chS+'</span><span class="dsc-lbl">Chess</span></div>'
-          +'<div class="disc-streak-chip" title="Control streak"><span class="dsc-fire">&#x1F9E0;</span><span class="dsc-num" style="color:'+(scS>=7?'#4ade80':scS>=3?'#fbbf24':'var(--acc)')+'">'+scS+'</span><span class="dsc-lbl">Control</span></div>'
+          +'<div class="disc-streak-chip" title="Body streak (Exercise + Chess + Control)"><span class="dsc-fire">&#x1F4AA;</span><span class="dsc-num" style="color:'+(bdS>=7?'#4ade80':bdS>=3?'#fbbf24':'var(--acc)')+'">'+bdS+'</span><span class="dsc-lbl">Body</span></div>'
           +'<div class="disc-streak-divider"></div>'
-          +'<div class="disc-streak-chip disc-streak-disc" title="Discipline streak (score &ge;90)"><span class="dsc-fire">&#x1F525;</span><span class="dsc-num" style="color:'+(streak>=7?'#4ade80':streak>=3?'#fbbf24':'var(--acc)')+'">'+streak+'</span><span class="dsc-lbl">Streak</span></div>'
+          +'<div class="disc-streak-chip disc-streak-disc" title="Discipline streak (score &ge;90)"><span class="dsc-fire">&#x1F525;</span><span class="dsc-num" style="color:'+(streak>=7?'#4ade80':streak>=3?'#fbbf24':'var(--acc)')+'">'+streak+'</span><span class="dsc-lbl">Discipline</span></div>'
           +'<div class="disc-streak-chip disc-streak-disc" title="All-time max discipline streak"><span class="dsc-fire">&#x1F3C6;</span><span class="dsc-num" style="color:#fbbf24">'+maxStrk+'</span><span class="dsc-lbl">Max</span></div>'
         +'</div>'
         +'<div class="disc-stat" style="margin-left:auto;"><div class="disc-stat-val" style="color:'+discColor(avg7)+'">'+avg7+'</div><div class="disc-stat-lbl">7-Day Avg</div></div>'
