@@ -525,7 +525,6 @@ select.inp-sm{cursor:pointer;}
         </div>
         <div class="sub-strip" id="sub-strip"></div>
         <div class="target-grid" id="target-grid"></div>
-        <div style="margin-top:16px;"><label class="lbl">Habits</label><div class="habit-row" id="habit-row"></div></div>
         <div id="entry-dynamic-fields" style="margin-top:16px;"></div>
       </div>
     </div>
@@ -2835,8 +2834,6 @@ function renderEntry(){
   if(!subjectOverrideEnabled&&autoSub&&!dd.subjectId)dd.subjectId=autoSub.id;
   const selSubId=dd.subjectId||(autoSub?autoSub.id:null);
   if($('entry-note'))$('entry-note').value=dd.note||'';
-  const HABITS=[{key:'gate',label:'📚 GATE Study'},{key:'exercise',label:'🏃 Exercise'},{key:'chess',label:'♟ Chess'},{key:'perfect',label:'⭐ Perfect Day'}];
-  $('habit-row').innerHTML=HABITS.map(h=>`<button class="habit-btn ${dd.habits?.[h.key]?'active':''}" onclick="toggleHabit('${h.key}')">${h.label}</button>`).join('');
 
   const dyn=$('entry-dynamic-fields');
   if(activity.type==='class'){
@@ -3395,19 +3392,25 @@ var WEEKEND_SCHEDULE = [
 function isFriSatSun(dateStr){
   var dow=new Date(dateStr+'T00:00:00').getDay();return dow===5||dow===6||dow===0;
 }
-function getDailySchedule(dateStr){return isFriSatSun(dateStr)?WEEKEND_SCHEDULE:WEEKDAY_SCHEDULE;}/* ── score computation — 6-signal / 100-pt ── */
+function getDailySchedule(dateStr){return isFriSatSun(dateStr)?WEEKEND_SCHEDULE:WEEKDAY_SCHEDULE;}/* ── score computation — 5-signal / 100-pt: Study 60, Exercise 10, Chess 10, Control 10, As per schedule 10 ── */
+function discStudySlots(date){ return getDailySchedule(date).filter(function(s){ return s.key.indexOf('study_')===0; }); }
+function discScoreFromLog(log,date){
+  var SCHED=getDailySchedule(date);var result={total:0,signals:[]};
+  var studySlots=discStudySlots(date);var per=Math.round(60/studySlots.length);
+  var sDone=studySlots.filter(function(s){return !!log['sched_'+s.key];}).length;
+  var sEarned=sDone===studySlots.length?60:sDone*per;
+  result.signals.push({name:'Study',note:sDone+'/'+studySlots.length+' study slots',pts:60,earned:sEarned,isStudy:true,slots:studySlots});result.total+=sEarned;
+  var ex=!!log['sched_exercise'];result.signals.push({name:'Exercise',note:'6:00 AM – 6:30 AM',pts:10,earned:ex?10:0,schedKey:'exercise'});result.total+=ex?10:0;
+  var ch=!!log['chess'];result.signals.push({name:'Chess',note:'Daily chess practice',pts:10,earned:ch?10:0,fixedKey:'chess'});result.total+=ch?10:0;
+  var scEarned=0,scNote='Mark below';if(log.selfControl===true){scEarned=10;scNote='Maintained ✓';}else if(log.selfControl===false){scNote='Broken today';}
+  result.signals.push({name:'Control',note:scNote,pts:10,earned:scEarned,isSelfCtrl:true});result.total+=scEarned;
+  var sdone=SCHED.filter(function(s){return !!log['sched_'+s.key];}).length;var schedEarned=sdone===SCHED.length?10:0;
+  result.signals.push({name:'As Per Schedule',note:sdone+'/'+SCHED.length+' slots',pts:10,earned:schedEarned,isSchedAll:true});result.total+=schedEarned;
+  result.total=Math.min(100,result.total);return result;
+}
 function calcDiscScore(date){
   loadDisc();
-  var log=discData.logs[date]||{};var DAILY_SCHEDULE=getDailySchedule(date);var result={total:0,signals:[]};
-  var am=!!log['sched_study_am'];result.signals.push({name:'Morning Study',note:'7:00 AM – 9:00 AM',pts:20,earned:am?20:0,schedKey:'study_am'});result.total+=am?20:0;
-  var mid=!!log['sched_study_mid'];result.signals.push({name:'Midday Study',note:'10:00 AM – 12:00 PM',pts:20,earned:mid?20:0,schedKey:'study_mid'});result.total+=mid?20:0;
-  var night=!!log['sched_study_night'];result.signals.push({name:'Night Study',note:'11:00 PM – 12:00 AM',pts:20,earned:night?20:0,schedKey:'study_night'});result.total+=night?20:0;
-  var pyqDone=!!log['fb_pyq'];result.signals.push({name:'PYQ Practice',note:'Friday–Sunday planned practice',pts:20,earned:pyqDone?20:0,fixedKey:'fb_pyq'});result.total+=pyqDone?20:0;
-  var scEarned=0,scNote='Mark below';if(log.selfControl===true){scEarned=10;scNote='Maintained ✓';}else if(log.selfControl===false){scNote='Broken today';}
-  result.signals.push({name:'Self Control',note:scNote,pts:10,earned:scEarned,isSelfCtrl:true});result.total+=scEarned;
-  var sdone=DAILY_SCHEDULE.filter(s=>!!log['sched_'+s.key]).length;var schedEarned=sdone===DAILY_SCHEDULE.length?10:0;
-  result.signals.push({name:'As Per Schedule',note:sdone+'/'+DAILY_SCHEDULE.length+' slots',pts:10,earned:schedEarned,isSchedAll:true});result.total+=schedEarned;
-  result.total=Math.min(100,result.total);return result;
+  return discScoreFromLog(discData.logs[date]||{},date);
 }
 
 /* ── discipline streak ≥ 90 ── */
@@ -3452,6 +3455,16 @@ function calcPyqStreak(){
   }
   return streak;
 }
+function calcStudyStreak(){
+  var streak=0; var d=addDays(TODAY,0);
+  for(var i=0;i<193;i++){
+    if(d<DISC_START) break;
+    if(calcDiscScore(d).signals[0].earned>=60) streak++;
+    else break;
+    d=addDays(d,-1);
+  }
+  return streak;
+}
 function calcRev1Streak(){ return calcSchedSlotStreak('study_mid'); }
 function calcNotesStreak(){ return calcSchedSlotStreak('study_night'); }
 function calcVidStreak(){ return calcSchedSlotStreak('study_am'); }
@@ -3482,7 +3495,7 @@ function calcChessStreak(){
   var streak=0; var d=addDays(TODAY,0);
   for(var i=0;i<193;i++){
     if(d<DISC_START) break;
-    if(!!(daily[d]&&daily[d].habits&&daily[d].habits.chess)) streak++;
+    var lgc=discData.logs[d]||{}; if(lgc['chess']) streak++;
     else break;
     d=addDays(d,-1);
   }
@@ -3648,7 +3661,7 @@ function discHeatmapHtml(){
     var titleStr = d+': '+sc+' pts';
     if(d<=TODAY && sc<100){
       var sigRes = calcDiscScore(d);
-      var missed = sigRes.signals.filter(function(s){ return s.earned===0; }).map(function(s){ return s.icon+' '+s.name+' (0/'+s.pts+')'; });
+      var missed = sigRes.signals.filter(function(s){ return s.earned===0; }).map(function(s){ return s.name+' (0/'+s.pts+')'; });
       if(missed.length) titleStr += ' | Missed: '+missed.join(', ');
     }
     cells+='<div class="disc-hm-cell" style="background:'+bg+';opacity:'+opacity+';" title="'+titleStr+'"></div>';
@@ -3859,21 +3872,18 @@ function renderDiscCard(){
   var maxStrk = calcDiscMaxStreak();
   var avg7    = calcDiscAvg7();
   var col     = discColor(sc.total);
-  var vidS    = calcVidStreak();
-  var rev1S   = calcRev1Streak();
-  var notesS  = calcNotesStreak();
-  var pyqS    = calcPyqStreak();
+  var stdS    = calcStudyStreak();
+  var chS     = calcChessStreak();
   var scS     = calcSelfCtrlStreak();
   var exS     = calcExerciseStreak();
   var log     = discData.logs[TODAY]||{};
   var DAILY_SCHEDULE = getDailySchedule(TODAY);
 
   var ICONS = {
-    'Morning Study':'&#x1F305;',
-    'Midday Study':'&#x1F4D6;',
-    'Night Study':'&#x1F319;',
-    'PYQ Practice':'&#x1F3AF;',
-    'Self Control':'&#x1F9E0;',
+    'Study':'&#x1F4DA;',
+    'Exercise':'&#x1F3C3;',
+    'Chess':'&#x265F;&#xFE0F;',
+    'Control':'&#x1F9E0;',
     'As Per Schedule':'&#x1F5D3;&#xFE0F;'
   };
 
@@ -3891,7 +3901,15 @@ function renderDiscCard(){
     var icon = ICONS[sig.name]||'&#x2B50;';
     var toggleHtml = '';
 
-    if(sig.schedKey){
+    if(sig.isStudy){
+      toggleHtml = '<div style="display:flex;flex-direction:column;gap:5px;margin-top:7px;">'+sig.slots.map(function(sl){
+        var d1=!!(log['sched_'+sl.key]);
+        var lbl=sl.key==='study_am'?'Morning':sl.key==='study_mid'?'Midday':sl.key==='study_pm'?'Afternoon':'Night';
+        return '<div style="display:flex;align-items:center;gap:7px;">'
+          +'<label class="sched-toggle"><input type="checkbox" '+(d1?'checked':'')+' data-sk="'+sl.key+'" onchange="toggleSchedSlot(this.dataset.sk,this.checked)"><span class="sched-toggle-slider"></span></label>'
+          +'<span style="font-size:10px;font-weight:700;color:'+(d1?'#4ade80':'var(--faint)')+'">'+lbl+' &middot; '+sl.from+'&ndash;'+sl.to+'</span></div>';
+      }).join('')+'</div>';
+    } else if(sig.schedKey){
       /* Finished / Pending toggle */
       var sdone = !!(log['sched_'+sig.schedKey]);
       toggleHtml = '<div style="display:flex;align-items:center;gap:7px;margin-top:7px;">'
@@ -3899,7 +3917,7 @@ function renderDiscCard(){
         +'<span style="font-size:10px;font-weight:700;color:'+(sdone?'#4ade80':'var(--faint)')+'">'+(sdone?'Finished':'Pending')+'</span>'
         +'</div>';
     } else if(sig.fixedKey){
-      /* PYQ toggle */
+      /* fixed-key toggle (Chess) */
       var fbDone = !!(log[sig.fixedKey]);
       toggleHtml = '<div style="display:flex;align-items:center;gap:7px;margin-top:7px;">'
         +'<label class="sched-toggle"><input type="checkbox" '+(fbDone?'checked':'')+' data-fk="'+sig.fixedKey+'" onchange="discToggleLog(\''+TODAY+'\',this.dataset.fk,this.checked)"><span class="sched-toggle-slider"></span></label>'
@@ -3946,12 +3964,10 @@ function renderDiscCard(){
       +'</div>'
       +'<div class="disc-stats">'
         +'<div class="disc-streaks-row">'
+          +'<div class="disc-streak-chip" title="Study streak (all study slots)"><span class="dsc-fire">&#x1F4DA;</span><span class="dsc-num" style="color:'+(stdS>=7?'#4ade80':stdS>=3?'#fbbf24':'var(--acc)')+'">'+stdS+'</span><span class="dsc-lbl">Study</span></div>'
           +'<div class="disc-streak-chip" title="Exercise streak"><span class="dsc-fire">&#x1F3C3;</span><span class="dsc-num" style="color:'+(exS>=7?'#4ade80':exS>=3?'#fbbf24':'var(--acc)')+'">'+exS+'</span><span class="dsc-lbl">Exercise</span></div>'
-          +'<div class="disc-streak-chip" title="Morning study streak"><span class="dsc-fire">&#x1F3AC;</span><span class="dsc-num" style="color:'+(vidS>=7?'#4ade80':vidS>=3?'#fbbf24':'var(--acc)')+'">'+vidS+'</span><span class="dsc-lbl">AM Study</span></div>'
-          +'<div class="disc-streak-chip" title="Midday study streak"><span class="dsc-fire">&#x1F4D6;</span><span class="dsc-num" style="color:'+(rev1S>=7?'#4ade80':rev1S>=3?'#fbbf24':'var(--acc)')+'">'+rev1S+'</span><span class="dsc-lbl">Mid Study</span></div>'
-          +'<div class="disc-streak-chip" title="Night study streak"><span class="dsc-fire">&#x1F4DD;</span><span class="dsc-num" style="color:'+(notesS>=7?'#4ade80':notesS>=3?'#fbbf24':'var(--acc)')+'">'+notesS+'</span><span class="dsc-lbl">Night</span></div>'
-          +'<div class="disc-streak-chip" title="PYQ streak"><span class="dsc-fire">&#x1F3AF;</span><span class="dsc-num" style="color:'+(pyqS>=7?'#4ade80':pyqS>=3?'#fbbf24':'var(--acc)')+'">'+pyqS+'</span><span class="dsc-lbl">PYQ</span></div>'
-          +'<div class="disc-streak-chip" title="Self Control streak"><span class="dsc-fire">&#x1F9E0;</span><span class="dsc-num" style="color:'+(scS>=7?'#4ade80':scS>=3?'#fbbf24':'var(--acc)')+'">'+scS+'</span><span class="dsc-lbl">Control</span></div>'
+          +'<div class="disc-streak-chip" title="Chess streak"><span class="dsc-fire">&#x265F;&#xFE0F;</span><span class="dsc-num" style="color:'+(chS>=7?'#4ade80':chS>=3?'#fbbf24':'var(--acc)')+'">'+chS+'</span><span class="dsc-lbl">Chess</span></div>'
+          +'<div class="disc-streak-chip" title="Control streak"><span class="dsc-fire">&#x1F9E0;</span><span class="dsc-num" style="color:'+(scS>=7?'#4ade80':scS>=3?'#fbbf24':'var(--acc)')+'">'+scS+'</span><span class="dsc-lbl">Control</span></div>'
           +'<div class="disc-streak-divider"></div>'
           +'<div class="disc-streak-chip disc-streak-disc" title="Discipline streak (score &ge;90)"><span class="dsc-fire">&#x1F525;</span><span class="dsc-num" style="color:'+(streak>=7?'#4ade80':streak>=3?'#fbbf24':'var(--acc)')+'">'+streak+'</span><span class="dsc-lbl">Streak</span></div>'
           +'<div class="disc-streak-chip disc-streak-disc" title="All-time max discipline streak"><span class="dsc-fire">&#x1F3C6;</span><span class="dsc-num" style="color:#fbbf24">'+maxStrk+'</span><span class="dsc-lbl">Max</span></div>'
@@ -4070,10 +4086,10 @@ function getMissingItems(date){
     if(!log['sched_'+sl.key])
       missing.push({ type:'sched', key:'sched_'+sl.key, name:sl.from+'–'+sl.to+' '+sl.label });
   });
-  if(!log['fb_pyq'])
-    missing.push({ type:'fixed', key:'fb_pyq', name:'PYQ Practice', pts:20 });
+  if(!log['chess'])
+    missing.push({ type:'fixed', key:'chess', name:'Chess', pts:10 });
   if(log.selfControl===undefined||log.selfControl===null)
-    missing.push({ type:'log', key:'selfControl', name:'Self Control', pts:10, yesNo:true });
+    missing.push({ type:'log', key:'selfControl', name:'Control', pts:10, yesNo:true });
   return missing;
 }
 function meProjectedScore(date){
@@ -4081,15 +4097,7 @@ function meProjectedScore(date){
   var log = Object.assign({}, discData.logs[date]||{});
   var DAILY_SCHEDULE = getDailySchedule(date);
   Object.keys(_mePendingVals).forEach(function(k){ log[k]=_mePendingVals[k]; });
-  var total=0;
-  if(log['sched_study_am'])    total+=20;
-  if(log['sched_study_mid'])   total+=20;
-  if(log['sched_study_night']) total+=20;
-  if(log['fb_pyq'])           total+=20;
-  if(log.selfControl===true)  total+=10;
-  var sd=DAILY_SCHEDULE.filter(function(s){ return !!(log['sched_'+s.key]); }).length;
-  if(sd===DAILY_SCHEDULE.length) total+=10;
-  return Math.min(100, total);
+  return discScoreFromLog(log,date).total;
 }
 
 /* Render the body of the modal */
@@ -4135,7 +4143,7 @@ function renderMeModal(){
   var fixedMissing = missing.filter(function(m){ return m.type==='fixed'; });
   var fixedHtml = '';
   if(fixedMissing.length > 0){
-    fixedHtml = '<div class="me-section"><div class="me-section-hdr">Study Signals (20 pts each)</div>';
+    fixedHtml = '<div class="me-section"><div class="me-section-hdr">Other Signals (10 pts each)</div>';
     fixedMissing.forEach(function(m){
       var isDone=!!_mePendingVals[m.key];
       fixedHtml += '<div class="me-item'+(isDone?' complete':'')+'">'
