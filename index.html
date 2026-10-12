@@ -631,7 +631,7 @@ const SEED_SUBJECTS=[
   {id:8, name:'POWER ELECTRONICS', faculty:'Ankit Goyal', start:'2027-06-18', end:'2027-07-21', days:34, videos:68, targetHrs:102, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
   {id:9, name:'DIGITAL ELECTRONICS', faculty:'Sujay', start:'2027-09-23', end:'2027-10-08', days:16, videos:16, targetHrs:32, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
   {id:10, name:'ANALOG ELECTRONICS', faculty:'Ankit Goyal', start:'2027-07-22', end:'2027-09-22', days:63, videos:61, targetHrs:110, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
-  {id:11, name:'APTITUDE + MATHEMATICS', faculty:'Himanshu Agarwal', start:'2026-10-08', end:'2026-12-29', days:83, videos:118, targetHrs:312, status:'Not Started', confidence:0, remarks:'118 videos: 88 Maths (~1.5h each = 132h) + 30 Aptitude (~6h each = 180h) · 1 Maths video daily, +1 Aptitude video on Sat & Sun', phase:2027},
+  {id:11, name:'APTITUDE + MATHEMATICS', faculty:'Himanshu Agarwal', start:'2026-10-08', end:'2026-12-29', days:83, videos:85, targetHrs:224, status:'Not Started', confidence:0, remarks:'85 videos: 61 Maths (~172h) + 24 Aptitude (~52h, last 6 skipped) · 1 Maths video daily, 1 Aptitude video on Sat & Sun', phase:2027},
 ];
 
 const SUBJECT_LINKS={
@@ -645,7 +645,7 @@ const SUBJECT_LINKS={
   8:{yt:'https://www.youtube.com/playlist?list=PLs5_Rtf2P2r5KREX_ijxw2Sz-ISNhAgH4'},
   9:{yt:'https://www.youtube.com/playlist?list=PLgzsL8klq6DKnltogpZsroj0yG-MlFLNL'},
   10:{yt:'https://www.youtube.com/playlist?list=PLs5_Rtf2P2r5MplAOADz3fTWIyBZTkGbB'},
-  11:{pf_m:'https://prepfusion.in/new-courses/98/content?activeTab=Content',pf_a:'https://prepfusion.in/new-courses/96/content?activeTab=Content',yt_a:'https://www.youtube.com/playlist?list=PLgF7lRh8Xb_WWuQ39i48DruAyzb_voYYD',yt_m:'https://youtube.com/playlist?list=PLs5_Rtf2P2r5UbxyGgiBIKgsddAzVHM7Q&si=VDBDCLHH-sfPxDAV'},
+  11:{pf_m:'https://prepfusion.in/new-courses/98/content?activeTab=Content',pf_a:'https://prepfusion.in/new-courses/96/content?activeTab=Content',yt_a:'https://youtube.com/playlist?list=PLgF7lRh8Xb_WWuQ39i48DruAyzb_voYYD&si=ayPhMqwZR0Ko4TCR',yt_m:'https://youtube.com/playlist?list=PLgF7lRh8Xb_UmswOfvBO371uK1Sa7ZF5I&si=2GL4BtdJjxR-JUo4'},
 };
 
 const SUBJECT_DISPLAY_ORDER=[1,2,3,4,5,11,6,7,8,10,9];
@@ -2371,6 +2371,22 @@ function runMigration(){
       }
       lsSet('gate-v21-s11-dates','1');
     }
+    if(!lsGet('gate-v22-s11-vids')){
+      var _subs2=lsGet('gate-subjects');
+      if(_subs2&&_subs2.length){
+        _subs2.forEach(function(s){if(s.id===11){s.videos=85;s.targetHrs=224;s.remarks='85 videos: 61 Maths (~172h) + 24 Aptitude (~52h, last 6 skipped) · 1 Maths video daily, 1 Aptitude video on Sat & Sun';}});
+        lsSet('gate-subjects',_subs2);
+      }
+      lsSet('gate-v22-s11-vids','1');
+    }
+    if(!lsGet('gate-v23-s11-vids')){
+      var _subs3=lsGet('gate-subjects');
+      if(_subs3&&_subs3.length){
+        _subs3.forEach(function(s){if(s.id===11){s.videos=85;s.targetHrs=224;s.remarks='85 videos: 61 Maths (~172h) + 24 Aptitude (~52h, last 6 skipped) · 1 Maths video daily, 1 Aptitude video on Sat & Sun';}});
+        lsSet('gate-subjects',_subs3);
+      }
+      lsSet('gate-v23-s11-vids','1');
+    }
     return;
   }
   lsSet('gate-subjects',JSON.parse(JSON.stringify(SEED_SUBJECTS)));
@@ -2406,7 +2422,7 @@ const FB_KEYS = [
   'gate-subjects','gate-daily','gate-settings','gate-milestones',
   'gate-sub-tests','gate-rev1-done','gate-rev1-notes','gate-rev1-pages',
   'gate-mocks','gate-pyq-data','gate-pyq-quiz','gate-discipline',
-  'gate-theme','gate-pyq-plan', 'gate-v20-migrated', 'gate-v21-s11-dates', 'gate-sn-pages', 'gate-sn-notes', 'gate-sample-mocks'
+  'gate-theme','gate-pyq-plan', 'gate-v20-migrated', 'gate-v21-s11-dates', 'gate-v22-s11-vids', 'gate-v23-s11-vids', 'gate-sn-pages', 'gate-sn-notes', 'gate-sample-mocks'
 ];
 
 function lsGet(k){
@@ -2891,7 +2907,7 @@ function renderTargetGrid(selSubId){
       const dLeft=Math.max(1,diffDays(entryDate,sub.end)+1);
       const hLeft=Math.max(0,sub.targetHrs-parseFloat(getActualHrs(sub)));hTgt=Math.max(1,Math.ceil(hLeft/dLeft*10)/10);
       const vLeft=Math.max(0,sub.videos-getActualVids(sub));vTgt=Math.max(1,Math.ceil(vLeft/dLeft));
-      if(sub.id===11){var _dw=new Date(entryDate+'T00:00:00').getDay();vTgt=(_dw===0||_dw===6)?2:1;} /* Maths 1/day; +1 Aptitude on Sat & Sun */
+      if(sub.id===11){var _dw=new Date(entryDate+'T00:00:00').getDay();vTgt=(_dw===0||_dw===6)?2:1;} /* Maths 1/day; Aptitude on Sat & Sun */
     }
     const vDelta=vDone-vTgt,hDelta=hToday-hTgt;
     function dH(d){if(d>0.05)return`<span class="stepper-delta delta-plus">+${d.toFixed(1)}</span>`;if(d<-0.05)return`<span class="stepper-delta delta-minus">${d.toFixed(1)}</span>`;return`<span class="stepper-delta delta-zero">On target</span>`;}
