@@ -299,6 +299,30 @@ select.inp-sm{cursor:pointer;}
 .disc-sig-pts{font-size:13px;font-weight:800;margin-left:auto;flex-shrink:0;}
 .disc-sig-pts.earned{color:#4ade80;}
 .disc-sig-pts.missed{color:#ef4444;}
+/* two-column detail: chart | score breakdown */
+.disc-two-col{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:22px;align-items:start;margin-bottom:6px;}
+@media(max-width:900px){.disc-two-col{grid-template-columns:1fr;}}
+.disc-col{min-width:0;}
+.disc-col-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;}
+.disc-two-col .sched-clock-svg{max-width:100%;}
+.disc-signals.disc-signals-stack{grid-template-columns:1fr;}
+.disc-signal.disc-signal-col{flex-direction:column;align-items:stretch;gap:8px;}
+.disc-sig-top{display:flex;align-items:center;gap:10px;}
+.disc-tgl-list{display:flex;flex-direction:column;gap:6px;}
+.disc-tgl-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;}
+@media(max-width:420px){.disc-tgl-grid{grid-template-columns:1fr;}}
+.disc-tgl-row,.disc-tgl-all{display:flex;align-items:center;gap:7px;min-width:0;}
+.disc-tgl-all{padding-bottom:7px;border-bottom:1px dashed var(--border);}
+.disc-tgl-lbl{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.disc-tgl-time{font-weight:400;opacity:.75;}
+.disc-excuse{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:11px;color:var(--muted);background:var(--navy);border:1px dashed var(--border);border-radius:8px;padding:8px 10px;margin-bottom:10px;}
+.disc-excuse.on{border:1px solid #38bdf8;color:var(--text);background:rgba(56,189,248,.08);justify-content:space-between;}
+.disc-ex-q{font-weight:700;margin-right:2px;}
+.disc-ex-chip{padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);}
+.disc-ex-chip:hover:not([disabled]){border-color:#38bdf8;color:#38bdf8;}
+.disc-ex-chip[disabled]{opacity:.4;cursor:not-allowed;}
+.disc-ex-count{margin-left:auto;font-size:10px;color:var(--faint);}
+.disc-rule-note{font-size:10px;color:var(--faint);margin-top:-6px;}
 .disc-manual-toggle{background:var(--navy);border:1px solid var(--border);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;cursor:pointer;color:var(--muted);transition:all .2s;}
 .disc-manual-toggle.on{background:#002d14;border-color:#4ade80;color:#4ade80;}
 .disc-plan-section{margin-top:14px;border-top:1px solid var(--border);padding-top:12px;}
@@ -3368,82 +3392,116 @@ function switchMainTab(id){
    Structure: { plans: { "YYYY-MM-DD": { wakeTime, blocks:[{time,desc,status}] } },
                 logs:  { "YYYY-MM-DD": { noSocial, scores:{...} } } }
 ════════════════════════════════════════════ */
-var DISC_START='2026-10-08';
+var DISC_START='2026-10-17';
+var DISC_THRESHOLD=80; /* score must be MORE than this to count as a disciplined day */
+var EXCUSE_REASONS=['Travel','Sick','Family','Official work','Other'];
+var EXCUSE_CAP=4; /* max excused days per calendar month */
 var discData = { plans:{}, logs:{} };
 function loadDisc(){ var d=lsGet('gate-discipline'); if(d){ discData.plans=d.plans||{}; discData.logs=d.logs||{}; } }
 function saveDisc(){ lsSet('gate-discipline', discData); }
 
-/* ── DAILY SCHEDULE SLOTS (weekday vs weekend) ── */
+/* ── DAILY SCHEDULE SLOTS ──
+   Mon–Thu = WEEKDAY_SCHEDULE, Fri/Sat/Sun = WEEKEND_SCHEDULE
+   Keys starting with 'study_' form the Study (GATE) group; everything else is Daily routine. */
 var WEEKDAY_SCHEDULE = [
   {key:'sleep',       color:'#6366f1',from:'00:00',to:'06:00',label:'Sleep'},
   {key:'exercise',    color:'#4ade80',from:'06:00',to:'06:30',label:'Exercise'},
   {key:'freshup',     color:'#a78bfa',from:'06:30',to:'07:00',label:'Fresh up'},
-  {key:'study_am',    color:'#00d4ff',from:'07:00',to:'09:00',label:'Study'},
+  {key:'study_video', color:'#00d4ff',from:'07:00',to:'09:00',label:'Videos',short:'Video'},
   {key:'breakfast',   color:'#fbbf24',from:'09:00',to:'09:30',label:'Breakfast'},
   {key:'walking',     color:'#38bdf8',from:'09:30',to:'10:00',label:'Walking'},
-  {key:'study_mid',   color:'#c084fc',from:'10:00',to:'12:00',label:'Study'},
-  {key:'travel1',     color:'#4a6a80',from:'12:00',to:'13:00',label:'Travel'},
+  {key:'notes',       color:'#c084fc',from:'10:00',to:'12:00',label:'Notes'},
+  {key:'chess1',      color:'#e879f9',from:'12:00',to:'13:00',label:'Chess'},
   {key:'lunch',       color:'#fbbf24',from:'13:00',to:'14:00',label:'Lunch'},
   {key:'office1',     color:'#64748b',from:'14:00',to:'18:00',label:'Office work'},
   {key:'snacks',      color:'#fbbf24',from:'18:00',to:'19:00',label:'Snacks'},
   {key:'office2',     color:'#64748b',from:'19:00',to:'22:00',label:'Office work'},
-  {key:'travel2',     color:'#4a6a80',from:'22:00',to:'23:00',label:'Travel'},
-  {key:'study_night', color:'#4ade80',from:'23:00',to:'24:00',label:'Study'},
+  {key:'chess2',      color:'#e879f9',from:'22:00',to:'23:00',label:'Chess'},
+  {key:'study_sn',    color:'#4ade80',from:'23:00',to:'24:00',label:'SN',short:'SN'},
 ];
 var WEEKEND_SCHEDULE = [
   {key:'sleep',       color:'#6366f1',from:'00:00',to:'06:00',label:'Sleep'},
   {key:'exercise',    color:'#4ade80',from:'06:00',to:'06:30',label:'Exercise'},
   {key:'freshup',     color:'#a78bfa',from:'06:30',to:'07:00',label:'Fresh up'},
-  {key:'study_am',    color:'#00d4ff',from:'07:00',to:'09:00',label:'Study'},
+  {key:'study_video', color:'#00d4ff',from:'07:00',to:'09:00',label:'Videos',short:'Video'},
   {key:'breakfast',   color:'#fbbf24',from:'09:00',to:'09:30',label:'Breakfast'},
   {key:'walking',     color:'#38bdf8',from:'09:30',to:'10:00',label:'Walking'},
-  {key:'study_mid',   color:'#c084fc',from:'10:00',to:'12:00',label:'Study'},
-  {key:'travel1',     color:'#4a6a80',from:'12:00',to:'13:00',label:'Travel'},
+  {key:'notes',       color:'#c084fc',from:'10:00',to:'12:00',label:'Notes'},
+  {key:'chess1',      color:'#e879f9',from:'12:00',to:'13:00',label:'Chess'},
   {key:'lunch',       color:'#fbbf24',from:'13:00',to:'14:00',label:'Lunch'},
-  {key:'study_pm',    color:'#f472b6',from:'14:00',to:'16:00',label:'Study'},
+  {key:'study_pyq',   color:'#f472b6',from:'14:00',to:'16:00',label:'PYQ',short:'PYQ'},
   {key:'office1',     color:'#64748b',from:'16:00',to:'20:00',label:'Office work'},
   {key:'dinner',      color:'#fbbf24',from:'20:00',to:'21:00',label:'Dinner'},
   {key:'office2',     color:'#64748b',from:'21:00',to:'23:00',label:'Office work'},
-  {key:'study_night', color:'#4ade80',from:'23:00',to:'24:00',label:'Study'},
+  {key:'study_sn',    color:'#4ade80',from:'23:00',to:'24:00',label:'SN',short:'SN'},
 ];
 function isFriSatSun(dateStr){
   var dow=new Date(dateStr+'T00:00:00').getDay();return dow===5||dow===6||dow===0;
 }
-function getDailySchedule(dateStr){return isFriSatSun(dateStr)?WEEKEND_SCHEDULE:WEEKDAY_SCHEDULE;}/* ── score computation — 5-signal / 100-pt: Study 60, Exercise 10, Chess 10, Control 10, As per schedule 10 ── */
+function getDailySchedule(dateStr){return isFriSatSun(dateStr)?WEEKEND_SCHEDULE:WEEKDAY_SCHEDULE;}
+/* ── score computation — 100 pts: Study 60 (split across study slots) + Daily routine 40 (split across other slots) ── */
 function discStudySlots(date){ return getDailySchedule(date).filter(function(s){ return s.key.indexOf('study_')===0; }); }
+function discOtherSlots(date){ return getDailySchedule(date).filter(function(s){ return s.key.indexOf('study_')!==0; }); }
 function discScoreFromLog(log,date){
-  var SCHED=getDailySchedule(date);var result={total:0,signals:[]};
-  var studySlots=discStudySlots(date);var per=Math.round(60/studySlots.length);
+  var result={total:0,signals:[],excused:log.excused||''};
+  var studySlots=discStudySlots(date), otherSlots=discOtherSlots(date);
   var sDone=studySlots.filter(function(s){return !!log['sched_'+s.key];}).length;
-  var sEarned=sDone===studySlots.length?60:sDone*per;
-  result.signals.push({name:'Study',note:sDone+'/'+studySlots.length+' study slots',pts:60,earned:sEarned,isStudy:true,slots:studySlots});result.total+=sEarned;
-  var bItems=[!!log['sched_exercise'],!!log['chess'],log.selfControl===true];var bDone=bItems.filter(Boolean).length;
-  result.signals.push({name:'Body',note:bDone+'/3 body habits',pts:30,earned:bDone*10,isBody:true,items:bItems});result.total+=bDone*10;
-  var sdone=SCHED.filter(function(s){return !!log['sched_'+s.key];}).length;var schedEarned=sdone===SCHED.length?10:0;
-  result.signals.push({name:'As Per Schedule',note:sdone+'/'+SCHED.length+' slots',pts:10,earned:schedEarned,isSchedAll:true});result.total+=schedEarned;
-  result.total=Math.min(100,result.total);return result;
+  var sEarned=Math.round(60*sDone/studySlots.length);
+  result.signals.push({name:'Study',note:sDone+'/'+studySlots.length+' done &middot; all done keeps GATE streak',pts:60,earned:sEarned,done:sDone,isStudy:true,slots:studySlots});
+  var oDone=otherSlots.filter(function(s){return !!log['sched_'+s.key];}).length;
+  var oEarned=Math.round(40*oDone/otherSlots.length);
+  result.signals.push({name:'Daily routine',note:oDone+'/'+otherSlots.length+' slots',pts:40,earned:oEarned,done:oDone,isOther:true,slots:otherSlots});
+  result.total=Math.min(100,sEarned+oEarned);return result;
 }
 function calcDiscScore(date){
   loadDisc();
   return discScoreFromLog(discData.logs[date]||{},date);
 }
-
-/* ── discipline streak ≥ 90 ── */
-function calcDiscStreak(){
-  var streak=0; var d=addDays(TODAY,0);
-  for(var i=0;i<193;i++){
+function discIsExcused(d){ var lg=discData.logs[d]; return !!(lg&&lg.excused); }
+function discIsDisciplined(d){ return calcDiscScore(d).total>DISC_THRESHOLD; }
+function discStudyComplete(d){ var s=calcDiscScore(d).signals[0]; return s.earned>=s.pts; }
+/* walk back from today; excused days are skipped (neither add nor break);
+   if today is not complete yet, counting starts from yesterday so the streak does not read 0 all day */
+function discStreakBack(test){
+  loadDisc();
+  var streak=0, d=TODAY;
+  if(!discIsExcused(TODAY) && !test(TODAY)) d=addDays(TODAY,-1);
+  for(var i=0;i<400;i++){
     if(d<DISC_START) break;
-    if(calcDiscScore(d).total>=90) streak++;
-    else break;
+    if(discIsExcused(d)){ d=addDays(d,-1); continue; }
+    if(test(d)) streak++; else break;
     d=addDays(d,-1);
   }
   return streak;
 }
+/* excused-day helpers */
+function discExcuseCount(month, exceptDate){
+  var n=0;
+  Object.keys(discData.logs).forEach(function(d){
+    if(d.substring(0,7)===month && d!==exceptDate && discData.logs[d] && discData.logs[d].excused) n++;
+  });
+  return n;
+}
+function discCanExcuse(date){ return discExcuseCount(date.substring(0,7),date)<EXCUSE_CAP; }
+function discSetExcuse(date, reason){
+  loadDisc(); if(!discData.logs[date]) discData.logs[date]={};
+  if(!reason){ delete discData.logs[date].excused; }
+  else{
+    if(!discCanExcuse(date)){ alert('Excused-day limit reached ('+EXCUSE_CAP+' per month).'); return; }
+    discData.logs[date].excused=reason;
+  }
+  saveDisc(); renderDiscCard();
+}
+
+/* ── discipline streak (score > DISC_THRESHOLD) ── */
+function calcDiscStreak(){ return discStreakBack(discIsDisciplined); }
 function calcDiscMaxStreak(){
+  loadDisc();
   var maxS=0,cur=0,d=DISC_START;
   while(d<=TODAY){
-    if(calcDiscScore(d).total>=90){ cur++; if(cur>maxS)maxS=cur; }
-    else cur=0;
+    if(discIsExcused(d)){ d=addDays(d,1); continue; }
+    if(discIsDisciplined(d)){ cur++; if(cur>maxS)maxS=cur; }
+    else if(d<TODAY) cur=0;
     d=addDays(d,1);
   }
   return maxS;
@@ -3470,16 +3528,7 @@ function calcPyqStreak(){
   }
   return streak;
 }
-function calcStudyStreak(){
-  var streak=0; var d=addDays(TODAY,0);
-  for(var i=0;i<193;i++){
-    if(d<DISC_START) break;
-    if(calcDiscScore(d).signals[0].earned>=60) streak++;
-    else break;
-    d=addDays(d,-1);
-  }
-  return streak;
-}
+function calcStudyStreak(){ return discStreakBack(discStudyComplete); }
 function calcBodyStreak(){
   var streak=0; var d=addDays(TODAY,0);
   for(var i=0;i<193;i++){
@@ -3527,19 +3576,20 @@ function calcChessStreak(){
   return streak;
 }
 
-/* ── 7-day rolling average ── */
+/* ── 7-day rolling average (excused days left out) ── */
 function calcDiscAvg7(){
   var sum=0, cnt=0;
   for(var i=0;i<7;i++){
     var d=addDays(TODAY,-i);
     if(d<DISC_START) break;
+    if(discIsExcused(d)) continue;
     sum+=calcDiscScore(d).total; cnt++;
   }
   return cnt>0 ? Math.round(sum/cnt) : 0;
 }
 
 /* ── score color ── */
-function discColor(sc){ return sc>=90?'#4ade80':sc>=70?'#fbbf24':'#ef4444'; }
+function discColor(sc){ return sc>DISC_THRESHOLD?'#4ade80':sc>=60?'#fbbf24':'#ef4444'; }
 
 /* ── SVG ring ── */
 function discRingHtml(score, size, sw){
@@ -3675,19 +3725,20 @@ function discToggleLog(date, key, val){
 function discHeatmapHtml(){
   var cells=''; var d=DISC_START;
   while(d<=EXAM){
+    var lg=discData.logs[d]||{};
     var sc=calcDiscScore(d).total;
-    var bg;
-    if(d>TODAY){ bg='var(--border)'; }
-    else if(sc>=90){ bg='#4ade80'; }
-    else if(sc>=70){ bg='#fbbf24'; }
+    var bg, titleStr=d+': '+sc+' pts';
+    if(lg.excused){ bg='#38bdf8'; titleStr=d+': Excused ('+lg.excused+')'; }
+    else if(d>TODAY){ bg='var(--border)'; }
+    else if(sc>DISC_THRESHOLD){ bg='#4ade80'; }
+    else if(sc>=60){ bg='#fbbf24'; }
     else if(sc>=1){ bg='#ef4444'; }
     else { bg='#1a3248'; }
-    var opacity = d<=TODAY ? '1' : '0.3';
-    var titleStr = d+': '+sc+' pts';
-    if(d<=TODAY && sc<100){
+    var opacity = (d<=TODAY||lg.excused) ? '1' : '0.3';
+    if(d<=TODAY && sc<100 && !lg.excused){
       var sigRes = calcDiscScore(d);
-      var missed = sigRes.signals.filter(function(s){ return s.earned===0; }).map(function(s){ return s.name+' (0/'+s.pts+')'; });
-      if(missed.length) titleStr += ' | Missed: '+missed.join(', ');
+      var missed = sigRes.signals.filter(function(s){ return s.earned<s.pts; }).map(function(s){ return s.name+' ('+s.earned+'/'+s.pts+')'; });
+      if(missed.length) titleStr += ' | Short: '+missed.join(', ');
     }
     cells+='<div class="disc-hm-cell" style="background:'+bg+';opacity:'+opacity+';" title="'+titleStr+'"></div>';
     d=addDays(d,1);
@@ -3810,7 +3861,7 @@ function schedClockSvg(log){
     return 'M'+s.x.toFixed(2)+','+s.y.toFixed(2)+' A'+r+','+r+' 0 '+(large?1:0)+' 1 '+e.x.toFixed(2)+','+e.y.toFixed(2);
   }
   var GAP=0.015;
-  var paths='', callouts='';
+  var paths='', callouts='', labels=[];
 
   DAILY_SCHEDULE.forEach(function(sl, idx){
     var toH=sl.to==='24:00'?1440:parseInt(sl.to.split(':')[0])*60+(parseInt(sl.to.split(':')[1])||0);
@@ -3828,40 +3879,43 @@ function schedClockSvg(log){
       +' A'+INN+','+INN+' 0 '+large+' 0 '+p4.x.toFixed(2)+','+p4.y.toFixed(2)
       +' Z" fill="'+sl.color+'" opacity="'+(done?0.92:0.18)+'"/>';
 
-    /* callout: anchor at midpoint of outer arc edge */
-    var durMins=toH-frH;
+    /* callout: collect label positions; drawn after collision pass */
     var aMid=(ang(sl.from)+GAP + (toH/TOTAL)*2*Math.PI-Math.PI/2-GAP)/2;
-    /* elbow point: slightly beyond the outer edge */
-    var elbowR = R + 28;
-    var ep = xy(elbowR, aMid);
-    /* label anchor: further out, snapped left/right */
-    var labelR = R + 68;
-    var lp = xy(labelR, aMid);
-    var isRight = Math.cos(aMid) >= 0;
-    var textAnchor = isRight ? 'start' : 'end';
-    /* horizontal line end */
-    var hLen = 36;
-    var hx2 = lp.x + (isRight ? hLen : -hLen);
-    var hy2 = lp.y;
-    /* label text */
-    var fromH = sl.from.replace(':00','');
-    var toHH  = sl.to.replace(':00','');
-    var timeStr = fromH+'\u2013'+toHH+'h';
-    var shortName = sl.label.length>30 ? sl.label.substring(0,28)+'\u2026' : sl.label;
-    var labelX = isRight ? hx2+4 : hx2-4;
-    var dotFill = done ? sl.color : sl.color;
-    /* only draw callout for segments wide enough to be meaningful */
-    if(durMins >= 30){
-      callouts += '<line x1="'+ep.x.toFixed(1)+'" y1="'+ep.y.toFixed(1)+'" x2="'+lp.x.toFixed(1)+'" y2="'+lp.y.toFixed(1)+'" stroke="'+sl.color+'" stroke-width="1.2" opacity="'+(done?0.9:0.4)+'"/>';
-      callouts += '<line x1="'+lp.x.toFixed(1)+'" y1="'+lp.y.toFixed(1)+'" x2="'+hx2.toFixed(1)+'" y2="'+hy2.toFixed(1)+'" stroke="'+sl.color+'" stroke-width="1.2" opacity="'+(done?0.9:0.4)+'"/>';
-      callouts += '<circle cx="'+ep.x.toFixed(1)+'" cy="'+ep.y.toFixed(1)+'" r="2" fill="'+sl.color+'" opacity="'+(done?1:0.5)+'"/>';
-      callouts += '<text x="'+labelX.toFixed(1)+'" y="'+(hy2-5).toFixed(1)+'" text-anchor="'+textAnchor+'" font-size="9" font-weight="700" fill="'+(done?'var(--text)':'var(--muted)')+'" font-family="system-ui">'+timeStr+'</text>';
-      callouts += '<text x="'+labelX.toFixed(1)+'" y="'+(hy2+6).toFixed(1)+'" text-anchor="'+textAnchor+'" font-size="8.5" fill="'+(done?sl.color:'var(--faint)')+'" font-family="system-ui">'+shortName+'</text>';
+    var lp0 = xy(R + 50, aMid);
+    function tf(t){ var q=t.split(':'); return parseInt(q[0],10)+(q[1]!=='00'?':'+q[1]:''); }
+    labels.push({sl:sl, done:done, aMid:aMid, ep:xy(R + 28, aMid), x:lp0.x, y:lp0.y,
+      isRight:Math.cos(aMid)>=0, timeStr:tf(sl.from)+'\u2013'+tf(sl.to)+'h'});
+  });
+
+  /* collision pass: on each side keep labels at least MINGAP apart vertically */
+  var MINGAP=30;
+  [true,false].forEach(function(side){
+    var grp=labels.filter(function(l){ return l.isRight===side; }).sort(function(a,b){ return a.y-b.y; });
+    for(var k=1;k<grp.length;k++){
+      if(grp[k].y-grp[k-1].y<MINGAP){
+        /* push the pair apart symmetrically, then re-check earlier ones */
+        var mid=(grp[k].y+grp[k-1].y)/2;
+        grp[k-1].y=mid-MINGAP/2; grp[k].y=mid+MINGAP/2;
+        for(var m=k-1;m>0;m--){ if(grp[m].y-grp[m-1].y<MINGAP) grp[m-1].y=grp[m].y-MINGAP; else break; }
+      }
     }
   });
 
+  labels.forEach(function(l){
+    var sl=l.sl, done=l.done, ep=l.ep;
+    var hLen=22, textAnchor=l.isRight?'start':'end';
+    var hx2=l.x+(l.isRight?hLen:-hLen), hy2=l.y;
+    var labelX=l.isRight?hx2+4:hx2-4;
+    var shortName = sl.label.length>30 ? sl.label.substring(0,28)+'\u2026' : sl.label;
+    callouts += '<line x1="'+ep.x.toFixed(1)+'" y1="'+ep.y.toFixed(1)+'" x2="'+l.x.toFixed(1)+'" y2="'+l.y.toFixed(1)+'" stroke="'+sl.color+'" stroke-width="1.2" opacity="'+(done?0.9:0.4)+'"/>';
+    callouts += '<line x1="'+l.x.toFixed(1)+'" y1="'+l.y.toFixed(1)+'" x2="'+hx2.toFixed(1)+'" y2="'+hy2.toFixed(1)+'" stroke="'+sl.color+'" stroke-width="1.2" opacity="'+(done?0.9:0.4)+'"/>';
+    callouts += '<circle cx="'+ep.x.toFixed(1)+'" cy="'+ep.y.toFixed(1)+'" r="2" fill="'+sl.color+'" opacity="'+(done?1:0.5)+'"/>';
+    callouts += '<text x="'+labelX.toFixed(1)+'" y="'+(hy2-6).toFixed(1)+'" text-anchor="'+textAnchor+'" font-size="13" font-weight="700" fill="'+(done?'var(--text)':'var(--muted)')+'" font-family="system-ui">'+l.timeStr+'</text>';
+    callouts += '<text x="'+labelX.toFixed(1)+'" y="'+(hy2+9).toFixed(1)+'" text-anchor="'+textAnchor+'" font-size="12" fill="'+(done?sl.color:'var(--faint)')+'" font-family="system-ui">'+shortName+'</text>';
+  });
+
   var doneCount=DAILY_SCHEDULE.filter(function(s){ return !!(log['sched_'+s.key]); }).length;
-  return '<svg width="100%" height="auto" viewBox="0 0 '+SIZE+' '+SIZE+'" style="display:block;overflow:visible;">'
+  return '<svg width="100%" height="auto" viewBox="0 75 '+SIZE+' 550" style="display:block;overflow:visible;">'
     + paths
     + callouts
     +'<circle cx="'+CX+'" cy="'+CY+'" r="'+(INN-1)+'" fill="var(--card)"/>'
@@ -3887,7 +3941,7 @@ function renderDiscCard(){
   if(preStart){
     var daysTo = diffDays(TODAY, DISC_START);
     previewBanner = '<div style="text-align:center;padding:10px 14px;margin-bottom:14px;border:1px dashed var(--acc);border-radius:10px;background:rgba(0,212,255,0.06);">'
-      +'<span style="font-size:12px;font-weight:800;color:var(--acc);">&#x1F3AF; Preview &mdash; Discipline Tracking Starts Oct 8, 2026</span>'
+      +'<span style="font-size:12px;font-weight:800;color:var(--acc);">&#x1F3AF; Preview &mdash; Discipline Tracking Starts Oct 17, 2026</span>'
       +'<div style="font-size:11px;color:var(--muted);margin-top:3px;">'+daysTo+' day'+(daysTo===1?'':'s')+' to go &middot; scores below are for preview only</div>'
       +'</div>';
   }
@@ -3897,96 +3951,64 @@ function renderDiscCard(){
   var maxStrk = calcDiscMaxStreak();
   var avg7    = calcDiscAvg7();
   var col     = discColor(sc.total);
-  var stdS    = calcStudyStreak();
-  var bdS     = calcBodyStreak();
-  var scS     = calcSelfCtrlStreak();
-  var exS     = calcExerciseStreak();
+  var gateS   = calcStudyStreak();
   var log     = discData.logs[TODAY]||{};
-  var DAILY_SCHEDULE = getDailySchedule(TODAY);
+  var exToday = log.excused||'';
+  var usedEx  = discExcuseCount(TODAY.substring(0,7),'');
 
-  var ICONS = {
-    'Study':'&#x1F4DA;',
-    'Body':'&#x1F4AA;',
-    'Exercise':'&#x1F3C3;',
-    'Chess':'&#x265F;&#xFE0F;',
-    'Control':'&#x1F9E0;',
-    'As Per Schedule':'&#x1F5D3;&#xFE0F;'
-  };
+  function tFmt(t){ var p=t.split(':'); return parseInt(p[0],10)+(p[1]!=='00'?':'+p[1]:''); }
+  function tgl(sl,label){
+    var on=!!log['sched_'+sl.key];
+    return '<div class="disc-tgl-row">'
+      +'<label class="sched-toggle"><input type="checkbox" '+(on?'checked':'')+' data-sk="'+sl.key+'" onchange="toggleSchedSlot(this.dataset.sk,this.checked)"><span class="sched-toggle-slider"></span></label>'
+      +'<span class="disc-tgl-lbl" style="color:'+(on?'#4ade80':'var(--faint)')+'">'+label+' <span class="disc-tgl-time">'+tFmt(sl.from)+'&ndash;'+tFmt(sl.to)+'</span></span></div>';
+  }
 
-  /* ── score breakdown signals ──
-     - schedKey cards: toggle the matching slot
-     - PYQ (fixedKey): checkbox toggle
-     - Self Control: toggle switch (on/off)
-     - As Per Schedule: toggle switch to mark all slots done at once
-  */
   var sigHtml = sc.signals.map(function(sig){
     var isEarned = sig.earned >= sig.pts;
     var cls = isEarned?'earned':sig.earned===0?'missed':'';
     var ptsCls = isEarned?'earned':'missed';
     var ptsStr = (isEarned?'+':'')+sig.earned+'/'+sig.pts;
-    var icon = ICONS[sig.name]||'&#x2B50;';
-    var toggleHtml = '';
-
+    var icon = sig.isStudy?'&#x1F4DA;':'&#x1F5D3;&#xFE0F;';
+    var body = '';
     if(sig.isStudy){
-      toggleHtml = '<div style="display:flex;flex-direction:column;gap:5px;margin-top:7px;">'+sig.slots.map(function(sl){
-        var d1=!!(log['sched_'+sl.key]);
-        var lbl=sl.key==='study_am'?'Video':sl.key==='study_mid'?'Notes':sl.key==='study_pm'?'PYQ':'SN';
-        return '<div style="display:flex;align-items:center;gap:7px;">'
-          +'<label class="sched-toggle"><input type="checkbox" '+(d1?'checked':'')+' data-sk="'+sl.key+'" onchange="toggleSchedSlot(this.dataset.sk,this.checked)"><span class="sched-toggle-slider"></span></label>'
-          +'<span style="font-size:10px;font-weight:700;color:'+(d1?'#4ade80':'var(--faint)')+'">'+lbl+' &middot; '+sl.from+'&ndash;'+sl.to+'</span></div>';
-      }).join('')+'</div>';
-    } else if(sig.isBody){
-      var bRows=[['Exercise','sched_exercise',!!log['sched_exercise']],['Chess','chess',!!log['chess']],['Control','selfControl',log.selfControl===true]];
-      toggleHtml = '<div style="display:flex;flex-direction:column;gap:5px;margin-top:7px;">'+bRows.map(function(r){
-        return '<div style="display:flex;align-items:center;gap:7px;">'
-          +'<label class="sched-toggle"><input type="checkbox" '+(r[2]?'checked':'')+' data-k="'+r[1]+'" onchange="discToggleLog(TODAY,this.dataset.k,this.checked)"><span class="sched-toggle-slider"></span></label>'
-          +'<span style="font-size:10px;font-weight:700;color:'+(r[2]?'#4ade80':'var(--faint)')+'">'+r[0]+'</span></div>';
-      }).join('')+'</div>';
-    } else if(sig.schedKey){
-      /* Finished / Pending toggle */
-      var sdone = !!(log['sched_'+sig.schedKey]);
-      toggleHtml = '<div style="display:flex;align-items:center;gap:7px;margin-top:7px;">'
-        +'<label class="sched-toggle"><input type="checkbox" '+(sdone?'checked':'')+' data-sk="'+sig.schedKey+'" onchange="toggleSchedSlot(this.dataset.sk,this.checked)"><span class="sched-toggle-slider"></span></label>'
-        +'<span style="font-size:10px;font-weight:700;color:'+(sdone?'#4ade80':'var(--faint)')+'">'+(sdone?'Finished':'Pending')+'</span>'
-        +'</div>';
-    } else if(sig.fixedKey){
-      /* fixed-key toggle (Chess) */
-      var fbDone = !!(log[sig.fixedKey]);
-      toggleHtml = '<div style="display:flex;align-items:center;gap:7px;margin-top:7px;">'
-        +'<label class="sched-toggle"><input type="checkbox" '+(fbDone?'checked':'')+' data-fk="'+sig.fixedKey+'" onchange="discToggleLog(\''+TODAY+'\',this.dataset.fk,this.checked)"><span class="sched-toggle-slider"></span></label>'
-        +'<span style="font-size:10px;font-weight:700;color:'+(fbDone?'#4ade80':'var(--faint)')+'">'+(fbDone?'Finished':'Pending')+'</span>'
-        +'</div>';
-    } else if(sig.isSelfCtrl){
-      /* Self Control toggle switch */
-      var sCT = log.selfControl;
-      var scDone = sCT===true;
-      toggleHtml = '<div style="display:flex;align-items:center;gap:7px;margin-top:7px;">'
-        +'<label class="sched-toggle"><input type="checkbox" '+(scDone?'checked':'')+' onchange="discToggleLog(\''+TODAY+'\',\'selfControl\',this.checked)"><span class="sched-toggle-slider"></span></label>'
-        +'<span style="font-size:10px;font-weight:700;color:'+(scDone?'#4ade80':sCT===false?'#ef4444':'var(--faint)')+'">'+(scDone?'Maintained':sCT===false?'Broken':'Mark here')+'</span>'
-        +'</div>';
-    } else if(sig.isSchedAll){
-      /* As Per Schedule: toggle marks ALL slots done/undone */
-      var sdone=DAILY_SCHEDULE.length;
-      var curDone=DAILY_SCHEDULE.filter(function(s){ return !!(log['sched_'+s.key]); }).length;
-      var allDone=curDone===sdone;
-      toggleHtml = '<div style="display:flex;align-items:center;gap:7px;margin-top:7px;">'
-        +'<label class="sched-toggle"><input type="checkbox" '+(allDone?'checked':'')+' onchange="schedToggleAll(this.checked)"><span class="sched-toggle-slider"></span></label>'
-        +'<span style="font-size:10px;font-weight:700;color:'+(allDone?'#4ade80':'var(--faint)')+'">'+(allDone?'All done (incl. Chess + Control)':'Mark all done')+'</span>'
-        +'</div>';
+      body = '<div class="disc-tgl-list">'+sig.slots.map(function(sl){ return tgl(sl, sl.short||sl.label); }).join('')+'</div>';
+    } else if(sig.isOther){
+      var allOn = sig.done===sig.slots.length;
+      body = '<div class="disc-tgl-all">'
+          +'<label class="sched-toggle"><input type="checkbox" '+(allOn?'checked':'')+' onchange="schedToggleOthers(this.checked)"><span class="sched-toggle-slider"></span></label>'
+          +'<span class="disc-tgl-lbl" style="color:'+(allOn?'#4ade80':'var(--muted)')+'">'+(allOn?'All routine slots done':'Toggle all')+'</span>'
+        +'</div>'
+        +'<div class="disc-tgl-grid">'+sig.slots.map(function(sl){ return tgl(sl, sl.label); }).join('')+'</div>';
     }
-
-    return '<div class="disc-signal '+cls+'">'
-      +'<span class="disc-sig-icon">'+icon+'</span>'
-      +'<div class="disc-sig-body">'
-        +'<div class="disc-sig-name">'+sig.name+'</div>'
-        +'<div class="disc-sig-note">'+sig.note+'</div>'
-        +toggleHtml
+    return '<div class="disc-signal disc-signal-col '+cls+'">'
+      +'<div class="disc-sig-top">'
+        +'<span class="disc-sig-icon">'+icon+'</span>'
+        +'<div class="disc-sig-body"><div class="disc-sig-name">'+sig.name+'</div><div class="disc-sig-note">'+sig.note+'</div></div>'
+        +'<span class="disc-sig-pts '+ptsCls+'">'+ptsStr+'</span>'
       +'</div>'
-      +'<span class="disc-sig-pts '+ptsCls+'">'+ptsStr+'</span>'
+      +body
       +'</div>';
   }).join('');
 
+  /* excused-day control */
+  var excuseHtml;
+  if(exToday){
+    excuseHtml = '<div class="disc-excuse on">'
+      +'<span>&#x1F9F3; Excused today &mdash; <b>'+exToday+'</b>. Streaks are paused, not broken.</span>'
+      +'<button class="disc-ex-chip" data-r="" onclick="discSetExcuse(TODAY,this.dataset.r)">Undo</button>'
+      +'</div>';
+  } else {
+    var capHit = usedEx>=EXCUSE_CAP;
+    excuseHtml = '<div class="disc-excuse">'
+      +'<span class="disc-ex-q">Off day for a real reason?</span>'
+      +EXCUSE_REASONS.map(function(r){ return '<button class="disc-ex-chip" data-r="'+r+'" '+(capHit?'disabled':'')+' onclick="discSetExcuse(TODAY,this.dataset.r)">'+r+'</button>'; }).join('')
+      +'<span class="disc-ex-count">'+usedEx+'/'+EXCUSE_CAP+' used this month</span>'
+      +'</div>';
+  }
 
+  var todayLbl = exToday ? 'Excused' : scoreLabel(sc.total);
+  var todayCol = exToday ? '#38bdf8' : col;
 
   el.innerHTML = '<div class="disc-card">'
     + previewBanner
@@ -3997,34 +4019,36 @@ function renderDiscCard(){
       +'</div>'
       +'<div class="disc-stats">'
         +'<div class="disc-streaks-row">'
-          +'<div class="disc-streak-chip" title="Study streak (all study slots)"><span class="dsc-fire">&#x1F4DA;</span><span class="dsc-num" style="color:'+(stdS>=7?'#4ade80':stdS>=3?'#fbbf24':'var(--acc)')+'">'+stdS+'</span><span class="dsc-lbl">Study</span></div>'
-          +'<div class="disc-streak-chip" title="Body streak (Exercise + Chess + Control)"><span class="dsc-fire">&#x1F4AA;</span><span class="dsc-num" style="color:'+(bdS>=7?'#4ade80':bdS>=3?'#fbbf24':'var(--acc)')+'">'+bdS+'</span><span class="dsc-lbl">Body</span></div>'
+          +'<div class="disc-streak-chip" title="GATE streak: all study slots done (excused days skipped)"><span class="dsc-fire">&#x1F4DA;</span><span class="dsc-num" style="color:'+(gateS>=7?'#4ade80':gateS>=3?'#fbbf24':'var(--acc)')+'">'+gateS+'</span><span class="dsc-lbl">GATE</span></div>'
           +'<div class="disc-streak-divider"></div>'
-          +'<div class="disc-streak-chip disc-streak-disc" title="Discipline streak (score &ge;90)"><span class="dsc-fire">&#x1F525;</span><span class="dsc-num" style="color:'+(streak>=7?'#4ade80':streak>=3?'#fbbf24':'var(--acc)')+'">'+streak+'</span><span class="dsc-lbl">Discipline</span></div>'
+          +'<div class="disc-streak-chip disc-streak-disc" title="Discipline streak: score above '+DISC_THRESHOLD+' (excused days skipped)"><span class="dsc-fire">&#x1F525;</span><span class="dsc-num" style="color:'+(streak>=7?'#4ade80':streak>=3?'#fbbf24':'var(--acc)')+'">'+streak+'</span><span class="dsc-lbl">Discipline</span></div>'
           +'<div class="disc-streak-chip disc-streak-disc" title="All-time max discipline streak"><span class="dsc-fire">&#x1F3C6;</span><span class="dsc-num" style="color:#fbbf24">'+maxStrk+'</span><span class="dsc-lbl">Max</span></div>'
         +'</div>'
         +'<div class="disc-stat" style="margin-left:auto;"><div class="disc-stat-val" style="color:'+discColor(avg7)+'">'+avg7+'</div><div class="disc-stat-lbl">7-Day Avg</div></div>'
-        +'<div class="disc-stat"><div class="disc-stat-val" style="color:'+col+'">'+scoreLabel(sc.total)+'</div><div class="disc-stat-lbl">Today</div></div>'
+        +'<div class="disc-stat"><div class="disc-stat-val" style="color:'+todayCol+'">'+todayLbl+'</div><div class="disc-stat-lbl">Today</div></div>'
       +'</div>'
       +'<button class="disc-expand-btn" onclick="event.stopPropagation();toggleDiscDetail();">'+(discOpen?'&#x25B2; Close':'&#x25BC; Details')+'</button>'
     +'</div>'
     +'<div class="disc-detail '+(discOpen?'open':'')+'">'
-      /* full-width donut + slim label list */
-      +'<div style="margin-bottom:18px;">'
-        +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">&#x1F5D3; Daily Schedule &mdash; '+TODAY+'</div>'
-        +'<div class="sched-clock-wrap">'
-          +'<div class="sched-clock-svg">'+schedClockSvg(log)+'</div>'
-
+      +'<div class="disc-two-col">'
+        +'<div class="disc-col">'
+          +'<div class="disc-col-title">&#x1F5D3; Daily Schedule &mdash; '+TODAY+(isFriSatSun(TODAY)?' (Fri&ndash;Sun)':' (Mon&ndash;Thu)')+'</div>'
+          +'<div class="sched-clock-wrap"><div class="sched-clock-svg">'+schedClockSvg(log)+'</div></div>'
+        +'</div>'
+        +'<div class="disc-col">'
+          +'<div class="disc-col-title">&#x1F4CA; Score Breakdown &mdash; Today</div>'
+          +excuseHtml
+          +'<div class="disc-signals disc-signals-stack">'+sigHtml+'</div>'
+          +'<div class="disc-rule-note">Disciplined day = score above '+DISC_THRESHOLD+'. All study slots done = GATE streak continues.</div>'
         +'</div>'
       +'</div>'
-      +'<div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;border-top:1px solid var(--border);padding-top:14px;">&#x1F4CA; Score Breakdown &mdash; Today</div>'
-      +'<div class="disc-signals">'+sigHtml+'</div>'
       +'<div class="disc-heatmap">'
-        +'<div class="disc-hm-title">Discipline Heatmap &middot; Oct 8 &ndash; Dec 31</div>'
-        +'<div style="display:flex;gap:8px;font-size:9px;color:var(--faint);margin-bottom:6px;">'
-          +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#4ade80;border-radius:2px;"></span>&ge;90</span>'
-          +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#fbbf24;border-radius:2px;"></span>70&ndash;89</span>'
-          +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#ef4444;border-radius:2px;"></span>&lt;70</span>'
+        +'<div class="disc-hm-title">Discipline Heatmap &middot; Oct 17 &ndash; Dec 31</div>'
+        +'<div style="display:flex;gap:8px;font-size:9px;color:var(--faint);margin-bottom:6px;flex-wrap:wrap;">'
+          +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#4ade80;border-radius:2px;"></span>&gt;'+DISC_THRESHOLD+'</span>'
+          +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#fbbf24;border-radius:2px;"></span>60&ndash;'+DISC_THRESHOLD+'</span>'
+          +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#ef4444;border-radius:2px;"></span>&lt;60</span>'
+          +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#38bdf8;border-radius:2px;"></span>excused</span>'
           +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#1a3248;border-radius:2px;"></span>future</span>'
         +'</div>'
         +'<div class="disc-hm-grid">'+discHeatmapHtml()+'</div>'
@@ -4033,22 +4057,28 @@ function renderDiscCard(){
   +'</div>';
 }
 
-/* toggle ALL schedule slots done/undone */
+/* toggle ALL schedule slots (study + routine) done/undone */
 function schedToggleAll(allOn){
   loadDisc();
   if(!discData.logs[TODAY]) discData.logs[TODAY]={};
-  var DAILY_SCHEDULE = getDailySchedule(TODAY);
-  DAILY_SCHEDULE.forEach(function(sl){
-    discData.logs[TODAY]['sched_'+sl.key] = allOn ? true : undefined;
-    if(!allOn) delete discData.logs[TODAY]['sched_'+sl.key];
+  getDailySchedule(TODAY).forEach(function(sl){
+    if(allOn) discData.logs[TODAY]['sched_'+sl.key]=true;
+    else delete discData.logs[TODAY]['sched_'+sl.key];
   });
-  /* Chess + Control follow the As Per Schedule toggle */
-  if(allOn){ discData.logs[TODAY]['chess']=true; discData.logs[TODAY]['selfControl']=true; }
-  else { delete discData.logs[TODAY]['chess']; delete discData.logs[TODAY]['selfControl']; }
+  saveDisc(); renderDiscCard();
+}
+/* toggle all Daily routine (non-study) slots done/undone */
+function schedToggleOthers(allOn){
+  loadDisc();
+  if(!discData.logs[TODAY]) discData.logs[TODAY]={};
+  discOtherSlots(TODAY).forEach(function(sl){
+    if(allOn) discData.logs[TODAY]['sched_'+sl.key]=true;
+    else delete discData.logs[TODAY]['sched_'+sl.key];
+  });
   saveDisc(); renderDiscCard();
 }
 
-function scoreLabel(sc){ return sc>=90?'Disciplined':sc>=70?'Good':sc>=50?'Average':sc>=30?'Below Avg':'Needs work'; }
+function scoreLabel(sc){ return sc>DISC_THRESHOLD?'Disciplined':sc>=60?'Good':sc>=40?'Average':sc>=20?'Below Avg':'Needs work'; }
 
 function renderAll(){renderProgress();renderEntry();renderSubjects();renderLearningPath();}
 
@@ -4088,7 +4118,8 @@ var _mePendingVals = {};     /* {key: value} edits staged in modal before save *
 /* Check on boot whether yesterday needs filling */
 function checkMissedEntry(){
   /* only check if within the disc tracking window */
-  if(TODAY < DISC_START) return;
+  var yesterday = addDays(TODAY,-1);
+  if(yesterday < DISC_START) return;
 
   /* have we already prompted for yesterday this session? */
   var seenKey = 'gate-me-seen-' + yesterday;
@@ -4114,16 +4145,13 @@ function checkMissedEntry(){
 function getMissingItems(date){
   loadDisc();
   var log = discData.logs[date]||{};
+  if(log.excused) return [];
   var DAILY_SCHEDULE = getDailySchedule(date);
   var missing = [];
   DAILY_SCHEDULE.forEach(function(sl){
     if(!log['sched_'+sl.key])
       missing.push({ type:'sched', key:'sched_'+sl.key, name:sl.from+'–'+sl.to+' '+sl.label });
   });
-  if(!log['chess'])
-    missing.push({ type:'fixed', key:'chess', name:'Chess', pts:10 });
-  if(log.selfControl===undefined||log.selfControl===null)
-    missing.push({ type:'log', key:'selfControl', name:'Control', pts:10, yesNo:true });
   return missing;
 }
 function meProjectedScore(date){
@@ -4163,7 +4191,7 @@ function renderMeModal(){
   var schedMissing = missing.filter(function(m){ return m.type==='sched'; });
   var schedHtml2 = '';
   if(schedMissing.length > 0){
-    schedHtml2 = '<div class="me-section"><div class="me-section-hdr">Schedule Slots (all done = +10 pts bonus)</div>';
+    schedHtml2 = '<div class="me-section"><div class="me-section-hdr">Schedule slots</div>';
     schedMissing.forEach(function(m){
       var isDone=!!_mePendingVals[m.key];
       schedHtml2 += '<div class="me-item'+(isDone?' complete':'')+'">'
@@ -4205,8 +4233,17 @@ function renderMeModal(){
     });
     ynHtml += '</div>';
   }
+  /* excuse this day instead of filling it */
+  var exSel = _mePendingVals.excused||'';
+  var exUsed = discExcuseCount(date.substring(0,7),date);
+  var exHtml = '<div class="me-section"><div class="me-section-hdr">Off day for a real reason? Excuse it (streaks kept)</div>'
+    +'<div class="me-yn-row" style="flex-wrap:wrap;">'
+    +EXCUSE_REASONS.map(function(r){ return '<button class="me-yn-btn'+(exSel===r?' sel-yes':'')+'" data-r="'+r+'" onclick="meSetExcuse(this.dataset.r)">'+r+'</button>'; }).join('')
+    +'</div><div class="me-item-pts" style="margin-top:6px;">'+exUsed+'/'+EXCUSE_CAP+' excused days used this month</div></div>';
   var body = document.getElementById('me-body');
-  if(body) body.innerHTML = scorePreview + schedHtml2 + fixedHtml + ynHtml;
+  if(body) body.innerHTML = exSel
+    ? exHtml + '<div class="me-item-pts">This day will be marked excused ('+exSel+'). Save to confirm.</div>'
+    : scorePreview + schedHtml2 + fixedHtml + ynHtml + exHtml;
 }
 
 /* Mark/unmark ALL schedule slots in pending state */
@@ -4216,8 +4253,16 @@ function meMarkAllSched(val){
     if(val){ _mePendingVals['sched_'+sl.key] = true; }
     else { delete _mePendingVals['sched_'+sl.key]; }
   });
-  if(val){ _mePendingVals['chess']=true; _mePendingVals['selfControl']=true; }
-  else { delete _mePendingVals['chess']; delete _mePendingVals['selfControl']; }
+  renderMeModal();
+}
+
+/* Excuse the pending date (toggle) */
+function meSetExcuse(reason){
+  if(_mePendingVals.excused===reason){ delete _mePendingVals.excused; }
+  else{
+    if(!discCanExcuse(_mePendingDate)){ alert('Excused-day limit reached ('+EXCUSE_CAP+' per month).'); return; }
+    _mePendingVals.excused=reason;
+  }
   renderMeModal();
 }
 
