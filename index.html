@@ -2434,6 +2434,9 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+// Long polling works on networks/VPNs/antivirus that block Firestore's streaming connection
+try{ db.settings({experimentalForceLongPolling:true, merge:true}); }catch(e){ console.warn('Firestore settings:',e); }
+let _fbLastErr = null;   // last Firestore error (shown in the sync pill)
 const DOC_REF = db.collection('users').doc('aswith');
 
 // In-memory cache — Firestore is source of truth
@@ -2486,6 +2489,7 @@ function fbFlush(){
     .then(()=>{keys.forEach(k=>{_lastJson[k]=batch[k];});if(!Object.keys(_pendingSaves).length)fbSetSyncState('synced');})
     .catch(e=>{
       console.warn('Firestore write error:',e);
+      _fbLastErr=e;
       // put them back so the next flush retries
       keys.forEach(k=>{if(!(k in _pendingSaves))_pendingSaves[k]=JSON.parse(batch[k]);});
       fbSetSyncState('error');
@@ -2552,33 +2556,52 @@ async function fbReconnect(){
       });
     }
     _fbReady=true;
+    _fbLastErr=null;
     fbFlush();
     fbStartLiveSync();
     fbApplyRemote();
-  }catch(e){ fbSetSyncState('offline'); }
+    fbSetSyncState('synced');
+  }catch(e){ _fbLastErr=e; console.warn('Reconnect failed:',e); fbSetSyncState('offline'); }
 }
-setInterval(()=>{ if(!_fbReady) fbReconnect(); },20000);
+setInterval(()=>{ if(!_fbReady) fbReconnect(); },10000);
+window.addEventListener('focus',()=>{ if(!_fbReady) fbReconnect(); });
 window.addEventListener('online',()=>{ if(!_fbReady) fbReconnect(); });
 
 /* small sync status pill (bottom-left) */
+function fbErrText(e){
+  if(!e) return '';
+  const c=(e.code||'').toString();
+  if(c==='permission-denied') return 'cloud refused access (Firestore rules)';
+  if(c==='unavailable'||/offline/i.test(e.message||'')) return 'cannot reach Firestore';
+  if(c==='failed-precondition') return 'Firestore not ready (precondition)';
+  if(c==='resource-exhausted') return 'Firestore quota exceeded';
+  if(typeof firebase==='undefined') return 'Firebase scripts did not load';
+  return c||(e.message||'unknown error').slice(0,60);
+}
 function fbSetSyncState(st){
   let el=document.getElementById('sync-pill');
   if(!el){
     if(!document.body) return;
     el=document.createElement('div');el.id='sync-pill';
-    el.style.cssText='position:fixed;left:12px;bottom:12px;z-index:9000;font-size:11px;font-weight:700;padding:5px 11px;border-radius:14px;background:var(--card);border:1px solid var(--border);color:var(--muted);font-family:system-ui;pointer-events:none;transition:opacity .4s;';
+    el.style.cssText='position:fixed;left:12px;bottom:12px;z-index:100001;font-size:11px;font-weight:700;padding:5px 11px;border-radius:14px;background:var(--card);border:1px solid var(--border);color:var(--muted);font-family:system-ui;transition:opacity .4s;cursor:default;max-width:90vw;';
+    el.onclick=function(){ if(!_fbReady){ el.textContent='\u25CF Reconnecting\u2026'; fbReconnect(); } else fbFlush(); };
     document.body.appendChild(el);
   }
+  const why=fbErrText(_fbLastErr);
   const M={
     'synced':['\u25CF Synced','#4ade80'],
     'saving':['\u25CF Saving\u2026','#fbbf24'],
     'updated':['\u21BB Updated from another device','#38bdf8'],
     'pending-remote':['\u21BB New data from another device \u2014 applies when you finish typing','#38bdf8'],
-    'offline':['\u25CF Offline \u2014 saved on this device only','#ef4444'],
-    'error':['\u25CF Sync error \u2014 retrying','#ef4444']
+    'offline':['\u25CF Not synced'+(why?' \u2014 '+why:'')+' \u00B7 tap to retry','#ef4444'],
+    'error':['\u25CF Sync error'+(why?' \u2014 '+why:'')+' \u00B7 retrying','#ef4444']
   };
   const m=M[st]||M.synced;
   el.textContent=m[0];el.style.color=m[1];el.style.borderColor=m[1]+'66';el.style.opacity='1';
+  el.style.cursor=(st==='offline'||st==='error')?'pointer':'default';
+  el.style.pointerEvents=(st==='offline'||st==='error')?'auto':'none';
+  el.title=_fbLastErr?String(_fbLastErr.code||'')+' '+String(_fbLastErr.message||''):'';
+  if(st==='synced'){ _fbLastErr=null; }
   clearTimeout(el._t);
   if(st==='synced'||st==='updated') el._t=setTimeout(()=>{el.style.opacity='0';},2500);
 }
@@ -2607,6 +2630,7 @@ async function fbInit(){
     _fbReady=true;
     fbFlush();          // push anything queued during load
     fbStartLiveSync();  // listen for edits from other browsers
+    if(!Object.keys(_pendingSaves).length) fbSetSyncState('synced');
     setBar(100,'Ready!');
     setTimeout(()=>{
       const overlay=$('fb-loading');
@@ -2615,6 +2639,7 @@ async function fbInit(){
   }catch(e){
     // Firestore failed — fall back to localStorage silently
     console.warn('Firestore unavailable, using localStorage:',e);
+    _fbLastErr=e;
     _fbReady=false;
     setBar(100,'Using offline mode');
     setTimeout(()=>fbSetSyncState('offline'),900);
