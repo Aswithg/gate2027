@@ -315,6 +315,7 @@ select.inp-sm{cursor:pointer;}
 .disc-tgl-all{padding-bottom:7px;border-bottom:1px dashed var(--border);}
 .disc-tgl-lbl{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .disc-tgl-time{font-weight:400;opacity:.75;}
+.disc-gate-tag{display:inline-block;font-size:8px;font-weight:800;letter-spacing:.4px;padding:1px 5px;border-radius:6px;border:1px solid #00d4ff88;color:#00d4ff;margin-left:2px;vertical-align:1px;}
 .disc-excuse{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:11px;color:var(--muted);background:var(--navy);border:1px dashed var(--border);border-radius:8px;padding:8px 10px;margin-bottom:10px;}
 .disc-excuse.on{border:1px solid #38bdf8;color:var(--text);background:rgba(56,189,248,.08);justify-content:space-between;}
 .disc-ex-q{font-weight:700;margin-right:2px;}
@@ -2440,6 +2441,9 @@ let _cache = {};
 let _pendingSaves = {};
 let _saveTimer = null;
 let _fbReady = false;
+let _lastJson = {};      // last JSON known to match the cloud, per key (prevents echo / redundant writes)
+let _liveUnsub = null;   // Firestore onSnapshot unsubscribe
+let _remoteDirty = false;// remote change arrived while user was typing
 
 // All keys managed by Firestore
 const FB_KEYS = [
@@ -2458,18 +2462,125 @@ function lsGet(k){
 
 function lsSet(k,v){
   _cache[k]=v;
+  const json=JSON.stringify(v);
   // Also write to localStorage as offline fallback
-  try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}
-  // Batch writes to Firestore — debounce 1s
+  try{localStorage.setItem(k,json);}catch(e){}
+  // Nothing changed vs the cloud copy -> no remote write (stops stale tabs re-sending old data)
+  if(_lastJson[k]===json && !(k in _pendingSaves)) return;
   _pendingSaves[k]=v;
+  fbSetSyncState(_fbReady?'saving':'offline');
   clearTimeout(_saveTimer);
-  _saveTimer=setTimeout(()=>{
-    if(!_fbReady) return;
-    const batch={};
-    Object.entries(_pendingSaves).forEach(([key,val])=>{batch[key]=JSON.stringify(val);});
-    _pendingSaves={};
-    DOC_REF.set(batch,{merge:true}).catch(e=>console.warn('Firestore write error:',e));
-  },1000);
+  _saveTimer=setTimeout(fbFlush,800);
+}
+
+/* Push all pending writes to Firestore now */
+function fbFlush(){
+  clearTimeout(_saveTimer);
+  if(!_fbReady) return;
+  const keys=Object.keys(_pendingSaves);
+  if(!keys.length) return;
+  const batch={};
+  keys.forEach(k=>{batch[k]=JSON.stringify(_pendingSaves[k]);});
+  _pendingSaves={};
+  DOC_REF.set(batch,{merge:true})
+    .then(()=>{keys.forEach(k=>{_lastJson[k]=batch[k];});if(!Object.keys(_pendingSaves).length)fbSetSyncState('synced');})
+    .catch(e=>{
+      console.warn('Firestore write error:',e);
+      // put them back so the next flush retries
+      keys.forEach(k=>{if(!(k in _pendingSaves))_pendingSaves[k]=JSON.parse(batch[k]);});
+      fbSetSyncState('error');
+    });
+}
+
+/* Live sync: apply changes made on other devices/browsers as they happen */
+function fbStartLiveSync(){
+  if(_liveUnsub) return;
+  _liveUnsub=DOC_REF.onSnapshot(snap=>{
+    if(!snap.exists||snap.metadata.hasPendingWrites) return;
+    let changed=false;
+    Object.entries(snap.data()).forEach(([k,v])=>{
+      const json=typeof v==='string'?v:JSON.stringify(v);
+      if(k in _pendingSaves) return;               // unsent local edit wins
+      if(_lastJson[k]===json) return;              // already have it
+      _lastJson[k]=json;
+      let parsed; try{parsed=JSON.parse(json);}catch(e){parsed=v;}
+      if(JSON.stringify(_cache[k])===json) return;
+      _cache[k]=parsed;
+      try{localStorage.setItem(k,json);}catch(e){}
+      changed=true;
+    });
+    if(changed) fbApplyRemote();
+  },e=>{console.warn('Live sync error:',e);fbSetSyncState('error');});
+}
+function fbIsTyping(){
+  const a=document.activeElement;
+  if(!a) return false;
+  const t=a.tagName;
+  return (t==='TEXTAREA'||t==='SELECT'||(t==='INPUT'&&a.type!=='checkbox'&&a.type!=='radio'&&a.type!=='button'));
+}
+function fbApplyRemote(){
+  if(fbIsTyping()){ _remoteDirty=true; fbSetSyncState('pending-remote'); return; }
+  _remoteDirty=false;
+  try{
+    loadAll();loadRev1();loadMocks();loadPyq();loadDisc();
+    renderAll();
+    const act=document.querySelector('.tab-panel.active');
+    const id=act?act.id.replace('panel-',''):'dashboard';
+    if(id==='dashboard')renderDashboard();
+    else if(id==='rev1')renderRevision1();
+    else if(id==='rev2')renderRevision2();
+    else if(id==='pyq')renderPyq();
+    fbSetSyncState('updated');
+  }catch(e){console.warn('Re-render after sync failed:',e);}
+}
+document.addEventListener('focusout',()=>{ if(_remoteDirty) setTimeout(()=>{ if(_remoteDirty&&!fbIsTyping()) fbApplyRemote(); },50); });
+// Don't lose the last edit when the tab is closed or hidden
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden') fbFlush(); });
+window.addEventListener('pagehide',fbFlush);
+// Offline at startup? keep retrying, then push local edits and start live sync
+async function fbReconnect(){
+  if(_fbReady) return;
+  try{
+    const snap=await DOC_REF.get();
+    if(snap.exists){
+      Object.entries(snap.data()).forEach(([k,v])=>{
+        const json=typeof v==='string'?v:JSON.stringify(v);
+        _lastJson[k]=json;
+        if(k in _pendingSaves) return;
+        try{_cache[k]=JSON.parse(json);}catch(e){_cache[k]=v;}
+        try{localStorage.setItem(k,json);}catch(e){}
+      });
+    }
+    _fbReady=true;
+    fbFlush();
+    fbStartLiveSync();
+    fbApplyRemote();
+  }catch(e){ fbSetSyncState('offline'); }
+}
+setInterval(()=>{ if(!_fbReady) fbReconnect(); },20000);
+window.addEventListener('online',()=>{ if(!_fbReady) fbReconnect(); });
+
+/* small sync status pill (bottom-left) */
+function fbSetSyncState(st){
+  let el=document.getElementById('sync-pill');
+  if(!el){
+    if(!document.body) return;
+    el=document.createElement('div');el.id='sync-pill';
+    el.style.cssText='position:fixed;left:12px;bottom:12px;z-index:9000;font-size:11px;font-weight:700;padding:5px 11px;border-radius:14px;background:var(--card);border:1px solid var(--border);color:var(--muted);font-family:system-ui;pointer-events:none;transition:opacity .4s;';
+    document.body.appendChild(el);
+  }
+  const M={
+    'synced':['\u25CF Synced','#4ade80'],
+    'saving':['\u25CF Saving\u2026','#fbbf24'],
+    'updated':['\u21BB Updated from another device','#38bdf8'],
+    'pending-remote':['\u21BB New data from another device \u2014 applies when you finish typing','#38bdf8'],
+    'offline':['\u25CF Offline \u2014 saved on this device only','#ef4444'],
+    'error':['\u25CF Sync error \u2014 retrying','#ef4444']
+  };
+  const m=M[st]||M.synced;
+  el.textContent=m[0];el.style.color=m[1];el.style.borderColor=m[1]+'66';el.style.opacity='1';
+  clearTimeout(el._t);
+  if(st==='synced'||st==='updated') el._t=setTimeout(()=>{el.style.opacity='0';},2500);
 }
 
 let lsOK=true; // Firestore is always available
@@ -2485,6 +2596,7 @@ async function fbInit(){
     if(snap.exists){
       const data=snap.data();
       Object.entries(data).forEach(([k,v])=>{
+        _lastJson[k]=typeof v==='string'?v:JSON.stringify(v);
         try{
           _cache[k]=JSON.parse(v);
           // Sync to localStorage as offline backup
@@ -2493,6 +2605,8 @@ async function fbInit(){
       });
     }
     _fbReady=true;
+    fbFlush();          // push anything queued during load
+    fbStartLiveSync();  // listen for edits from other browsers
     setBar(100,'Ready!');
     setTimeout(()=>{
       const overlay=$('fb-loading');
@@ -2503,6 +2617,7 @@ async function fbInit(){
     console.warn('Firestore unavailable, using localStorage:',e);
     _fbReady=false;
     setBar(100,'Using offline mode');
+    setTimeout(()=>fbSetSyncState('offline'),900);
     setTimeout(()=>{
       const overlay=$('fb-loading');
       if(overlay){overlay.style.opacity='0';overlay.style.transition='opacity 0.4s';setTimeout(()=>overlay.remove(),400);}
@@ -2514,6 +2629,7 @@ function dataStatus(msg,col){const el=$('data-status');if(!el)return;el.textCont
 
 function loadAll(){
   runMigration();
+  const _subjBefore=JSON.stringify(lsGet('gate-subjects'));
   subjects=lsGet('gate-subjects')||JSON.parse(JSON.stringify(SEED_SUBJECTS));
   // Always sync static fields from SEED_SUBJECTS to fix stale localStorage values
   SEED_SUBJECTS.forEach(seed=>{
@@ -2522,7 +2638,7 @@ function loadAll(){
     else{subjects.push(JSON.parse(JSON.stringify(seed)));}
   });
   subjects.sort((a,b)=>a.id-b.id);
-  lsSet('gate-subjects',subjects);
+  if(JSON.stringify(subjects)!==_subjBefore) lsSet('gate-subjects',subjects);
   daily=lsGet('gate-daily')||JSON.parse(JSON.stringify(DAILY_SEED));
   settings=lsGet('gate-settings')||JSON.parse(JSON.stringify(SEED_SETTINGS));
   earnedMilestones=new Set(lsGet('gate-milestones')||SEED_MILESTONES);
@@ -3407,10 +3523,10 @@ var WEEKDAY_SCHEDULE = [
   {key:'sleep',       color:'#6366f1',from:'00:00',to:'06:00',label:'Sleep'},
   {key:'exercise',    color:'#4ade80',from:'06:00',to:'06:30',label:'Exercise'},
   {key:'freshup',     color:'#a78bfa',from:'06:30',to:'07:00',label:'Fresh up'},
-  {key:'study_video', color:'#00d4ff',from:'07:00',to:'09:00',label:'Videos',short:'Video'},
+  {key:'study_video', color:'#00d4ff',from:'07:00',to:'09:00',label:'Videos',short:'Videos'},
   {key:'breakfast',   color:'#fbbf24',from:'09:00',to:'09:30',label:'Breakfast'},
   {key:'walking',     color:'#38bdf8',from:'09:30',to:'10:00',label:'Walking'},
-  {key:'notes',       color:'#c084fc',from:'10:00',to:'12:00',label:'Notes'},
+  {key:'study_notes', color:'#c084fc',from:'10:00',to:'12:00',label:'Notes',short:'Notes'},
   {key:'chess1',      color:'#e879f9',from:'12:00',to:'13:00',label:'Chess'},
   {key:'lunch',       color:'#fbbf24',from:'13:00',to:'14:00',label:'Lunch'},
   {key:'office1',     color:'#64748b',from:'14:00',to:'18:00',label:'Office work'},
@@ -3423,10 +3539,10 @@ var WEEKEND_SCHEDULE = [
   {key:'sleep',       color:'#6366f1',from:'00:00',to:'06:00',label:'Sleep'},
   {key:'exercise',    color:'#4ade80',from:'06:00',to:'06:30',label:'Exercise'},
   {key:'freshup',     color:'#a78bfa',from:'06:30',to:'07:00',label:'Fresh up'},
-  {key:'study_video', color:'#00d4ff',from:'07:00',to:'09:00',label:'Videos',short:'Video'},
+  {key:'study_video', color:'#00d4ff',from:'07:00',to:'09:00',label:'Videos',short:'Videos'},
   {key:'breakfast',   color:'#fbbf24',from:'09:00',to:'09:30',label:'Breakfast'},
   {key:'walking',     color:'#38bdf8',from:'09:30',to:'10:00',label:'Walking'},
-  {key:'notes',       color:'#c084fc',from:'10:00',to:'12:00',label:'Notes'},
+  {key:'study_notes', color:'#c084fc',from:'10:00',to:'12:00',label:'Notes',short:'Notes'},
   {key:'chess1',      color:'#e879f9',from:'12:00',to:'13:00',label:'Chess'},
   {key:'lunch',       color:'#fbbf24',from:'13:00',to:'14:00',label:'Lunch'},
   {key:'study_pyq',   color:'#f472b6',from:'14:00',to:'16:00',label:'PYQ',short:'PYQ'},
@@ -3964,32 +4080,28 @@ function renderDiscCard(){
       +'<span class="disc-tgl-lbl" style="color:'+(on?'#4ade80':'var(--faint)')+'">'+label+' <span class="disc-tgl-time">'+tFmt(sl.from)+'&ndash;'+tFmt(sl.to)+'</span></span></div>';
   }
 
-  var sigHtml = sc.signals.map(function(sig){
-    var isEarned = sig.earned >= sig.pts;
-    var cls = isEarned?'earned':sig.earned===0?'missed':'';
-    var ptsCls = isEarned?'earned':'missed';
-    var ptsStr = (isEarned?'+':'')+sig.earned+'/'+sig.pts;
-    var icon = sig.isStudy?'&#x1F4DA;':'&#x1F5D3;&#xFE0F;';
-    var body = '';
-    if(sig.isStudy){
-      body = '<div class="disc-tgl-list">'+sig.slots.map(function(sl){ return tgl(sl, sl.short||sl.label); }).join('')+'</div>';
-    } else if(sig.isOther){
-      var allOn = sig.done===sig.slots.length;
-      body = '<div class="disc-tgl-all">'
-          +'<label class="sched-toggle"><input type="checkbox" '+(allOn?'checked':'')+' onchange="schedToggleOthers(this.checked)"><span class="sched-toggle-slider"></span></label>'
-          +'<span class="disc-tgl-lbl" style="color:'+(allOn?'#4ade80':'var(--muted)')+'">'+(allOn?'All routine slots done':'Toggle all')+'</span>'
-        +'</div>'
-        +'<div class="disc-tgl-grid">'+sig.slots.map(function(sl){ return tgl(sl, sl.label); }).join('')+'</div>';
-    }
-    return '<div class="disc-signal disc-signal-col '+cls+'">'
-      +'<div class="disc-sig-top">'
-        +'<span class="disc-sig-icon">'+icon+'</span>'
-        +'<div class="disc-sig-body"><div class="disc-sig-name">'+sig.name+'</div><div class="disc-sig-note">'+sig.note+'</div></div>'
-        +'<span class="disc-sig-pts '+ptsCls+'">'+ptsStr+'</span>'
-      +'</div>'
-      +body
-      +'</div>';
-  }).join('');
+  /* one combined card: GATE (study) slots + routine slots, in time order */
+  var sigS = sc.signals[0], sigO = sc.signals[1];
+  var allSlots = getDailySchedule(TODAY);
+  var allOn = allSlots.every(function(sl){ return !!log['sched_'+sl.key]; });
+  var cardCls = sc.total>DISC_THRESHOLD?'earned':sc.total===0?'missed':'';
+  var gateDone = sigS.earned>=sigS.pts;
+  var sigHtml = '<div class="disc-signal disc-signal-col '+cardCls+'">'
+    +'<div class="disc-sig-top">'
+      +'<span class="disc-sig-icon">&#x1F5D3;&#xFE0F;</span>'
+      +'<div class="disc-sig-body"><div class="disc-sig-name">Daily routine</div>'
+        +'<div class="disc-sig-note"><span style="color:'+(gateDone?'#4ade80':'#00d4ff')+';font-weight:700;">GATE '+sigS.done+'/'+sigS.slots.length+' &middot; '+sigS.earned+'/'+sigS.pts+'</span> &middot; Routine '+sigO.done+'/'+sigO.slots.length+' &middot; '+sigO.earned+'/'+sigO.pts+'</div></div>'
+      +'<span class="disc-sig-pts '+(sc.total>DISC_THRESHOLD?'earned':'missed')+'">'+sc.total+'/100</span>'
+    +'</div>'
+    +'<div class="disc-tgl-all">'
+      +'<label class="sched-toggle"><input type="checkbox" '+(allOn?'checked':'')+' onchange="schedToggleAll(this.checked)"><span class="sched-toggle-slider"></span></label>'
+      +'<span class="disc-tgl-lbl" style="color:'+(allOn?'#4ade80':'var(--muted)')+'">'+(allOn?'All slots done':'Toggle all')+'</span>'
+    +'</div>'
+    +'<div class="disc-tgl-grid">'+allSlots.map(function(sl){
+        var isGate = sl.key.indexOf('study_')===0;
+        return tgl(sl, sl.label+(isGate?' <span class="disc-gate-tag">GATE</span>':''));
+      }).join('')+'</div>'
+    +'</div>';
 
   /* excused-day control */
   var excuseHtml;
@@ -4039,7 +4151,7 @@ function renderDiscCard(){
           +'<div class="disc-col-title">&#x1F4CA; Score Breakdown &mdash; Today</div>'
           +excuseHtml
           +'<div class="disc-signals disc-signals-stack">'+sigHtml+'</div>'
-          +'<div class="disc-rule-note">Disciplined day = score above '+DISC_THRESHOLD+'. All study slots done = GATE streak continues.</div>'
+          +'<div class="disc-rule-note">GATE slots carry 60 pts, routine slots 40. Disciplined day = score above '+DISC_THRESHOLD+'. All GATE slots done = GATE streak continues.</div>'
         +'</div>'
       +'</div>'
       +'<div class="disc-heatmap">'
