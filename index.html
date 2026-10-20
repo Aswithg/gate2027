@@ -656,7 +656,7 @@ const SEED_SUBJECTS=[
   {id:8, name:'POWER ELECTRONICS', faculty:'Ankit Goyal', start:'2027-06-18', end:'2027-07-21', days:34, videos:68, targetHrs:102, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
   {id:9, name:'DIGITAL ELECTRONICS', faculty:'Sujay', start:'2027-09-23', end:'2027-10-08', days:16, videos:16, targetHrs:32, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
   {id:10, name:'ANALOG ELECTRONICS', faculty:'Ankit Goyal', start:'2027-07-22', end:'2027-09-22', days:63, videos:61, targetHrs:110, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
-  {id:11, name:'APTITUDE + MATHEMATICS', faculty:'Himanshu Agarwal', start:'2026-10-08', end:'2026-12-29', days:83, videos:85, targetHrs:224, status:'Not Started', confidence:0, remarks:'85 videos: 61 Maths (~172h) + 24 Aptitude (~52h, last 6 skipped) · 1 Maths video daily, 1 Aptitude video on Sat & Sun', phase:2027},
+  {id:11, name:'APTITUDE + MATHEMATICS', faculty:'Himanshu Agarwal', start:'2026-10-21', end:'2026-12-31', days:72, videos:85, targetHrs:224, status:'Not Started', confidence:0, remarks:'85 videos: 61 Maths (~172h) + 24 Aptitude (~52h, last 6 skipped) · 1 Maths video daily, 1 Aptitude video on Sat & Sun', phase:2027},
 ];
 
 const SUBJECT_LINKS={
@@ -679,7 +679,7 @@ function getDisplaySubjects(){return SUBJECT_DISPLAY_ORDER.map(id=>subjects.find
 /* ── Gap / special activity plan from Book1.xlsx ── */
 const SPECIAL_STUDY_PHASES=[
   {start:'2026-08-27',end:'2026-09-30',type:'hours',icon:'⚡',title:'Electrical Machines Crash Course',sub:'Crash-course study period · continues through 30 Sep 2026'},
-  {start:'2026-12-30',end:'2027-02-28',type:'hours',icon:'📘',title:'Revision 2 + Mock Tests',sub:'Short-notes revision · mock tests during January'},
+  {start:'2027-01-01',end:'2027-02-28',type:'hours',icon:'📘',title:'Revision 2 + Mock Tests',sub:'Short-notes revision · mock tests during January'},
   {start:'2027-10-09',end:'2027-12-31',type:'questions',icon:'📚',title:'Paramount Question Book',sub:'Simple-question practice · complete by 31 Dec 2027',paramount:true},
   {start:'2028-01-01',end:'2028-01-31',type:'hours',icon:'📝',title:'Mock Tests + Formula Notes',sub:'Full mocks and formula-notes making'},
   {start:'2028-02-01',end:'9999-12-31',type:'hours',icon:'🧠',title:'Formula Notes Revision',sub:'Revise formula notes up to the exam'},
@@ -2186,15 +2186,15 @@ function renderPyqQuizCard(sub){
    ══════════════════════════════════════════════════ */
 
 // Auto-plan: PYQ work is scheduled ONLY on Friday, Saturday and Sunday.
-// 2026 cohort: Network, Signals, Control, Measurements and EMFT must finish by 31 Dec 2026.
+// 2026 cohort: Network, Signals, Control, Measurements and EMFT run 21 Oct – 31 Dec 2026.
 // 2027 cohort: Maths, Machines, Power Systems, Power Electronics, Analog and Digital must finish by 31 Dec 2027.
 const PYQ_DEADLINES={1:'2026-12-31',2:'2026-12-31',3:'2026-12-31',4:'2026-12-31',5:'2026-12-31',11:'2027-12-31',6:'2027-12-31',7:'2027-12-31',8:'2027-12-31',10:'2027-12-31',9:'2027-12-31'};
 const PYQ_AVAILABLE={
-  1:'2026-10-16',2:'2026-10-16',3:'2026-10-16',4:'2026-10-16',5:'2026-10-16',
+  1:'2026-10-21',2:'2026-10-21',3:'2026-10-21',4:'2026-10-21',5:'2026-10-21',
   11:'2027-01-01',6:'2027-05-23',7:'2027-06-18',8:'2027-07-22',10:'2027-09-23',9:'2027-10-09'
 };
 const PYQ_COHORTS=[
-  {ids:[1,2,3,4,5],start:'2026-10-16',end:'2026-12-31',dailyMax:29},
+  {ids:[1,2,3,4,5],start:'2026-10-21',end:'2026-12-31',dailyMax:32},
   {ids:[11,6,7,8,10,9],start:'2027-01-01',end:'2027-12-31',dailyMax:25}
 ];
 function getPyqDeadline(subId){return PYQ_DEADLINES[subId]||'';}
@@ -2368,7 +2368,7 @@ function renderPyq(){
   renderPyqChart();
   renderPyqTopics();
 }
-const REV1_START='2026-10-08';
+const REV1_START='2026-10-21';
 function applyTabLock(wrapId,isLocked,startLabel){
   const wrap=$(wrapId);if(!wrap)return;
   // remove existing banner if any
@@ -2412,6 +2412,14 @@ function runMigration(){
       }
       lsSet('gate-v23-s11-vids','1');
     }
+    if(!lsGet('gate-v24-s11-oct21')){
+      var _subs4=lsGet('gate-subjects');
+      if(_subs4&&_subs4.length){
+        _subs4.forEach(function(s){if(s.id===11){s.start='2026-10-21';s.end='2026-12-31';s.days=72;}});
+        lsSet('gate-subjects',_subs4);
+      }
+      lsSet('gate-v24-s11-oct21','1');
+    }
     return;
   }
   lsSet('gate-subjects',JSON.parse(JSON.stringify(SEED_SUBJECTS)));
@@ -2453,7 +2461,7 @@ const FB_KEYS = [
   'gate-subjects','gate-daily','gate-settings','gate-milestones',
   'gate-sub-tests','gate-rev1-done','gate-rev1-notes','gate-rev1-pages',
   'gate-mocks','gate-pyq-data','gate-pyq-quiz','gate-discipline',
-  'gate-theme','gate-pyq-plan', 'gate-v20-migrated', 'gate-v21-s11-dates', 'gate-v22-s11-vids', 'gate-v23-s11-vids', 'gate-sn-pages', 'gate-sn-notes', 'gate-sample-mocks'
+  'gate-theme','gate-pyq-plan', 'gate-v20-migrated', 'gate-v21-s11-dates', 'gate-v22-s11-vids', 'gate-v23-s11-vids', 'gate-v24-s11-oct21', 'gate-sn-pages', 'gate-sn-notes', 'gate-sample-mocks'
 ];
 
 function lsGet(k){
@@ -3159,14 +3167,14 @@ const REV1_NOTES={
   11:[{file:'Engineering Mathematics .pdf',pages:2423,url:'https://drive.google.com/file/d/1eDa50THB2M4cpUerP0REuRyPWl3AsDtd/view?usp=sharing'}]
 };
 /* REV1 SCHEDULE — ~60 pages/day; starts only after subject classes are complete.
-   Completed 2027 subjects are cleared sequentially from Oct 8 to Dec 31, 2026.
+   Completed 2027 subjects are cleared sequentially from Oct 21 to Dec 31, 2026.
    Mathematics is revised during the Electrical Machines study window; Aptitude has no notes. */
 const REV1_SCHEDULE={
-  1:{start:'2026-10-08',end:'2026-10-27',days:20,perDay:60},
-  2:{start:'2026-10-28',end:'2026-11-18',days:22,perDay:60},
-  3:{start:'2026-11-19',end:'2026-12-12',days:24,perDay:60},
-  4:{start:'2026-12-13',end:'2026-12-25',days:13,perDay:60},
-  5:{start:'2026-12-26',end:'2026-12-31',days:6, perDay:60},
+  1:{start:'2026-10-21',end:'2026-11-06',days:17,perDay:70},
+  2:{start:'2026-11-07',end:'2026-11-24',days:18,perDay:70},
+  3:{start:'2026-11-25',end:'2026-12-15',days:21,perDay:70},
+  4:{start:'2026-12-16',end:'2026-12-26',days:11,perDay:70},
+  5:{start:'2026-12-27',end:'2026-12-31',days:5, perDay:70},
   11:{start:'2027-03-01',end:'2027-04-10',days:41,perDay:60},
   6:{start:'2027-05-23',end:'2027-06-08',days:17,perDay:60},
   7:{start:'2027-06-18',end:'2027-07-10',days:23,perDay:60},
@@ -3533,7 +3541,7 @@ function switchMainTab(id){
    Structure: { plans: { "YYYY-MM-DD": { wakeTime, blocks:[{time,desc,status}] } },
                 logs:  { "YYYY-MM-DD": { noSocial, scores:{...} } } }
 ════════════════════════════════════════════ */
-var DISC_START='2026-10-17';
+var DISC_START='2026-10-21';
 var DISC_THRESHOLD=80; /* score must be MORE than this to count as a disciplined day */
 var EXCUSE_REASONS=['Travel','Sick','Family','Official work','Other'];
 var EXCUSE_CAP=4; /* max excused days per calendar month */
@@ -4082,7 +4090,7 @@ function renderDiscCard(){
   if(preStart){
     var daysTo = diffDays(TODAY, DISC_START);
     previewBanner = '<div style="text-align:center;padding:10px 14px;margin-bottom:14px;border:1px dashed var(--acc);border-radius:10px;background:rgba(0,212,255,0.06);">'
-      +'<span style="font-size:12px;font-weight:800;color:var(--acc);">&#x1F3AF; Preview &mdash; Discipline Tracking Starts Oct 17, 2026</span>'
+      +'<span style="font-size:12px;font-weight:800;color:var(--acc);">&#x1F3AF; Preview &mdash; Discipline Tracking Starts Oct 21, 2026</span>'
       +'<div style="font-size:11px;color:var(--muted);margin-top:3px;">'+daysTo+' day'+(daysTo===1?'':'s')+' to go &middot; scores below are for preview only</div>'
       +'</div>';
   }
@@ -4180,7 +4188,7 @@ function renderDiscCard(){
         +'</div>'
       +'</div>'
       +'<div class="disc-heatmap">'
-        +'<div class="disc-hm-title">Discipline Heatmap &middot; Oct 17 &ndash; Dec 31</div>'
+        +'<div class="disc-hm-title">Discipline Heatmap &middot; Oct 21 &ndash; Dec 31</div>'
         +'<div style="display:flex;gap:8px;font-size:9px;color:var(--faint);margin-bottom:6px;flex-wrap:wrap;">'
           +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#4ade80;border-radius:2px;"></span>&gt;'+DISC_THRESHOLD+'</span>'
           +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#fbbf24;border-radius:2px;"></span>60&ndash;'+DISC_THRESHOLD+'</span>'
