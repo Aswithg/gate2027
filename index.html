@@ -1858,7 +1858,7 @@ function renderPyqTopics(){
   let html=`<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
       <div style="font-size:15px;font-weight:700;">${esc(sub.name)}</div>
-      <span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:10px;background:#001e2e;color:#00d4ff;border:1px solid #00d4ff44;">🎯 Fri–Sun only</span>
+      <span style="font-size:11px;font-weight:700;padding:2px 9px;border-radius:10px;background:#001e2e;color:#00d4ff;border:1px solid #00d4ff44;">🎯 Daily · after Rev 1</span>
       ${planRange?`<span style="font-size:10px;color:var(--muted);">📅 ${fmt(planRange.start)}–${fmt(planRange.end)} · finish by ${fmtFull(deadline)}</span>`:''}
     </div>
     <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
@@ -2185,51 +2185,74 @@ function renderPyqQuizCard(sub){
    PYQ_PLAN: static array of scheduled slots (computed)
    ══════════════════════════════════════════════════ */
 
-// Auto-plan: PYQ work is scheduled ONLY on Friday, Saturday and Sunday.
-// 2026 cohort: Network, Signals, Control, Measurements and EMFT run 21 Oct – 31 Dec 2026.
-// 2027 cohort: Maths, Machines, Power Systems, Power Electronics, Analog and Digital must finish by 31 Dec 2027.
+// Auto-plan: PYQ for a subject starts the day AFTER its Revision 1 is complete
+// (scheduled Rev1 end date, or the date Rev1 was marked done if earlier). PYQ is planned EVERY day
+// (no Fri/Sat/Sun restriction). Each subject's questions are spread evenly across the days until the
+// next subject's PYQ window opens; the last subject in the sequence finishes at the daily maximum.
 const PYQ_DEADLINES={1:'2026-12-31',2:'2026-12-31',3:'2026-12-31',4:'2026-12-31',5:'2026-12-31',11:'2027-12-31',6:'2027-12-31',7:'2027-12-31',8:'2027-12-31',10:'2027-12-31',9:'2027-12-31'};
-const PYQ_AVAILABLE={
-  1:'2026-10-21',2:'2026-10-21',3:'2026-10-21',4:'2026-10-21',5:'2026-10-21',
-  11:'2027-01-01',6:'2027-05-23',7:'2027-06-18',8:'2027-07-22',10:'2027-09-23',9:'2027-10-09'
-};
-const PYQ_COHORTS=[
-  {ids:[1,2,3,4,5],start:'2026-10-21',end:'2026-12-31',dailyMax:32},
-  {ids:[11,6,7,8,10,9],start:'2027-01-01',end:'2027-12-31',dailyMax:25}
+/* Fallback copy of REV1_SCHEDULE end dates (REV1_SCHEDULE is declared later in the file). Keep in sync. */
+const PYQ_REV1_END_FALLBACK={1:'2026-11-06',2:'2026-11-24',3:'2026-12-15',4:'2026-12-26',5:'2026-12-31',11:'2027-04-10',6:'2027-06-08',7:'2027-07-10',8:'2027-08-13',10:'2027-10-26',9:'2027-11-14'};
+const PYQ_ORDER=[
+  {id:1,cohort:2026,dailyMax:32},{id:2,cohort:2026,dailyMax:32},{id:3,cohort:2026,dailyMax:32},{id:4,cohort:2026,dailyMax:32},{id:5,cohort:2026,dailyMax:32},
+  {id:11,cohort:2027,dailyMax:25},{id:6,cohort:2027,dailyMax:25},{id:7,cohort:2027,dailyMax:25},{id:8,cohort:2027,dailyMax:25},{id:10,cohort:2027,dailyMax:25},{id:9,cohort:2027,dailyMax:25}
 ];
-function getPyqDeadline(subId){return PYQ_DEADLINES[subId]||'';}
-const PYQ_PLAN = (function(){
-  const slots=[];
-  function isPyqDay(d){const w=dayOfWeek(d);return w===5||w===6||w===0;}
-  function nextPyqDay(d){let x=d;while(!isPyqDay(x))x=addDays(x,1);return x;}
-  function later(a,b){return a>b?a:b;}
-  PYQ_COHORTS.forEach(function(cfg){
-    let cursor=nextPyqDay(cfg.start);
-    cfg.ids.forEach(function(subId){
-      const sub=PYQ_SUBJECTS.find(s=>s.id===subId);if(!sub)return;
-      cursor=nextPyqDay(later(cursor,PYQ_AVAILABLE[subId]||cfg.start));
-      let usedToday=0;
-      sub.topics.forEach(function(t,ti){
-        let remaining=t.qs;
-        while(remaining>0){
-          if(cursor>cfg.end){console.warn('PYQ plan exceeded deadline for',sub.name);break;}
-          let cap=cfg.dailyMax-usedToday;
-          if(cap<=0){cursor=nextPyqDay(addDays(cursor,1));usedToday=0;cap=cfg.dailyMax;}
-          const target=Math.min(remaining,cap);
-          slots.push({date:cursor,subId:subId,ti:ti,name:t.name,qs:t.qs,target:target,deadline:cfg.end});
-          remaining-=target;usedToday+=target;
-          if(usedToday>=cfg.dailyMax){cursor=nextPyqDay(addDays(cursor,1));usedToday=0;}
-        }
-      });
-      /* Keep each PYQ day focused on one subject. */
-      if(usedToday>0){cursor=nextPyqDay(addDays(cursor,1));usedToday=0;}
+const PYQ_MIN_PER_DAY=10; /* avoid tiny sessions when a window is long */
+function pyqRev1End(subId){
+  var sched=null;try{sched=REV1_SCHEDULE;}catch(e){sched=null;}
+  var sl=sched&&sched[subId];
+  return (sl&&sl.end)||PYQ_REV1_END_FALLBACK[subId]||'';
+}
+/* First PYQ day for a subject = day after Rev1 completion */
+function pyqAvailableFrom(subId){
+  var schedStart=addDays(pyqRev1End(subId),1);
+  var d=(typeof rev1Done!=='undefined'&&rev1Done)?rev1Done[subId]:null;
+  if(d){
+    var doneOn=(typeof d==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(d))?d:TODAY;
+    var early=addDays(doneOn,1);
+    if(early<schedStart)return early;
+  }
+  return schedStart;
+}
+function buildPyqPlan(){
+  var slots=[];
+  var later=function(a,b){return a>b?a:b;};
+  var cursor='';
+  PYQ_ORDER.forEach(function(cfg,idx){
+    var subId=cfg.id;
+    var sub=PYQ_SUBJECTS.find(function(s){return s.id===subId;});if(!sub)return;
+    var start=later(cursor||'0000-00-00',pyqAvailableFrom(subId));
+    var total=sub.topics.reduce(function(t,x){return t+x.qs;},0);
+    var next=PYQ_ORDER[idx+1];if(next&&next.cohort!==cfg.cohort)next=null;
+    var windowDays;
+    if(next){
+      var nextStart=pyqAvailableFrom(next.id);
+      windowDays=Math.max(1,diffDays(start,nextStart));
+    }else{
+      windowDays=Math.max(1,Math.ceil(total/cfg.dailyMax));
+    }
+    var perDay=Math.min(cfg.dailyMax,Math.max(PYQ_MIN_PER_DAY,Math.ceil(total/windowDays)));
+    var day=start,usedToday=0;
+    sub.topics.forEach(function(t,ti){
+      var remaining=t.qs;
+      while(remaining>0){
+        var cap=perDay-usedToday;
+        if(cap<=0){day=addDays(day,1);usedToday=0;cap=perDay;}
+        var target=Math.min(remaining,cap);
+        slots.push({date:day,subId:subId,ti:ti,name:t.name,qs:t.qs,target:target,deadline:PYQ_DEADLINES[subId]||''});
+        remaining-=target;usedToday+=target;
+      }
     });
+    /* Keep each PYQ day focused on one subject. */
+    cursor=addDays(day,1);
   });
-  const grouped={};
-  slots.forEach(function(s){const k=s.subId+'|'+s.ti;if(!grouped[k])grouped[k]=[];grouped[k].push(s);});
+  var grouped={};
+  slots.forEach(function(s){var k=s.subId+'|'+s.ti;if(!grouped[k])grouped[k]=[];grouped[k].push(s);});
   Object.values(grouped).forEach(function(arr){arr.forEach(function(s,i){s.part=i+1;s.totalDays=arr.length;});});
   return slots;
-})();
+}
+function getPyqDeadline(subId){var r=getPyqPlanRange(subId);return r?r.end:(PYQ_DEADLINES[subId]||'');}
+let PYQ_PLAN = buildPyqPlan();
+function rebuildPyqPlan(){PYQ_PLAN=buildPyqPlan();}
 function getPyqPlanRange(subId){
   const a=PYQ_PLAN.filter(x=>x.subId===subId);return a.length?{start:a[0].date,end:a[a.length-1].date}:null;
 }
@@ -2276,9 +2299,14 @@ const SUB_NAMES={1:'Network Theory',2:'Signals & Systems',3:'Control Systems',4:
 
 function pyqPlanTopicKey(subId,ti){return 'ptp|'+subId+'|'+ti;}
 function getPyqPlanTopicDone(subId,ti){return+(pyqPlanData[pyqPlanTopicKey(subId,ti)]||0);}
+function pyqDayKey(date,subId){return 'pday|'+date+'|'+subId;}
+function getPyqDayDone(date,subId){return+(pyqPlanData[pyqDayKey(date,subId)]||0);}
 function setPyqPlanTopicDone(subId,ti,val){
   const k=pyqPlanTopicKey(subId,ti);
   const v=Math.max(0,+val||0);
+  var prevDone=+(pyqPlanData[k]||0);
+  var dk=pyqDayKey(TODAY,subId);var dv=Math.max(0,(+(pyqPlanData[dk]||0))+(v-prevDone));
+  if(dv===0)delete pyqPlanData[dk]; else pyqPlanData[dk]=dv;
   if(v===0)delete pyqPlanData[k]; else pyqPlanData[k]=v;
   savePyqPlan();
   renderPyqTopics();
@@ -2678,7 +2706,7 @@ function loadAll(){
   subTests=lsGet('gate-sub-tests')||{};
   // storage-warn not needed — using Firestore cloud storage
 }
-function loadRev1(){rev1Done=lsGet('gate-rev1-done')||{};rev1Notes=lsGet('gate-rev1-notes')||{};rev1Pages=lsGet('gate-rev1-pages')||{};snPages=lsGet('gate-sn-pages')||{};snNotes=lsGet('gate-sn-notes')||{};}
+function loadRev1(){rev1Done=lsGet('gate-rev1-done')||{};rev1Notes=lsGet('gate-rev1-notes')||{};rev1Pages=lsGet('gate-rev1-pages')||{};snPages=lsGet('gate-sn-pages')||{};snNotes=lsGet('gate-sn-notes')||{};rebuildPyqPlan();}
 function loadMocks(){mockData=lsGet('gate-mocks')||{};subTests=lsGet('gate-sub-tests')||{};}
 
 /* ── SHORT NOTES HELPERS ── */
@@ -2826,7 +2854,10 @@ function renderRevision2(){
 /* ── DASHBOARD THREE-CARD ROW ── */
 function dbThreeCards(activeSub,hDone,vDone,hPct,vPct,dLeft,subCol,
   r1ActiveSub,r1Slot,r1TodayPg,r1Target,r1PgsDone,r1TotPg,r1PgPct,r1Col2,
-  pyqMonthSubs,pyqMonthSubNames,pyqMonthAcc,pyqMonthCol,pyqMonthC,pyqMonthW,pyqPendingNames){
+  pyqMonthSubs,pyqMonthSubNames,pyqMonthAcc,pyqMonthCol,pyqMonthC,pyqMonthW,pyqPendingNames,stToday,pqToday){
+  stToday=stToday||{hToday:0,vToday:0,hTgt:0,vTgt:0};pqToday=pqToday||{tgt:0,done:0,subs:[],next:''};
+  var stTodayCol=(stToday.vToday>=stToday.vTgt&&stToday.hToday>=stToday.hTgt)?'#4ade80':(stToday.vToday>0||stToday.hToday>0)?'#fbbf24':'#ef4444';
+  var pqTodayCol=pqToday.tgt===0?'var(--muted)':pqToday.done>=pqToday.tgt?'#4ade80':pqToday.done>0?'#fbbf24':'#ef4444';
   var studyCard='<div class="db-card" onclick="switchMainTab(\'study\')">'
     +'<div class="db-card-header"><div class="db-card-icon">📚</div>'
       +'<div><div class="db-card-title">'+esc(activeSub.name)+'</div>'
@@ -2836,6 +2867,7 @@ function dbThreeCards(activeSub,hDone,vDone,hPct,vPct,dLeft,subCol,
     +'<div class="db-stat-row">'
       +'<div class="db-stat"><div class="db-stat-lbl">Hours</div><div class="db-stat-val" style="color:'+subCol+';">'+hDone.toFixed(1)+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+ activeSub.targetHrs+'h</span></div></div>'
       +'<div class="db-stat"><div class="db-stat-lbl">Videos</div><div class="db-stat-val" style="color:var(--acc);">'+vDone+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+activeSub.videos+'</span></div></div>'
+      +'<div class="db-stat"><div class="db-stat-lbl">Today</div><div class="db-stat-val" style="color:'+stTodayCol+';">'+stToday.vToday+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+stToday.vTgt+' vid</span></div><div style="font-size:11px;color:var(--faint);margin-top:2px;">'+stToday.hToday.toFixed(1)+' / '+stToday.hTgt.toFixed(1)+'h</div></div>'
     +'</div>'
     +'<div class="db-pbar"><div class="db-pbar-fill" style="width:'+hPct+'%;background:'+subCol+';"></div></div>'
   +'</div>';
@@ -2854,10 +2886,11 @@ function dbThreeCards(activeSub,hDone,vDone,hPct,vPct,dLeft,subCol,
   var pyqCard='<div class="db-card" onclick="switchMainTab(\'pyq\')">'
     +'<div class="db-card-header"><div class="db-card-icon">🎯</div>'
       +'<div><div class="db-card-title">PYQ Practice</div>'
-        +'<div class="db-card-sub">'+(pyqMonthSubs.length>0?pyqMonthSubNames.join(', '):'No sessions this month')+'</div>'
+        +'<div class="db-card-sub">'+(pqToday.subs.length>0?esc(pqToday.subs.join(', '))+' &middot; due today':(pqToday.next?'Next: '+esc(pqToday.next):'No PYQ planned'))+'</div>'
       +'</div>'
     +'</div>'
     +'<div class="db-stat-row">'
+      +'<div class="db-stat"><div class="db-stat-lbl">Today</div><div class="db-stat-val" style="color:'+pqTodayCol+';">'+pqToday.done+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+pqToday.tgt+'q</span></div></div>'
       +'<div class="db-stat"><div class="db-stat-lbl">This Month Acc</div><div class="db-stat-val" style="color:'+pyqMonthCol+';">'+(pyqMonthAcc!==null?pyqMonthAcc+'%':'—')+'</div></div>'
       +'<div class="db-stat"><div class="db-stat-lbl">Correct / Wrong</div><div class="db-stat-val" style="font-size:14px;"><span style="color:#4ade80;">'+pyqMonthC+'</span> / <span style="color:#ef4444;">'+pyqMonthW+'</span></div></div>'
     +'</div>'
@@ -3188,7 +3221,7 @@ function pagesDone(id){return Object.values(rev1Pages[id]||{}).reduce((t,v)=>t+(
 function pagesOn(id,date){return+((rev1Pages[id]||{})[date]||0);}
 function setRevPages(id,date,val){const v=Math.max(0,Math.round(+val||0));if(!rev1Pages[id])rev1Pages[id]={};if(v===0)delete rev1Pages[id][date];else rev1Pages[id][date]=v;lsSet('gate-rev1-pages',rev1Pages);showSaveToast();renderRevision1();checkMilestones();}
 function stepRevPages(id,delta){setRevPages(id,rev1LogDate,pagesOn(id,rev1LogDate)+delta);}
-function toggleRev1Done(id){rev1Done[id]=!rev1Done[id];lsSet('gate-rev1-done',rev1Done);showSaveToast();renderRevision1();checkMilestones();}
+function toggleRev1Done(id){rev1Done[id]=rev1Done[id]?false:TODAY;lsSet('gate-rev1-done',rev1Done);rebuildPyqPlan();showSaveToast();renderRevision1();checkMilestones();if(typeof renderDashboard==='function')renderDashboard();}
 function setRev1Note(id,val){rev1Notes[id]=val;clearTimeout(saveTimers['rn']);saveTimers['rn']=setTimeout(()=>{lsSet('gate-rev1-notes',rev1Notes);showSaveToast();},600);}
 function setRev1LogDate(d){rev1LogDate=d;renderRevision1();}
 function navRev1Date(delta){setRev1LogDate(addDays(rev1LogDate,delta));}
@@ -3402,7 +3435,8 @@ function dashboardPlanHtml(date,headerText,periodLabel){
 
   const pslots=PYQ_PLAN.filter(x=>x.date===date);
   const pqTitle=pslots.length?SUB_NAMES[pslots[0].subId]:'N/A';
-  const pqSub=pslots.length?pslots.map(x=>`${x.name} · ${x.target}q`).join(' | '):'PYQ is scheduled only on Friday, Saturday and Sunday';
+  const pqNext=PYQ_PLAN.find(x=>x.date>date);
+  const pqSub=pslots.length?pslots.map(x=>`${x.name} · ${x.target}q`).join(' | '):(pqNext?`No PYQ planned · ${SUB_NAMES[pqNext.subId]} PYQ starts ${fmt(pqNext.date)} (after Rev 1)`:'No PYQ planned');
   return `<div class="db-section-hdr" style="margin-bottom:10px;">${headerText}</div><div class="today-plan-grid">
     <div class="today-plan-card"><div class="today-plan-label">📚 Study</div><div class="today-plan-title">${esc(studyTitle)}</div><div class="today-plan-sub">${esc(studySub)}</div></div>
     <div class="today-plan-card"><div class="today-plan-label">📖 Revision 1</div><div class="today-plan-title">${esc(r1Title)}</div><div class="today-plan-sub">${esc(r1Sub)}</div></div>
@@ -3480,11 +3514,35 @@ function renderDashboard(){
       const due=PYQ_PLAN.some(x=>x.subId===ps.id&&x.date<=TODAY);if(!due)return false;
       return ps.topics.some((t,ti)=>getPyqPlanTopicDone(ps.id,ti)<t.qs);
     }).map(ps=>ps.short);
+    /* Today's PYQ target: for every subject whose PYQ window has opened and still has questions left,
+       spread the remaining questions (as of start of today) over the remaining planned days. */
+    var pyqTodayTgt=0,pyqTodayDone=0,pyqTodaySubs=[];
+    PYQ_SUBJECTS.forEach(function(ps){
+      var r=getPyqPlanRange(ps.id);if(!r||r.start>TODAY)return;
+      var tot=ps.topics.reduce(function(t,x){return t+x.qs;},0);
+      var doneAll=ps.topics.reduce(function(t,x,ti){return t+Math.min(getPyqPlanTopicDone(ps.id,ti),x.qs);},0);
+      var doneToday=getPyqDayDone(TODAY,ps.id);
+      var leftAtStart=Math.max(0,tot-doneAll+doneToday);if(leftAtStart<=0)return;
+      var dl=Math.max(1,diffDays(TODAY,r.end)+1);
+      var t=Math.min(leftAtStart,Math.ceil(leftAtStart/dl));
+      pyqTodayTgt+=t;pyqTodayDone+=doneToday;pyqTodaySubs.push(ps.name);
+    });
+    var pyqQuizToday=0;Object.values(pyqQuizData||{}).forEach(function(arr){(arr||[]).forEach(function(s){if(s.date===TODAY)pyqQuizToday+=(+s.correct||0)+(+s.wrong||0);});});
+    pyqTodayDone=Math.max(pyqTodayDone,pyqQuizToday);
+    var pyqNextSlot=PYQ_PLAN.find(function(x){return x.date>TODAY;});
+    var pyqNextLabel=pyqNextSlot?(SUB_NAMES[pyqNextSlot.subId]+' from '+fmtFull(pyqNextSlot.date)):'';
+    /* Study card: today's targets (same logic as the Study tab) */
+    var asDl=Math.max(1,diffDays(TODAY,activeSub.end)+1);
+    var asHTgt=Math.max(1,Math.ceil(Math.max(0,activeSub.targetHrs-hDone)/asDl*10)/10);
+    var asVTgt=Math.max(1,Math.ceil(Math.max(0,activeSub.videos-vDone)/asDl));
+    if(activeSub.id===11){var _adw=new Date(TODAY+'T00:00:00').getDay();asVTgt=(_adw===0||_adw===6)?2:1;}
 
     activeSubCard=dbThreeCards(
       activeSub,hDone,vDone,hPct,vPct,dLeft,subCol,
       r1ActiveSub,r1Slot,r1TodayPg,r1Target,r1PgsDone,r1TotPg,r1PgPct,r1Col2,
-      pyqMonthSubs,pyqMonthSubNames,pyqMonthAcc,pyqMonthCol,pyqMonthC,pyqMonthW,pyqPendingNames
+      pyqMonthSubs,pyqMonthSubNames,pyqMonthAcc,pyqMonthCol,pyqMonthC,pyqMonthW,pyqPendingNames,
+      {hToday:hToday,vToday:vToday,hTgt:asHTgt,vTgt:asVTgt},
+      {tgt:pyqTodayTgt,done:pyqTodayDone,subs:pyqTodaySubs,next:pyqNextLabel}
     );
   }
 
