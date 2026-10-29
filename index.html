@@ -3599,7 +3599,7 @@ function switchMainTab(id){
    Structure: { plans: { "YYYY-MM-DD": { wakeTime, blocks:[{time,desc,status}] } },
                 logs:  { "YYYY-MM-DD": { noSocial, scores:{...} } } }
 ════════════════════════════════════════════ */
-var DISC_START='2026-11-01';
+var DISC_START='2026-10-30';
 var DISC_THRESHOLD=80; /* score must be MORE than this to count as a disciplined day */
 var EXCUSE_REASONS=['Travel','Sick','Family','Official work','Other'];
 var EXCUSE_CAP=4; /* max excused days per calendar month */
@@ -3611,36 +3611,34 @@ function saveDisc(){ lsSet('gate-discipline', discData); }
    Mon–Thu = WEEKDAY_SCHEDULE, Fri/Sat/Sun = WEEKEND_SCHEDULE
    Keys starting with 'study_' form the Study (GATE) group; everything else is Daily routine. */
 var WEEKDAY_SCHEDULE = [
-  {key:'sleep',       color:'#6366f1',from:'00:00',to:'06:00',label:'Sleep'},
-  {key:'exercise',    color:'#4ade80',from:'06:00',to:'06:30',label:'Exercise'},
-  {key:'freshup',     color:'#a78bfa',from:'06:30',to:'07:00',label:'Fresh up'},
-  {key:'study_video', color:'#00d4ff',from:'07:00',to:'09:00',label:'Videos',short:'Videos'},
-  {key:'breakfast',   color:'#fbbf24',from:'09:00',to:'09:30',label:'Breakfast'},
-  {key:'walking',     color:'#38bdf8',from:'09:30',to:'10:00',label:'Walking'},
-  {key:'study_notes', color:'#c084fc',from:'10:00',to:'12:00',label:'Notes',short:'Notes'},
-  {key:'chess1',      color:'#e879f9',from:'12:00',to:'13:00',label:'Chess'},
+  {key:'sleep',       color:'#6366f1',from:'00:00',to:'07:30',label:'Sleep'},
+  {key:'walking',     color:'#38bdf8',from:'07:30',to:'08:00',label:'Walking'},
+  {key:'exercise',    color:'#4ade80',from:'08:00',to:'08:30',label:'Exercise'},
+  {key:'freshup',     color:'#a78bfa',from:'08:30',to:'09:00',label:'Fresh up'},
+  {key:'study_video', color:'#00d4ff',from:'09:00',to:'12:00',label:'Videos',short:'Videos'},
+  {key:'chess1',      color:'#e879f9',from:'12:00',to:'13:00',label:'Travel + Chess'},
   {key:'lunch',       color:'#fbbf24',from:'13:00',to:'14:00',label:'Lunch'},
-  {key:'office1',     color:'#64748b',from:'14:00',to:'18:00',label:'Office work'},
+  {key:'study_notes', color:'#c084fc',from:'14:00',to:'16:00',label:'Notes',short:'Notes'},
+  {key:'study_pyq',   color:'#f472b6',from:'16:00',to:'18:00',label:'PYQ',short:'PYQ'},
   {key:'snacks',      color:'#fbbf24',from:'18:00',to:'19:00',label:'Snacks'},
   {key:'office2',     color:'#64748b',from:'19:00',to:'22:00',label:'Office work'},
-  {key:'chess2',      color:'#e879f9',from:'22:00',to:'23:00',label:'Chess'},
+  {key:'chess2',      color:'#e879f9',from:'22:00',to:'23:00',label:'Travel + Chess'},
   {key:'study_sn',    color:'#4ade80',from:'23:00',to:'24:00',label:'SN',short:'SN'},
 ];
 var WEEKEND_SCHEDULE = [
-  {key:'sleep',       color:'#6366f1',from:'00:00',to:'06:00',label:'Sleep'},
-  {key:'exercise',    color:'#4ade80',from:'06:00',to:'06:30',label:'Exercise'},
-  {key:'freshup',     color:'#a78bfa',from:'06:30',to:'07:00',label:'Fresh up'},
-  {key:'study_video', color:'#00d4ff',from:'07:00',to:'09:00',label:'Videos',short:'Videos'},
-  {key:'breakfast',   color:'#fbbf24',from:'09:00',to:'09:30',label:'Breakfast'},
-  {key:'walking',     color:'#38bdf8',from:'09:30',to:'10:00',label:'Walking'},
-  {key:'study_notes', color:'#c084fc',from:'10:00',to:'12:00',label:'Notes',short:'Notes'},
-  {key:'chess1',      color:'#e879f9',from:'12:00',to:'13:00',label:'Chess'},
+  {key:'sleep',       color:'#6366f1',from:'00:00',to:'07:30',label:'Sleep'},
+  {key:'walking',     color:'#38bdf8',from:'07:30',to:'08:00',label:'Walking'},
+  {key:'exercise',    color:'#4ade80',from:'08:00',to:'08:30',label:'Exercise'},
+  {key:'freshup',     color:'#a78bfa',from:'08:30',to:'09:00',label:'Fresh up'},
+  {key:'study_video', color:'#00d4ff',from:'09:00',to:'12:00',label:'Videos',short:'Videos'},
+  {key:'chess1',      color:'#e879f9',from:'12:00',to:'13:00',label:'Travel + Chess'},
   {key:'lunch',       color:'#fbbf24',from:'13:00',to:'14:00',label:'Lunch'},
-  {key:'study_pyq',   color:'#f472b6',from:'14:00',to:'16:00',label:'PYQ',short:'PYQ'},
-  {key:'office1',     color:'#64748b',from:'16:00',to:'20:00',label:'Office work'},
+  {key:'study_notes', color:'#c084fc',from:'14:00',to:'16:00',label:'Notes',short:'Notes'},
+  {key:'study_pyq',   color:'#f472b6',from:'16:00',to:'18:00',label:'PYQ',short:'PYQ'},
+  {key:'office1',     color:'#64748b',from:'18:00',to:'20:00',label:'Office work'},
   {key:'dinner',      color:'#fbbf24',from:'20:00',to:'21:00',label:'Dinner'},
-  {key:'office2',     color:'#64748b',from:'21:00',to:'23:00',label:'Office work'},
-  {key:'study_sn',    color:'#4ade80',from:'23:00',to:'24:00',label:'SN',short:'SN'},
+  {key:'office2',     color:'#64748b',from:'21:00',to:'22:00',label:'Office work'},
+  {key:'study_sn',    color:'#4ade80',from:'22:00',to:'24:00',label:'SN',short:'SN'},
 ];
 function isFriSatSun(dateStr){
   var dow=new Date(dateStr+'T00:00:00').getDay();return dow===5||dow===6||dow===0;
@@ -4148,7 +4146,7 @@ function renderDiscCard(){
   if(preStart){
     var daysTo = diffDays(TODAY, DISC_START);
     previewBanner = '<div style="text-align:center;padding:10px 14px;margin-bottom:14px;border:1px dashed var(--acc);border-radius:10px;background:rgba(0,212,255,0.06);">'
-      +'<span style="font-size:12px;font-weight:800;color:var(--acc);">&#x1F3AF; Preview &mdash; Discipline Tracking Starts Nov 1, 2026</span>'
+      +'<span style="font-size:12px;font-weight:800;color:var(--acc);">&#x1F3AF; Preview &mdash; Discipline Tracking Starts Oct 30, 2026</span>'
       +'<div style="font-size:11px;color:var(--muted);margin-top:3px;">'+daysTo+' day'+(daysTo===1?'':'s')+' to go &middot; scores below are for preview only</div>'
       +'</div>';
   }
@@ -4246,7 +4244,7 @@ function renderDiscCard(){
         +'</div>'
       +'</div>'
       +'<div class="disc-heatmap">'
-        +'<div class="disc-hm-title">Discipline Heatmap &middot; Nov 1 &ndash; Dec 31</div>'
+        +'<div class="disc-hm-title">Discipline Heatmap &middot; Oct 30 &ndash; Dec 31</div>'
         +'<div style="display:flex;gap:8px;font-size:9px;color:var(--faint);margin-bottom:6px;flex-wrap:wrap;">'
           +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#4ade80;border-radius:2px;"></span>&gt;'+DISC_THRESHOLD+'</span>'
           +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#fbbf24;border-radius:2px;"></span>60&ndash;'+DISC_THRESHOLD+'</span>'
