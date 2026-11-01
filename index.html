@@ -656,7 +656,7 @@ const SEED_SUBJECTS=[
   {id:8, name:'POWER ELECTRONICS', faculty:'Ankit Goyal', start:'2027-06-18', end:'2027-07-21', days:34, videos:68, targetHrs:102, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
   {id:9, name:'DIGITAL ELECTRONICS', faculty:'Sujay', start:'2027-09-23', end:'2027-10-08', days:16, videos:16, targetHrs:32, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
   {id:10, name:'ANALOG ELECTRONICS', faculty:'Ankit Goyal', start:'2027-07-22', end:'2027-09-22', days:63, videos:61, targetHrs:110, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
-  {id:11, name:'APTITUDE + MATHEMATICS', faculty:'Himanshu Agarwal', start:'2026-10-21', end:'2026-12-31', days:72, videos:85, targetHrs:224, status:'Not Started', confidence:0, remarks:'85 videos: 61 Maths (~172h) + 24 Aptitude (~52h, last 6 skipped) · 1 Maths video daily, 1 Aptitude video on Sat & Sun', phase:2027},
+  {id:11, name:'APTITUDE + MATHEMATICS', faculty:'Himanshu Agarwal', start:'2026-11-02', end:'2026-12-31', days:60, videos:85, targetHrs:224, status:'Not Started', confidence:0, remarks:'85 videos: 61 Maths (~172h) + 24 Aptitude (~52h, last 6 skipped) · 1 Maths video daily, 1 Aptitude video on Sat & Sun', phase:2027},
 ];
 
 const SUBJECT_LINKS={
@@ -2191,7 +2191,7 @@ function renderPyqQuizCard(sub){
 // next subject's PYQ window opens; the last subject in the sequence finishes at the daily maximum.
 const PYQ_DEADLINES={1:'2026-12-31',2:'2026-12-31',3:'2026-12-31',4:'2026-12-31',5:'2026-12-31',11:'2027-12-31',6:'2027-12-31',7:'2027-12-31',8:'2027-12-31',10:'2027-12-31',9:'2027-12-31'};
 /* Fallback copy of REV1_SCHEDULE end dates (REV1_SCHEDULE is declared later in the file). Keep in sync. */
-const PYQ_REV1_END_FALLBACK={1:'2026-11-06',2:'2026-11-24',3:'2026-12-15',4:'2026-12-26',5:'2026-12-31',11:'2027-04-10',6:'2027-06-08',7:'2027-07-10',8:'2027-08-13',10:'2027-10-26',9:'2027-11-14'};
+const PYQ_REV1_END_FALLBACK={1:'2026-11-14',2:'2026-11-28',3:'2026-12-13',4:'2026-12-22',5:'2026-12-26',11:'2027-04-10',6:'2027-06-08',7:'2027-07-10',8:'2027-08-13',10:'2027-10-26',9:'2027-11-14'};
 const PYQ_ORDER=[
   {id:1,cohort:2026,dailyMax:32},{id:2,cohort:2026,dailyMax:32},{id:3,cohort:2026,dailyMax:32},{id:4,cohort:2026,dailyMax:32},{id:5,cohort:2026,dailyMax:32},
   {id:11,cohort:2027,dailyMax:25},{id:6,cohort:2027,dailyMax:25},{id:7,cohort:2027,dailyMax:25},{id:8,cohort:2027,dailyMax:25},{id:10,cohort:2027,dailyMax:25},{id:9,cohort:2027,dailyMax:25}
@@ -2396,7 +2396,7 @@ function renderPyq(){
   renderPyqChart();
   renderPyqTopics();
 }
-const REV1_START='2026-10-21';
+const REV1_START='2026-11-02';
 function applyTabLock(wrapId,isLocked,startLabel){
   const wrap=$(wrapId);if(!wrap)return;
   // remove existing banner if any
@@ -3199,15 +3199,17 @@ const REV1_NOTES={
   10:[{file:'10.Analog_Electronics_Complete_Notes.pdf',pages:1982,url:'file:///C:/Users/AswithGiduturi/OneDrive%20-%20DESRI/Documents/G2027_2028/Video%20Notes/10.Analog_Electronics_Complete_Notes.pdf'}],
   11:[{file:'Engineering Mathematics .pdf',pages:2423,url:'https://drive.google.com/file/d/1eDa50THB2M4cpUerP0REuRyPWl3AsDtd/view?usp=sharing'}]
 };
-/* REV1 SCHEDULE — ~60 pages/day; starts only after subject classes are complete.
-   Completed 2027 subjects are cleared sequentially from Oct 21 to Dec 31, 2026.
+/* REV1 SCHEDULE — starts only after subject classes are complete.
+   Completed 2027 subjects are cleared sequentially from Nov 2 to Dec 26, 2026 (~90 pages/day).
+   Rev1 closes Dec 26 so the last subject's PYQ (EMFT) runs Dec 27–30 and every 2026 PYQ closes by Dec 31.
+   2027-cycle subjects stay at ~60 pages/day.
    Mathematics is revised during the Electrical Machines study window; Aptitude has no notes. */
 const REV1_SCHEDULE={
-  1:{start:'2026-10-21',end:'2026-11-06',days:17,perDay:70},
-  2:{start:'2026-11-07',end:'2026-11-24',days:18,perDay:70},
-  3:{start:'2026-11-25',end:'2026-12-15',days:21,perDay:70},
-  4:{start:'2026-12-16',end:'2026-12-26',days:11,perDay:70},
-  5:{start:'2026-12-27',end:'2026-12-31',days:5, perDay:70},
+  1:{start:'2026-11-02',end:'2026-11-14',days:13,perDay:92},
+  2:{start:'2026-11-15',end:'2026-11-28',days:14,perDay:92},
+  3:{start:'2026-11-29',end:'2026-12-13',days:15,perDay:95},
+  4:{start:'2026-12-14',end:'2026-12-22',days:9, perDay:85},
+  5:{start:'2026-12-23',end:'2026-12-26',days:4, perDay:81},
   11:{start:'2027-03-01',end:'2027-04-10',days:41,perDay:60},
   6:{start:'2027-05-23',end:'2027-06-08',days:17,perDay:60},
   7:{start:'2027-06-18',end:'2027-07-10',days:23,perDay:60},
@@ -3314,7 +3316,7 @@ function renderRevision1(){
       +'</div>'
     +'</div>';
   });
-  var html='<div class="section"><div class="sec-hdr"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;width:100%"><div><h2>Revision 1</h2><div class="sub">~60 pages/day · starts after subject classes · click a subject to expand</div></div></div></div>'
+  var html='<div class="section"><div class="sec-hdr"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;width:100%"><div><h2>Revision 1</h2><div class="sub">~90 pages/day · starts after subject classes · click a subject to expand</div></div></div></div>'
     +'<div class="g4" style="margin-bottom:16px;">'
       +'<div class="hcard" style="border:1px solid #00d4ff22"><div class="hlbl">Pages Revised</div><div class="hval" style="color:#00d4ff">'+rev1DonePages+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+totalPages+'</span></div><div class="pbar-bg"><div class="pbar-fill" style="width:'+rev1Pct+'%;background:#00d4ff;"></div></div></div>'
       +'<div class="hcard" style="border:1px solid #a78bfa22"><div class="hlbl">SN Pages</div><div class="hval" style="color:#a78bfa">'+snDonePages+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+totalPages+'</span></div><div class="pbar-bg"><div class="pbar-fill" style="width:'+snPct+'%;background:#a78bfa;"></div></div></div>'
@@ -3599,7 +3601,8 @@ function switchMainTab(id){
    Structure: { plans: { "YYYY-MM-DD": { wakeTime, blocks:[{time,desc,status}] } },
                 logs:  { "YYYY-MM-DD": { noSocial, scores:{...} } } }
 ════════════════════════════════════════════ */
-var DISC_START='2026-10-30';
+var DISC_START='2026-11-02';
+function discMd(d){var p=String(d).split('-');return MOS[+p[1]-1]+' '+(+p[2]);} /* 'YYYY-MM-DD' -> 'Nov 2'; discipline labels follow DISC_START */
 var DISC_THRESHOLD=80; /* score must be MORE than this to count as a disciplined day */
 var EXCUSE_REASONS=['Travel','Sick','Family','Official work','Other'];
 var EXCUSE_CAP=4; /* max excused days per calendar month */
@@ -4146,7 +4149,7 @@ function renderDiscCard(){
   if(preStart){
     var daysTo = diffDays(TODAY, DISC_START);
     previewBanner = '<div style="text-align:center;padding:10px 14px;margin-bottom:14px;border:1px dashed var(--acc);border-radius:10px;background:rgba(0,212,255,0.06);">'
-      +'<span style="font-size:12px;font-weight:800;color:var(--acc);">&#x1F3AF; Preview &mdash; Discipline Tracking Starts Oct 30, 2026</span>'
+      +'<span style="font-size:12px;font-weight:800;color:var(--acc);">&#x1F3AF; Preview &mdash; Discipline Tracking Starts '+discMd(DISC_START)+', '+DISC_START.slice(0,4)+'</span>'
       +'<div style="font-size:11px;color:var(--muted);margin-top:3px;">'+daysTo+' day'+(daysTo===1?'':'s')+' to go &middot; scores below are for preview only</div>'
       +'</div>';
   }
@@ -4244,7 +4247,7 @@ function renderDiscCard(){
         +'</div>'
       +'</div>'
       +'<div class="disc-heatmap">'
-        +'<div class="disc-hm-title">Discipline Heatmap &middot; Oct 30 &ndash; Dec 31</div>'
+        +'<div class="disc-hm-title">Discipline Heatmap &middot; '+discMd(DISC_START)+' &ndash; '+discMd(EXAM)+'</div>'
         +'<div style="display:flex;gap:8px;font-size:9px;color:var(--faint);margin-bottom:6px;flex-wrap:wrap;">'
           +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#4ade80;border-radius:2px;"></span>&gt;'+DISC_THRESHOLD+'</span>'
           +'<span style="display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:10px;height:10px;background:#fbbf24;border-radius:2px;"></span>60&ndash;'+DISC_THRESHOLD+'</span>'
