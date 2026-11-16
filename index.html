@@ -656,7 +656,7 @@ const SEED_SUBJECTS=[
   {id:8, name:'POWER ELECTRONICS', faculty:'Ankit Goyal', start:'2027-06-18', end:'2027-07-21', days:34, videos:68, targetHrs:102, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
   {id:9, name:'DIGITAL ELECTRONICS', faculty:'Sujay', start:'2027-09-23', end:'2027-10-08', days:16, videos:16, targetHrs:32, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
   {id:10, name:'ANALOG ELECTRONICS', faculty:'Ankit Goyal', start:'2027-07-22', end:'2027-09-22', days:63, videos:61, targetHrs:110, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
-  {id:11, name:'APTITUDE + MATHEMATICS', faculty:'Himanshu Agarwal', start:'2026-11-09', end:'2026-12-31', days:53, videos:85, targetHrs:224, status:'Not Started', confidence:0, remarks:'85 videos: 61 Maths (~172h) + 24 Aptitude (~52h, last 6 skipped) · Maths 1 video daily (2 on Mondays), Aptitude 1 video Thu–Sun, 12 Nov–20 Dec', phase:2027},
+  {id:11, name:'APTITUDE + MATHEMATICS', faculty:'Himanshu Agarwal', start:'2026-11-17', end:'2026-12-31', days:45, videos:50, targetHrs:100, status:'Not Started', confidence:0, remarks:'50 videos × 2h = 100h: 38 Maths (76h) + 12 Aptitude (24h) · Maths 1 video daily 17 Nov–24 Dec, Aptitude 1 video each Sat & Sun 21 Nov–27 Dec', phase:2027},
 ];
 
 const SUBJECT_LINKS={
@@ -670,7 +670,7 @@ const SUBJECT_LINKS={
   8:{yt:'https://www.youtube.com/playlist?list=PLs5_Rtf2P2r5KREX_ijxw2Sz-ISNhAgH4'},
   9:{yt:'https://www.youtube.com/playlist?list=PLgzsL8klq6DKnltogpZsroj0yG-MlFLNL'},
   10:{yt:'https://www.youtube.com/playlist?list=PLs5_Rtf2P2r5MplAOADz3fTWIyBZTkGbB'},
-  11:{pf_m:'https://prepfusion.in/new-courses/98/content?activeTab=Content',pf_a:'https://prepfusion.in/new-courses/96/content?activeTab=Content',yt_a:'https://youtube.com/playlist?list=PLgF7lRh8Xb_WWuQ39i48DruAyzb_voYYD&si=ayPhMqwZR0Ko4TCR',yt_m:'https://youtube.com/playlist?list=PLgF7lRh8Xb_UmswOfvBO371uK1Sa7ZF5I&si=2GL4BtdJjxR-JUo4'},
+  11:{pf_m:'https://prepfusion.in/new-courses/98/content?activeTab=Content',pf_a:'https://prepfusion.in/new-courses/96/content?activeTab=Content',yt_a:'https://youtube.com/playlist?list=PLvTTv60o7qj9YJU93vxkf570EQOfPnhwP&si=2ltNC12xO52d-cF0',yt_m:'https://youtube.com/playlist?list=PLvTTv60o7qj_tdY9zH7YceES7jfXiZkAz&si=8LiEdchbXHuTE2U1'},
 };
 
 const SUBJECT_DISPLAY_ORDER=[1,2,3,4,5,11,6,7,8,10,9];
@@ -2191,7 +2191,7 @@ function renderPyqQuizCard(sub){
 // next subject's PYQ window opens; the last subject in the sequence finishes at the daily maximum.
 const PYQ_DEADLINES={1:'2026-12-31',2:'2026-12-31',3:'2026-12-31',4:'2026-12-31',5:'2026-12-31',11:'2027-12-31',6:'2027-12-31',7:'2027-12-31',8:'2027-12-31',10:'2027-12-31',9:'2027-12-31'};
 /* Fallback copy of REV1_SCHEDULE end dates (REV1_SCHEDULE is declared later in the file). Keep in sync. */
-const PYQ_REV1_END_FALLBACK={1:'2026-11-19',2:'2026-12-01',3:'2026-12-14',4:'2026-12-22',5:'2026-12-26',11:'2027-04-10',6:'2027-06-08',7:'2027-07-10',8:'2027-08-13',10:'2027-10-26',9:'2027-11-14'};
+const PYQ_REV1_END_FALLBACK={1:'2026-11-25',2:'2026-12-04',3:'2026-12-15',4:'2026-12-22',5:'2026-12-26',11:'2027-04-10',6:'2027-06-08',7:'2027-07-10',8:'2027-08-13',10:'2027-10-26',9:'2027-11-14'};
 const PYQ_ORDER=[
   {id:1,cohort:2026,dailyMax:32},{id:2,cohort:2026,dailyMax:32},{id:3,cohort:2026,dailyMax:32},{id:4,cohort:2026,dailyMax:32},{id:5,cohort:2026,dailyMax:32},
   {id:11,cohort:2027,dailyMax:25},{id:6,cohort:2027,dailyMax:25},{id:7,cohort:2027,dailyMax:25},{id:8,cohort:2027,dailyMax:25},{id:10,cohort:2027,dailyMax:25},{id:9,cohort:2027,dailyMax:25}
@@ -2396,7 +2396,7 @@ function renderPyq(){
   renderPyqChart();
   renderPyqTopics();
 }
-const REV1_START='2026-11-09';
+const REV1_START='2026-11-17';
 function applyTabLock(wrapId,isLocked,startLabel){
   const wrap=$(wrapId);if(!wrap)return;
   // remove existing banner if any
@@ -2455,6 +2455,16 @@ function runMigration(){
       var _ch5=false;
       _s5.forEach(function(s){if(s.id===11&&s.start==='2026-11-02'){s.start='2026-11-09';s.end='2026-12-31';s.days=53;s.remarks='85 videos: 61 Maths (~172h) + 24 Aptitude (~52h, last 6 skipped) · Maths 1 video daily (2 on Mondays), Aptitude 1 video Thu–Sun, 12 Nov–20 Dec';_ch5=true;}});
       if(_ch5)lsSet('gate-subjects',_s5);
+    }
+    /* 16 Nov 2026 re-plan: Maths + Aptitude classes, Rev1, PYQ and discipline all start 17 Nov 2026.
+       Maths playlist 38 videos + Aptitude playlist 12 videos = 50 videos x 2h = 100h. Runs once (flag). */
+    if(!lsGet('gate-v25-nov17')){
+      var _s6=lsGet('gate-subjects');
+      if(_s6&&_s6.length){
+        _s6.forEach(function(s){if(s.id===11){s.start='2026-11-17';s.end='2026-12-31';s.days=45;s.videos=50;s.targetHrs=100;s.remarks='50 videos × 2h = 100h: 38 Maths (76h) + 12 Aptitude (24h) · Maths 1 video daily 17 Nov–24 Dec, Aptitude 1 video each Sat & Sun 21 Nov–27 Dec';}});
+        lsSet('gate-subjects',_s6);
+      }
+      lsSet('gate-v25-nov17','1');
     }
     var _rp5=lsGet('gate-rev1-pages')||{};
     if(_rp5['1']){var _t5=0;Object.keys(_rp5['1']).forEach(function(k){_t5+=(+_rp5['1'][k]||0);});if(_t5===402){delete _rp5['1'];lsSet('gate-rev1-pages',_rp5);}}
@@ -3125,7 +3135,7 @@ function renderTargetGrid(selSubId){
       const dLeft=Math.max(1,diffDays(entryDate,sub.end)+1);
       const hLeft=Math.max(0,sub.targetHrs-parseFloat(getActualHrs(sub)));hTgt=Math.max(1,Math.ceil(hLeft/dLeft*10)/10);
       const vLeft=Math.max(0,sub.videos-getActualVids(sub));vTgt=Math.max(1,Math.ceil(vLeft/dLeft));
-      if(sub.id===11){var _dw=new Date(entryDate+'T00:00:00').getDay();vTgt=(_dw===1?2:1)+(((_dw===0||_dw>=4)&&entryDate>='2026-11-12'&&entryDate<='2026-12-20')?1:0);} /* Maths 1/day (2 on Mondays); Aptitude Thu-Sun, 12 Nov-20 Dec */
+      if(sub.id===11){var _dw=new Date(entryDate+'T00:00:00').getDay();vTgt=((entryDate>='2026-11-17'&&entryDate<='2026-12-24')?1:0)+(((_dw===0||_dw===6)&&entryDate>='2026-11-21'&&entryDate<='2026-12-27')?1:0);if(vTgt<1)vTgt=1;} /* Maths 1/day 17 Nov-24 Dec (38 videos); Aptitude 1 video each Sat & Sun 21 Nov-27 Dec (12 videos) */
     }
     const vDelta=vDone-vTgt,hDelta=hToday-hTgt;
     function dH(d){if(d>0.05)return`<span class="stepper-delta delta-plus">+${d.toFixed(1)}</span>`;if(d<-0.05)return`<span class="stepper-delta delta-minus">${d.toFixed(1)}</span>`;return`<span class="stepper-delta delta-zero">On target</span>`;}
@@ -3212,15 +3222,15 @@ const REV1_NOTES={
   11:[{file:'Engineering Mathematics .pdf',pages:2423,url:'https://drive.google.com/file/d/1eDa50THB2M4cpUerP0REuRyPWl3AsDtd/view?usp=sharing'}]
 };
 /* REV1 SCHEDULE — starts only after subject classes are complete.
-   Completed 2027 subjects are cleared sequentially from Nov 9 to Dec 26, 2026 (~80-110 pages/day).
+   Completed 2027 subjects are cleared sequentially from Nov 17 to Dec 26, 2026 (~80-140 pages/day).
    Rev1 closes Dec 26 so the last subject's PYQ (EMFT) runs Dec 27–30 and every 2026 PYQ closes by Dec 31.
    2027-cycle subjects stay at ~60 pages/day.
    Mathematics is revised during the Electrical Machines study window; Aptitude has no notes. */
 const REV1_SCHEDULE={
-  1:{start:'2026-11-09',end:'2026-11-19',days:11,perDay:109},
-  2:{start:'2026-11-20',end:'2026-12-01',days:12,perDay:107},
-  3:{start:'2026-12-02',end:'2026-12-14',days:13,perDay:110},
-  4:{start:'2026-12-15',end:'2026-12-22',days:8, perDay:96},
+  1:{start:'2026-11-17',end:'2026-11-25',days:9, perDay:133},
+  2:{start:'2026-11-26',end:'2026-12-04',days:9, perDay:142},
+  3:{start:'2026-12-05',end:'2026-12-15',days:11,perDay:130},
+  4:{start:'2026-12-16',end:'2026-12-22',days:7, perDay:109},
   5:{start:'2026-12-23',end:'2026-12-26',days:4, perDay:81},
   11:{start:'2027-03-01',end:'2027-04-10',days:41,perDay:60},
   6:{start:'2027-05-23',end:'2027-06-08',days:17,perDay:60},
@@ -3328,7 +3338,7 @@ function renderRevision1(){
       +'</div>'
     +'</div>';
   });
-  var html='<div class="section"><div class="sec-hdr"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;width:100%"><div><h2>Revision 1</h2><div class="sub">~80–110 pages/day · starts 9 Nov · click a subject to expand</div></div></div></div>'
+  var html='<div class="section"><div class="sec-hdr"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;width:100%"><div><h2>Revision 1</h2><div class="sub">~80–140 pages/day · starts 17 Nov · click a subject to expand</div></div></div></div>'
     +'<div class="g4" style="margin-bottom:16px;">'
       +'<div class="hcard" style="border:1px solid #00d4ff22"><div class="hlbl">Pages Revised</div><div class="hval" style="color:#00d4ff">'+rev1DonePages+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+totalPages+'</span></div><div class="pbar-bg"><div class="pbar-fill" style="width:'+rev1Pct+'%;background:#00d4ff;"></div></div></div>'
       +'<div class="hcard" style="border:1px solid #a78bfa22"><div class="hlbl">SN Pages</div><div class="hval" style="color:#a78bfa">'+snDonePages+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+totalPages+'</span></div><div class="pbar-bg"><div class="pbar-fill" style="width:'+snPct+'%;background:#a78bfa;"></div></div></div>'
@@ -3613,7 +3623,7 @@ function switchMainTab(id){
    Structure: { plans: { "YYYY-MM-DD": { wakeTime, blocks:[{time,desc,status}] } },
                 logs:  { "YYYY-MM-DD": { noSocial, scores:{...} } } }
 ════════════════════════════════════════════ */
-var DISC_START='2026-11-09';
+var DISC_START='2026-11-17';
 function discMd(d){var p=String(d).split('-');return MOS[+p[1]-1]+' '+(+p[2]);} /* 'YYYY-MM-DD' -> 'Nov 9'; discipline labels follow DISC_START */
 var DISC_THRESHOLD=80; /* score must be MORE than this to count as a disciplined day */
 var EXCUSE_REASONS=['Travel','Sick','Family','Official work','Other'];
@@ -3627,14 +3637,14 @@ function saveDisc(){ lsSet('gate-discipline', discData); }
    Keys starting with 'study_' form the Study (GATE) group; everything else is Daily routine. */
 var WEEKDAY_SCHEDULE = [
   {key:'sleep',       color:'#6366f1',from:'00:00',to:'07:30',label:'Sleep'},
-  {key:'walking',     color:'#38bdf8',from:'07:30',to:'08:00',label:'Walking'},
-  {key:'exercise',    color:'#4ade80',from:'08:00',to:'08:30',label:'Exercise'},
-  {key:'freshup',     color:'#a78bfa',from:'08:30',to:'09:00',label:'Fresh up'},
-  {key:'study_video', color:'#00d4ff',from:'09:00',to:'12:00',label:'Videos',short:'Videos'},
+  {key:'exercise',    color:'#4ade80',from:'07:30',to:'08:00',label:'Exercise'},
+  {key:'study_video', color:'#00d4ff',from:'08:00',to:'10:00',label:'Videos',short:'Videos'},
+  {key:'breakfast',   color:'#fbbf24',from:'10:00',to:'10:30',label:'Breakfast'},
+  {key:'study_notes', color:'#c084fc',from:'10:30',to:'12:00',label:'Notes',short:'Notes'},
   {key:'chess1',      color:'#e879f9',from:'12:00',to:'13:00',label:'Travel + Chess'},
   {key:'lunch',       color:'#fbbf24',from:'13:00',to:'14:00',label:'Lunch'},
-  {key:'study_notes', color:'#c084fc',from:'14:00',to:'16:00',label:'Notes',short:'Notes'},
-  {key:'study_pyq',   color:'#f472b6',from:'16:00',to:'18:00',label:'PYQ',short:'PYQ'},
+  {key:'study_pyq',   color:'#f472b6',from:'14:00',to:'16:00',label:'PYQ',short:'PYQ'},
+  {key:'office1',     color:'#64748b',from:'16:00',to:'18:00',label:'Office work'},
   {key:'snacks',      color:'#fbbf24',from:'18:00',to:'19:00',label:'Snacks'},
   {key:'office2',     color:'#64748b',from:'19:00',to:'22:00',label:'Office work'},
   {key:'chess2',      color:'#e879f9',from:'22:00',to:'23:00',label:'Travel + Chess'},
@@ -3642,17 +3652,17 @@ var WEEKDAY_SCHEDULE = [
 ];
 var WEEKEND_SCHEDULE = [
   {key:'sleep',       color:'#6366f1',from:'00:00',to:'07:30',label:'Sleep'},
-  {key:'walking',     color:'#38bdf8',from:'07:30',to:'08:00',label:'Walking'},
-  {key:'exercise',    color:'#4ade80',from:'08:00',to:'08:30',label:'Exercise'},
-  {key:'freshup',     color:'#a78bfa',from:'08:30',to:'09:00',label:'Fresh up'},
-  {key:'study_video', color:'#00d4ff',from:'09:00',to:'12:00',label:'Videos',short:'Videos'},
+  {key:'exercise',    color:'#4ade80',from:'07:30',to:'08:00',label:'Exercise'},
+  {key:'study_video', color:'#00d4ff',from:'08:00',to:'10:00',label:'Videos',short:'Videos'},
+  {key:'breakfast',   color:'#fbbf24',from:'10:00',to:'10:30',label:'Breakfast'},
+  {key:'study_notes', color:'#c084fc',from:'10:30',to:'12:00',label:'Notes',short:'Notes'},
   {key:'chess1',      color:'#e879f9',from:'12:00',to:'13:00',label:'Travel + Chess'},
   {key:'lunch',       color:'#fbbf24',from:'13:00',to:'14:00',label:'Lunch'},
-  {key:'study_notes', color:'#c084fc',from:'14:00',to:'16:00',label:'Notes',short:'Notes'},
-  {key:'study_pyq',   color:'#f472b6',from:'16:00',to:'18:00',label:'PYQ',short:'PYQ'},
-  {key:'office1',     color:'#64748b',from:'18:00',to:'20:00',label:'Office work'},
+  {key:'study_pyq',   color:'#f472b6',from:'14:00',to:'16:00',label:'PYQ',short:'PYQ'},
+  {key:'office1',     color:'#64748b',from:'16:00',to:'18:00',label:'Office work'},
+  {key:'office2',     color:'#64748b',from:'18:00',to:'20:00',label:'Office work'},
   {key:'dinner',      color:'#fbbf24',from:'20:00',to:'21:00',label:'Dinner'},
-  {key:'office2',     color:'#64748b',from:'21:00',to:'22:00',label:'Office work'},
+  {key:'office3',     color:'#64748b',from:'21:00',to:'22:00',label:'Office work'},
   {key:'study_sn',    color:'#4ade80',from:'22:00',to:'24:00',label:'SN',short:'SN'},
 ];
 function isFriSatSun(dateStr){
