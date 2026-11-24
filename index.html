@@ -2893,7 +2893,7 @@ function dbThreeCards(activeSub,hDone,vDone,hPct,vPct,dLeft,subCol,
   var studyCard='<div class="db-card" onclick="switchMainTab(\'study\')">'
     +'<div class="db-card-header"><div class="db-card-icon">📚</div>'
       +'<div><div class="db-card-title">'+esc(activeSub.name)+'</div>'
-        +'<div class="db-card-sub">'+esc(activeSub.faculty)+' &middot; '+dLeft+'d left</div>'
+        +'<div class="db-card-sub">'+esc(activeSub.faculty)+' &middot; '+(TODAY<activeSub.start?('starts '+fmt(activeSub.start)):(dLeft+'d left'))+'</div>'
       +'</div>'
     +'</div>'
     +'<div class="db-stat-row">'
@@ -3580,7 +3580,7 @@ function renderDashboard(){
     var asDl=Math.max(1,diffDays(TODAY,activeSub.end)+1);
     var asHTgt=Math.max(1,Math.ceil(Math.max(0,activeSub.targetHrs-hDone)/asDl*10)/10);
     var asVTgt=Math.max(1,Math.ceil(Math.max(0,activeSub.videos-vDone)/asDl));
-    if(activeSub.id===11){var _adw=new Date(TODAY+'T00:00:00').getDay();asVTgt=(_adw===0||_adw===6)?2:1;}
+    if(activeSub.id===11){asVTgt=mathsVidsPlan(TODAY);asHTgt=asVTgt*2;} /* same Maths-only plan as the Study tab: 0 before 1 Dec, 1/day, 2 on Sat & Sun; 2h per video */
 
     activeSubCard=dbThreeCards(
       activeSub,hDone,vDone,hPct,vPct,dLeft,subCol,
@@ -3644,7 +3644,7 @@ function switchMainTab(id){
    Structure: { plans: { "YYYY-MM-DD": { wakeTime, blocks:[{time,desc,status}] } },
                 logs:  { "YYYY-MM-DD": { noSocial, scores:{...} } } }
 ════════════════════════════════════════════ */
-var DISC_START='2026-11-17';
+var DISC_START='2026-12-01';
 function discMd(d){var p=String(d).split('-');return MOS[+p[1]-1]+' '+(+p[2]);} /* 'YYYY-MM-DD' -> 'Nov 9'; discipline labels follow DISC_START */
 var DISC_THRESHOLD=80; /* score must be MORE than this to count as a disciplined day */
 var EXCUSE_REASONS=['Travel','Sick','Family','Official work','Other'];
