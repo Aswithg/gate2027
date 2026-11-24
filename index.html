@@ -656,7 +656,7 @@ const SEED_SUBJECTS=[
   {id:8, name:'POWER ELECTRONICS', faculty:'Ankit Goyal', start:'2027-06-18', end:'2027-07-21', days:34, videos:68, targetHrs:102, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
   {id:9, name:'DIGITAL ELECTRONICS', faculty:'Sujay', start:'2027-09-23', end:'2027-10-08', days:16, videos:16, targetHrs:32, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
   {id:10, name:'ANALOG ELECTRONICS', faculty:'Ankit Goyal', start:'2027-07-22', end:'2027-09-22', days:63, videos:61, targetHrs:110, status:'Not Started', confidence:0, remarks:'2028 attempt', phase:2028},
-  {id:11, name:'APTITUDE + MATHEMATICS', faculty:'Himanshu Agarwal', start:'2026-11-17', end:'2026-12-31', days:45, videos:50, targetHrs:100, status:'Not Started', confidence:0, remarks:'50 videos × 2h = 100h: 38 Maths (76h) + 12 Aptitude (24h) · Maths 1 video daily 17 Nov–24 Dec, Aptitude 1 video each Sat & Sun 21 Nov–27 Dec', phase:2027},
+  {id:11, name:'MATHEMATICS', faculty:'Himanshu Agarwal', start:'2026-12-01', end:'2026-12-31', days:31, videos:38, targetHrs:76, status:'Not Started', confidence:0, remarks:'38 Maths videos × 2h = 76h · Maths only (no Aptitude) · 1 video daily, 2 on Sat & Sun, 1–31 Dec', phase:2027},
 ];
 
 const SUBJECT_LINKS={
@@ -1603,7 +1603,7 @@ const MILESTONE_DEFS=[
   {id:'sub8_done', emoji:'💡',title:'PE Complete',         sub:'Finish Power Electronics',       detail:'Subject 8/11 done!'},
   {id:'sub9_done', emoji:'💻',title:'Digital Done',        sub:'Finish Digital Electronics',     detail:'Subject 9/11 done!'},
   {id:'sub10_done',emoji:'🔊',title:'Analog Done',         sub:'Finish Analog Electronics',      detail:'Subject 10/11 done!'},
-  {id:'sub11_done',emoji:'🧮',title:'Aptitude Done',       sub:'Finish Aptitude + Maths',        detail:'All 11 subjects complete!'},
+  {id:'sub11_done',emoji:'🧮',title:'Maths Done',           sub:'Finish Mathematics',        detail:'All 11 subjects complete!'},
   {id:'streak_7',  emoji:'🔥',title:'Week Warrior',        sub:'7-day GATE streak',              detail:'7 days in a row!'},
   {id:'streak_14', emoji:'🔥',title:'Fortnight Fire',      sub:'14-day GATE streak',             detail:'14 consecutive days!'},
   {id:'streak_21', emoji:'🔥',title:'3-Week Blazer',       sub:'21-day GATE streak',             detail:'3 weeks straight!'},
@@ -2189,9 +2189,9 @@ function renderPyqQuizCard(sub){
 // (scheduled Rev1 end date, or the date Rev1 was marked done if earlier). PYQ is planned EVERY day
 // (no Fri/Sat/Sun restriction). Each subject's questions are spread evenly across the days until the
 // next subject's PYQ window opens; the last subject in the sequence finishes at the daily maximum.
-const PYQ_DEADLINES={1:'2026-12-31',2:'2026-12-31',3:'2026-12-31',4:'2026-12-31',5:'2026-12-31',11:'2027-12-31',6:'2027-12-31',7:'2027-12-31',8:'2027-12-31',10:'2027-12-31',9:'2027-12-31'};
+const PYQ_DEADLINES={1:'2027-01-05',2:'2027-01-05',3:'2027-01-05',4:'2027-01-05',5:'2027-01-05',11:'2027-12-31',6:'2027-12-31',7:'2027-12-31',8:'2027-12-31',10:'2027-12-31',9:'2027-12-31'};
 /* Fallback copy of REV1_SCHEDULE end dates (REV1_SCHEDULE is declared later in the file). Keep in sync. */
-const PYQ_REV1_END_FALLBACK={1:'2026-11-25',2:'2026-12-04',3:'2026-12-15',4:'2026-12-22',5:'2026-12-26',11:'2027-04-10',6:'2027-06-08',7:'2027-07-10',8:'2027-08-13',10:'2027-10-26',9:'2027-11-14'};
+const PYQ_REV1_END_FALLBACK={1:'2026-12-06',2:'2026-12-13',3:'2026-12-20',4:'2026-12-24',5:'2026-12-26',11:'2027-04-10',6:'2027-06-08',7:'2027-07-10',8:'2027-08-13',10:'2027-10-26',9:'2027-11-14'};
 const PYQ_ORDER=[
   {id:1,cohort:2026,dailyMax:32},{id:2,cohort:2026,dailyMax:32},{id:3,cohort:2026,dailyMax:32},{id:4,cohort:2026,dailyMax:32},{id:5,cohort:2026,dailyMax:32},
   {id:11,cohort:2027,dailyMax:25},{id:6,cohort:2027,dailyMax:25},{id:7,cohort:2027,dailyMax:25},{id:8,cohort:2027,dailyMax:25},{id:10,cohort:2027,dailyMax:25},{id:9,cohort:2027,dailyMax:25}
@@ -2396,7 +2396,7 @@ function renderPyq(){
   renderPyqChart();
   renderPyqTopics();
 }
-const REV1_START='2026-11-17';
+const REV1_START='2026-12-01';
 function applyTabLock(wrapId,isLocked,startLabel){
   const wrap=$(wrapId);if(!wrap)return;
   // remove existing banner if any
@@ -2465,6 +2465,16 @@ function runMigration(){
         lsSet('gate-subjects',_s6);
       }
       lsSet('gate-v25-nov17','1');
+    }
+    /* 24 Nov 2026 re-plan: Maths classes (Maths only, no Aptitude) and Revision 1 start 1 Dec 2026.
+       38 Maths videos x 2h = 76h. Runs once (flag). */
+    if(!lsGet('gate-v26-dec1')){
+      var _s7=lsGet('gate-subjects');
+      if(_s7&&_s7.length){
+        _s7.forEach(function(s){if(s.id===11){s.name='MATHEMATICS';s.start='2026-12-01';s.end='2026-12-31';s.days=31;s.videos=38;s.targetHrs=76;s.remarks='38 Maths videos × 2h = 76h · Maths only (no Aptitude) · 1 video daily, 2 on Sat & Sun, 1–31 Dec';}});
+        lsSet('gate-subjects',_s7);
+      }
+      lsSet('gate-v26-dec1','1');
     }
     var _rp5=lsGet('gate-rev1-pages')||{};
     if(_rp5['1']){var _t5=0;Object.keys(_rp5['1']).forEach(function(k){_t5+=(+_rp5['1'][k]||0);});if(_t5===402){delete _rp5['1'];lsSet('gate-rev1-pages',_rp5);}}
@@ -3124,6 +3134,17 @@ function renderSubjectStrip(selSubId){
     <div class="sub-strip-item"><div class="sub-strip-label">Hrs %</div><div class="sub-strip-val">${hPct}%</div></div>
     <div class="sub-strip-item"><div class="sub-strip-label">Vids %</div><div class="sub-strip-val">${vPct}%</div></div>`;
 }
+/* Maths-only video plan: 38 videos, 1 per day from 1 Dec 2026, 2 on Sat & Sun, capped so the total stays 38 */
+function mathsVidsPlan(date){
+  var done=0,d='2026-12-01';
+  for(var i=0;i<31&&done<38;i++){
+    var dw=new Date(d+'T00:00:00').getDay();
+    var n=Math.min((dw===0||dw===6)?2:1,38-done);
+    if(d===date)return n;
+    done+=n;d=addDays(d,1);
+  }
+  return 0;
+}
 function renderTargetGrid(selSubId){
   const dd=daily[entryDate]||{};const activity=getStudyActivity(entryDate);
   const sub=subjects.find(s=>s.id===+selSubId);
@@ -3135,7 +3156,7 @@ function renderTargetGrid(selSubId){
       const dLeft=Math.max(1,diffDays(entryDate,sub.end)+1);
       const hLeft=Math.max(0,sub.targetHrs-parseFloat(getActualHrs(sub)));hTgt=Math.max(1,Math.ceil(hLeft/dLeft*10)/10);
       const vLeft=Math.max(0,sub.videos-getActualVids(sub));vTgt=Math.max(1,Math.ceil(vLeft/dLeft));
-      if(sub.id===11){var _dw=new Date(entryDate+'T00:00:00').getDay();vTgt=((entryDate>='2026-11-17'&&entryDate<='2026-12-24')?1:0)+(((_dw===0||_dw===6)&&entryDate>='2026-11-21'&&entryDate<='2026-12-27')?1:0);if(vTgt<1)vTgt=1;} /* Maths 1/day 17 Nov-24 Dec (38 videos); Aptitude 1 video each Sat & Sun 21 Nov-27 Dec (12 videos) */
+      if(sub.id===11){vTgt=mathsVidsPlan(entryDate);if(vTgt<1)vTgt=1;} /* Maths only: 1 video/day, 2 on Sat & Sun, 38 videos 1-31 Dec */
     }
     const vDelta=vDone-vTgt,hDelta=hToday-hTgt;
     function dH(d){if(d>0.05)return`<span class="stepper-delta delta-plus">+${d.toFixed(1)}</span>`;if(d<-0.05)return`<span class="stepper-delta delta-minus">${d.toFixed(1)}</span>`;return`<span class="stepper-delta delta-zero">On target</span>`;}
@@ -3222,16 +3243,16 @@ const REV1_NOTES={
   11:[{file:'Engineering Mathematics .pdf',pages:2423,url:'https://drive.google.com/file/d/1eDa50THB2M4cpUerP0REuRyPWl3AsDtd/view?usp=sharing'}]
 };
 /* REV1 SCHEDULE — starts only after subject classes are complete.
-   Completed 2027 subjects are cleared sequentially from Nov 17 to Dec 26, 2026 (~80-140 pages/day).
-   Rev1 closes Dec 26 so the last subject's PYQ (EMFT) runs Dec 27–30 and every 2026 PYQ closes by Dec 31.
+   Completed 2027 subjects are cleared sequentially from Dec 1 to Dec 26, 2026 (~160-205 pages/day).
+   Rev1 closes Dec 26; each subject's PYQ starts the day after its own Rev1 ends, so the 2026 PYQ plan runs into early Jan 2027.
    2027-cycle subjects stay at ~60 pages/day.
    Mathematics is revised during the Electrical Machines study window; Aptitude has no notes. */
 const REV1_SCHEDULE={
-  1:{start:'2026-11-17',end:'2026-11-25',days:9, perDay:133},
-  2:{start:'2026-11-26',end:'2026-12-04',days:9, perDay:142},
-  3:{start:'2026-12-05',end:'2026-12-15',days:11,perDay:130},
-  4:{start:'2026-12-16',end:'2026-12-22',days:7, perDay:109},
-  5:{start:'2026-12-23',end:'2026-12-26',days:4, perDay:81},
+  1:{start:'2026-12-01',end:'2026-12-06',days:6, perDay:200},
+  2:{start:'2026-12-07',end:'2026-12-13',days:7, perDay:183},
+  3:{start:'2026-12-14',end:'2026-12-20',days:7, perDay:203},
+  4:{start:'2026-12-21',end:'2026-12-24',days:4, perDay:191},
+  5:{start:'2026-12-25',end:'2026-12-26',days:2, perDay:161},
   11:{start:'2027-03-01',end:'2027-04-10',days:41,perDay:60},
   6:{start:'2027-05-23',end:'2027-06-08',days:17,perDay:60},
   7:{start:'2027-06-18',end:'2027-07-10',days:23,perDay:60},
@@ -3338,7 +3359,7 @@ function renderRevision1(){
       +'</div>'
     +'</div>';
   });
-  var html='<div class="section"><div class="sec-hdr"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;width:100%"><div><h2>Revision 1</h2><div class="sub">~80–140 pages/day · starts 17 Nov · click a subject to expand</div></div></div></div>'
+  var html='<div class="section"><div class="sec-hdr"><div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;width:100%"><div><h2>Revision 1</h2><div class="sub">~160–205 pages/day · starts 1 Dec · click a subject to expand</div></div></div></div>'
     +'<div class="g4" style="margin-bottom:16px;">'
       +'<div class="hcard" style="border:1px solid #00d4ff22"><div class="hlbl">Pages Revised</div><div class="hval" style="color:#00d4ff">'+rev1DonePages+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+totalPages+'</span></div><div class="pbar-bg"><div class="pbar-fill" style="width:'+rev1Pct+'%;background:#00d4ff;"></div></div></div>'
       +'<div class="hcard" style="border:1px solid #a78bfa22"><div class="hlbl">SN Pages</div><div class="hval" style="color:#a78bfa">'+snDonePages+'<span style="font-size:13px;color:var(--faint);font-weight:400;">/'+totalPages+'</span></div><div class="pbar-bg"><div class="pbar-fill" style="width:'+snPct+'%;background:#a78bfa;"></div></div></div>'
